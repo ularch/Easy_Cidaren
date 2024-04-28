@@ -1,5 +1,6 @@
 import json
 import re
+import spacy
 import time
 
 import api.request_header as requests
@@ -20,20 +21,12 @@ def handle_response(response):
         exit(-1)
 
 
-# use api get word prototype
-def use_api_get_prototype(word: str) -> str or None:
-    """
-    利用api获取单词原型
-    :param word:
-    :return: word prototype
-    """
-    basic_api.logger.info(f"单词{word}走api转原型")
-    url = f'https://app.vocabgo.com/student/api/Student/Course/SearchWord?word={word}&timestamp=1710396115786&version=2.6.2.24031302&app_type=1'
-    rsp = requests.rqs_session.get(url=url)
-    # check rsp is success
-    handle_response(rsp)
-    result = re.findall('span>(.+?)</span>', rsp.json()['data']['word_mean']['meaning'])
-    return None if not result else result[0]
+# 使用spacy获取单词原型
+def get_prototype(word: str) -> str:
+    nlp = spacy.load('en_core_web_sm')
+    prototype = nlp(word)[0].lemma_
+    basic_api.logger.info(f"单词{word}转原型为{prototype}")
+    return prototype
 
 
 def get_select_course(public_info):
@@ -67,9 +60,6 @@ def get_unit_words(public_info):
     handle_response(rsp)
     rsp_json = rsp.json()
     public_info.get_word_list_result = rsp_json
-
-
-
 
 
 def get_book_all_words(public_info):

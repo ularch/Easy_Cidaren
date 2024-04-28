@@ -1,7 +1,7 @@
 import en_core_web_sm
 import spacy
 
-from api.basic_api import use_api_get_prototype
+from api.basic_api import get_prototype
 
 nlp = en_core_web_sm.load()
 
@@ -13,7 +13,7 @@ def word_revert(word: str) -> str:
     for token in doc:
         # fail
         if token.lemma_ == word:
-            return use_api_get_prototype(word)
+            return get_prototype(word)
         # success
         return token.lemma_
 

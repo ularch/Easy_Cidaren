@@ -147,7 +147,7 @@ def complete_practice(unit: str, progress: int, task_id=None):
             skip_exam(public_info)
         else:
             submit(public_info, option)
-        # 休眠
+        # 暂停
         time.sleep(random.randint(public_info.min_time, public_info.max_time))
 
 
@@ -166,6 +166,7 @@ def init_token():
     else:
         exit("需要输入token！")
 
+
 def run():
     init_token()
     PublicInfo.task_type = 'ClassTask'
@@ -181,19 +182,15 @@ def run():
     # 获取需要完成的任务
     get_todo_task(public_info)
     # 开始完成班级任务
-    for task_info in public_info.class_task:
-        # 关闭自建任务
-        public_info.is_self_built = False
-        complete_test(task_info)
+    # 关闭自建任务，但是暂时不知道是干什么的
+    public_info.is_self_built = False
+    complete_test(public_info.class_task)
     main.logger.info('运行完成')
     os.system("pause")
 
 
 if __name__ == '__main__':
     # 初始化日志记录
-    # is delete item
-    # if not is_close():
-    #     print('项目关闭')
     main = Log("main")
     main.logger.info('开始登录')
     main.logger.info('侵权请联系删除')
