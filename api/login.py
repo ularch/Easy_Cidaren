@@ -30,7 +30,7 @@ def get_token(public_info):
     rsp = requests.rqs3_session.post(basic_url + url, data=json.dumps(data)).json()
     rsp_data = rsp['data']
     if rsp_data:
-        public_info.token = rsp_data['token']
+        public_info._token = rsp_data['token']
         # update request header token
         requests.set_token(rsp_data['token'])
         login.logger.info(f"token获取成功{rsp_data['token']}")
@@ -39,17 +39,16 @@ def get_token(public_info):
         exit('程序退出')
 
 
-def verify_token(token) -> bool:
-    # init all request header
+def verify_token(token):
+    import main
+    # 初始化所有请求头
     requests.set_token(token)
     timestamp = create_timestamp()
     url = f'Student/Main?timestamp={timestamp}&version=2.6.1.231204&app_type=1'
-    rsp = requests.rqs_session.get(basic_url + url).json()
-    # # 测试json信息
-    # print(rsp)
-    # exit()
-    if rsp['code'] != 1:
+    result = requests.rqs_session.get(basic_url + url).json()
+    # 判断是否过期 code = 1 为未过期
+    if result['code'] != 1:
         login.logger.info("token已过期")
-        return False
+        return 0
     else:
-        return True
+        return result

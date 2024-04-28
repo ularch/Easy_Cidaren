@@ -3,23 +3,21 @@ import os
 
 
 class PublicInfo:
-    # task_choice: str
+    # 这俩暂时不知道有啥用
     task_type: str
     task_type_int: int
 
+    #
     def __init__(self, path):
         self.get_word_list_result = {}
         self.path = path
-        user_input = input("请输入token：")
-        self._token = user_input
-        # 设置待刷任务类型
-        user_choice = input("请输入任务选择（1：学习任务；2：测试任务）：")
-        self._task_choices = int(user_choice)
-        # 设置间隔
-        min_time_input = input("请输入最短间隔秒数:")
-        self._min_time = int(min_time_input)
-        max_time_input = input("请输入最长间隔秒数:")
-        self._max_time = int(max_time_input)
+        with open(os.path.join(self.path, "config", "config.json"), 'r', encoding='utf-8') as f:
+            # user config
+            user_config = json.load(f)
+            self._min_time = user_config['min_time']
+            self._max_time = user_config['max_time']
+        # 任务列表
+        self.task_list = ""
         # query_answer
         self._topic_code = ''
         self.word_query_result = ''
@@ -37,6 +35,8 @@ class PublicInfo:
         self.course_id = ''
         # class task
         self.class_task = []
+        # 任务类型选择（默认1）
+        self._task_choices = 1
         # unit task amount
         self.task_total_count = ''
         self.now_page = ''
@@ -71,9 +71,17 @@ class PublicInfo:
         return self._task_choices
 
     @property
-    def min_time(self):
+    def min_time(self) -> int:
         return self._min_time
 
     @property
-    def max_time(self):
+    def max_time(self) -> int:
         return self._max_time
+
+    def input_info(self, min_time, max_time):
+        self._min_time = min_time
+        self._max_time = max_time
+        data = {'min_time': self._min_time, 'max_time': self._max_time}
+        data_string = json.dumps(data, indent=2)
+        with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
+            f.write(data_string)

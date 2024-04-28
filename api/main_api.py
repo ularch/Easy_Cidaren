@@ -114,7 +114,7 @@ def get_class_task(public_info, page_count: int):
         "sign": encrypt_md5(sign),
         "app_type": 1
     }
-    # "task_type": 2 是班级测试任务
+    # "task_type": 2 是班级测试任务 1 是班级自学任务
     rsp = requests.class_task_request.post(url=basic_url + url, json=data)
     # check response is success
     handle_response(rsp) 

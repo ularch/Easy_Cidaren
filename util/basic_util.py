@@ -1,4 +1,5 @@
 import time
+
 from log.log import Log
 
 basic_util = Log("basic_util")
@@ -13,8 +14,12 @@ def filler_not_complete_unit(public_info) -> None:
 
 # delete expire task
 def get_todo_task(public_info):
+    """
+    从列表里删除过期的任务
+    :param public_info: 公共组件
+    """
+    import main
     todo_task_list = []
-    todo_task = []
     for tasks in public_info.class_task:
         for task in tasks['records']:
             # over_status 2 未过期
@@ -25,15 +30,24 @@ def get_todo_task(public_info):
                     choice = public_info.task_choices
                     if task['task_type'] == choice:
                         todo_task_list.append(task)
-                        # 第一次赛选出来后的任务放在todo_task_list中
-    basic_util.logger.info(f'获取任务成功:{todo_task_list}')
-    task_names = [task['task_name'] for task in todo_task_list]
-    basic_util.logger.info(f'当前选择下的任务有:{task_names}')
-    task_choices = input("请输入您要操作的章节：")
-    for task in todo_task_list:
-        if task['task_name'] == task_choices:
+                        # 未过期的任务放在todo_task_list中
+    basic_util.logger.info(f'获取到:{todo_task_list}')
+    public_info.task_list = todo_task_list
+
+
+def get_choices_task(public_info, task_name):
+    """
+    筛选出最终选择的任务
+    :param public_info: 公共组件
+    :param task_name: 选择的任务名称
+    """
+    todo_task = []
+    for task in public_info.task_list:
+        if task['task_name'] == task_name:
             todo_task.append(task)
-    public_info.class_task = todo_task
+        # public_info.class_task就是筛选出来的任务
+        public_info.class_task = todo_task
+
 
 
 # create timestamp
@@ -57,7 +71,7 @@ def extract_book_word(public_info):
 def query_word_unit(public_info):
     all_unit = {}
     # create all unit dict
-    for unit in public_info.all_unit_name:
+    for unit in public_info.course_all_unit_name:
         all_unit.update({public_info.course_id + ':' + unit: []})
     # word classify
     for word_info in public_info.get_word_list_result["data"]['word_list']:

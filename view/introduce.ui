@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>200</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>使用教程</string>
+  </property>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>361</width>
+     <height>171</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>1.获取用户token
+2. 在用户token栏输入token
+3.点击登录，系统会自动获取用户信息和待完成的学习任务
+4.可自由选择待获取的任务类型，点击获取即可获取
+5.选中需要完成的任务
+6.点击开始任务即可自动完成
+6.在自动刷题时，软件ui界面将会消失，期间不要关闭cmd窗口</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -22,7 +22,7 @@ rqs_session = rqs2_session = rqs3_session = class_task_request = rsq_self_built 
 
 
 def set_token(token):
-    # update global value
+    # 更新全局变量
     global Token
     Token = token
     global rqs_session, rqs2_session, rqs3_session, class_task_request, rsq_self_built
