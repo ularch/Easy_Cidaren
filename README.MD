@@ -40,3 +40,7 @@ pip install -r requirements.txt
 pip install spacy
 python -m spacy download en_core_web_sm
 ```
+安装GUI库
+```angular2html
+pip install PyQt6
+```
