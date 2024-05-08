@@ -12,8 +12,11 @@ basic_api = Log("basic_api")
 basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
 
-# response is 200
 def handle_response(response):
+    """
+    判断请求是否成功
+    response is 200
+    """
     if response.json()['code'] == 1:
         basic_api.logger.info(f"请求成功{response.content}")
     else:
@@ -21,8 +24,12 @@ def handle_response(response):
         exit(-1)
 
 
-# 使用spacy获取单词原型
 def get_prototype(word: str) -> str:
+    """
+    获取单词原型，这个方法相当于是备选
+    :param word: 目标单词
+    :return: 单词原型
+    """
     nlp = spacy.load('en_core_web_sm')
     prototype = nlp(word)[0].lemma_
     basic_api.logger.info(f"单词{word}转原型为{prototype}")

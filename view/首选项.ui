@@ -23,7 +23,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_1">
     <attribute name="title">
@@ -76,7 +76,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="spinBox_2">
+        <widget class="QSpinBox" name="max_time">
          <property name="suffix">
           <string>    秒</string>
          </property>
@@ -96,6 +96,114 @@
     <attribute name="title">
      <string>答题设置</string>
     </attribute>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>331</width>
+       <height>121</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>答题用时</string>
+     </property>
+     <widget class="QWidget" name="verticalLayoutWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>311</width>
+        <height>92</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>最短间隔：</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="min_time_2">
+         <property name="suffix">
+          <string>    秒</string>
+         </property>
+         <property name="value">
+          <number>5</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>最长间隔：</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="max_time_2">
+         <property name="suffix">
+          <string>    秒</string>
+         </property>
+         <property name="value">
+          <number>15</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>140</y>
+       <width>331</width>
+       <height>71</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>模型选择</string>
+     </property>
+     <widget class="QWidget" name="verticalLayoutWidget_3">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>19</y>
+        <width>311</width>
+        <height>45</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>词形还原</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="api_choices">
+         <item>
+          <property name="text">
+           <string>官方api接口</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>本地模型</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </widget>
   </widget>
   <widget class="QWidget" name="horizontalLayoutWidget">
@@ -109,21 +217,21 @@
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QPushButton" name="pushButton_2">
+     <widget class="QPushButton" name="confirmBtn">
       <property name="text">
        <string>确认</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="cancelBtn">
       <property name="text">
        <string>取消</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton_3">
+     <widget class="QPushButton" name="inputBtn">
       <property name="text">
        <string>应用</string>
       </property>
@@ -131,7 +239,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QLabel" name="label_3">
+  <widget class="QLabel" name="warn_info">
    <property name="geometry">
     <rect>
      <x>30</x>

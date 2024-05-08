@@ -35,9 +35,6 @@ def handle_response(response):
         exit(-1)
 
 
-
-
-
 def is_close() -> bool:
     url = 'https://gitee.com/hhhuuuu/cdr/access/add_access_log'
     rsp = requests.requests.get(url)
@@ -149,6 +146,9 @@ def get_exam(public_info):
 
 # next exam
 def next_exam(public_info):
+    # 获取每一题提交的用时，500为一秒
+    min_time = public_info.spend_min_time * 500
+    max_time = public_info.spend_max_time * 500
     api.logger.info("获取下一题")
     url = f'{PublicInfo.task_type}/SubmitAnswerAndSave'
     params = {'it_font_size': 42,
@@ -156,29 +156,29 @@ def next_exam(public_info):
               'opt_font_c': '#000000',
               'opt_font_size': 37,
               'opt_img_w': 684,
-              'time_spent': random.randint(2500, 7500),
+              'time_spent': random.randint(min_time, max_time),
               'timestamp': create_timestamp(),
               'topic_code': public_info.topic_code,
               'version': '2.6.2.24031302'}
     sign = encrypt_md5("&".join([f'{key}={value}' for key, value in params.items()]) + 'ajfajfamsnfaflfasakljdlalkflak')
     params.update({'sign': sign})
-    rsp = requests.rqs2_session.post(basic_url + url, data=json.dumps(params))
-    # check request is success
-    handle_response(rsp)
-    if rsp.json()['msg'] == '任务已完成！' or rsp.json()['msg'] == '需要选词！':
+    data = requests.rqs2_session.post(basic_url + url, data=json.dumps(params))
+    # 检查请求是否成功
+    handle_response(data)
+    if data.json()['msg'] == '任务已完成！' or data.json()['msg'] == '需要选词！':
         public_info.exam = 'complete'
     # decrypt response
     else:
-        public_info.exam = debase64(rsp.json())
+        public_info.exam = debase64(data.json())
 
 
 def check_is_self_built(func):
     @wraps(func)
     def is_self_built(public_info, word):
         if public_info.is_self_built:
-            # get word index in the word_list
+            # 从单词列表获取索引
             word_index = public_info.word_list.index(word)
-            # get word in the unit
+            # 获取单元单词
             public_info.now_unit = public_info.get_book_words_data[word_index]["list_id"]
         return func(public_info, word)
 

@@ -3,20 +3,17 @@ import spacy
 
 from api.basic_api import get_prototype
 
-nlp = en_core_web_sm.load()
-
 
 def word_revert(word: str) -> str:
+    """
+    使用spacy模型获取单词原型
+    """
     nlp = spacy.load("en_core_web_sm")
 
     doc = nlp(word)
     for token in doc:
-        # fail
+        # 转换失败，调用官方接口获取
         if token.lemma_ == word:
             return get_prototype(word)
-        # success
+        # 转换成功
         return token.lemma_
-
-
-if __name__ == '__main__':
-    print(word_revert('installed'))

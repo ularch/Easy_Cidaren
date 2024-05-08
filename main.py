@@ -71,10 +71,12 @@ class UiMainWindow(QMainWindow):
         self.learn_task = QtWidgets.QRadioButton(parent=self.formLayoutWidget)
         self.learn_task.setObjectName("learn_task")
         self.learn_task.setChecked(True)
+        # 学习任务点击事件
         self.learn_task.clicked.connect(self.get_task_list)
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.learn_task)
         self.test_task = QtWidgets.QRadioButton(parent=self.formLayoutWidget)
         self.test_task.setObjectName("test_task")
+        # 测试任务点击事件
         self.test_task.clicked.connect(self.get_task_list)
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.test_task)
         self.task_list = QtWidgets.QComboBox(parent=self.centralwidget)
@@ -224,6 +226,7 @@ class UiMainWindow(QMainWindow):
             # 获取任务名称
             if not public_info.task_list == []:
                 task_names = [task['task_name'] for task in public_info.task_list]
+                main.logger.info(f'{task_names}')
                 for task in task_names:
                     self.task_list.addItem(f"{task}")
                 ui.update_output_info("获取成功！")
@@ -235,6 +238,7 @@ class UiMainWindow(QMainWindow):
             main.logger.info("开始任务")
             # 获取所选任务名称
             task_name = self.task_list.currentText()
+            task_index = self.task_list.currentIndex()
             get_choices_task(public_info, task_name)
             ui.update_output_info(f"开始任务{task_name}")
             # 开始任务 启动等待页面
@@ -252,9 +256,7 @@ class UiMainWindow(QMainWindow):
                 ui.update_output_info(f"{task_name}运行完成")
                 self.show()
                 # 删除已完成任务
-                for index in range(self.task_list.count()):
-                    if self.task_list.itemText(index) == task_name:
-                        self.task_list.removeItem(index)
+                self.task_list.removeItem(task_index)
                 self.show()
 
     def open_settings(self, m):
@@ -285,8 +287,10 @@ def stop_task():
     quit()
 
 
-# 测试任务及自建任务
 def class_task_answer():
+    """
+    测试任务及自建任务
+    """
     token = PublicInfo.token
     # 获取第一个试题
     get_exam(public_info)
