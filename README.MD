@@ -35,6 +35,8 @@ pip install -r requirements.txt
 安装模型
 ```angular2html
 pip install spacy
+```
+```angular2html
 python -m spacy download en_core_web_sm
 ```
 安装GUI库
