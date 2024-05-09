@@ -22,6 +22,7 @@ class UiMainWindow(QMainWindow):
     主菜单ui
     """
     output = "软件初始化成功！"
+
     def __init__(self):
         super(UiMainWindow, self).__init__()
         self.token = ''
@@ -167,7 +168,6 @@ class UiMainWindow(QMainWindow):
             scrollbar = self.output_info.verticalScrollBar()
             scrollbar.setValue(scrollbar.maximum())
 
-
     def token_login(self):
         """
         token登录
@@ -242,8 +242,10 @@ class UiMainWindow(QMainWindow):
             get_choices_task(public_info, task_name)
             ui.update_output_info(f"开始任务{task_name}")
             # 开始任务 启动等待页面
-            reply = QMessageBox.question(self, f"开始任务{task_name}",f"确认开始任务{task_name}吗？\n任务开始后，页面将消失，将在后台自动刷题\n期间请勿关闭cmd窗口，关闭cmd窗口将结束运行",
-                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+            reply = QMessageBox.question(self, f"开始任务{task_name}",
+                                         f"确认开始任务{task_name}吗？\n任务开始后，页面将消失，将在后台自动刷题\n期间请勿关闭cmd窗口，关闭cmd窗口将结束运行",
+                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                         QMessageBox.StandardButton.Yes)
             if reply == QMessageBox.StandardButton.Yes:
                 self.hide()
                 # 关闭自建任务
@@ -254,7 +256,6 @@ class UiMainWindow(QMainWindow):
                 QtWidgets.QMessageBox.information(self, "任务完成！", f"已完成{task_name}")
                 main.logger.info('运行完成')
                 ui.update_output_info(f"{task_name}运行完成")
-                self.show()
                 # 删除已完成任务
                 self.task_list.removeItem(task_index)
                 self.show()
@@ -432,6 +433,7 @@ def complete_practice(unit: str, progress: int, task_id=None):
 
 if __name__ == '__main__':
     import sys
+
     main = Log("main")
     main.logger.info("初始化主页面")
     # 路径

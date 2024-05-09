@@ -24,16 +24,19 @@ def handle_response(response):
         exit(-1)
 
 
-def get_prototype(word: str) -> str:
+def use_api_get_prototype(word: str) -> str:
     """
-    获取单词原型，这个方法相当于是备选
-    :param word: 目标单词
-    :return: 单词原型
+    利用api获取单词原型
+    :param word:
+    :return: word prototype
     """
-    nlp = spacy.load('en_core_web_sm')
-    prototype = nlp(word)[0].lemma_
-    basic_api.logger.info(f"单词{word}转原型为{prototype}")
-    return prototype
+    basic_api.logger.info(f"单词{word}走api转原型")
+    url = f'https://app.vocabgo.com/student/api/Student/Course/SearchWord?word={word}&timestamp=1710396115786&version=2.6.2.24031302&app_type=1'
+    prototype = requests.rqs_session.get(url=url)
+    # 检查获取原型成功
+    handle_response(prototype)
+    result = re.findall('span>(.+?)</span>', prototype.json()['data']['word_mean']['meaning'])
+    return None if not result else result[0]
 
 
 def get_select_course(public_info):

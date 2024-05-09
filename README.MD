@@ -11,9 +11,6 @@
 **2024-05-02**
 + 更新GUI
 
-**2024-04-28**
-+ 使用本地模型获取单词原型（速度可能有所下降）
-+ 
 **2023-04-26**
 + 在原有源码的基础上添加了手动选择章节功能
 + 将token等设置从config文件改为了在控制台输入
@@ -38,6 +35,8 @@ pip install -r requirements.txt
 安装模型
 ```angular2html
 pip install spacy
+```
+```angular2html
 python -m spacy download en_core_web_sm
 ```
 安装GUI库

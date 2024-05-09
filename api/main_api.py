@@ -2,6 +2,7 @@ import json
 import random
 import time
 from functools import wraps
+import view
 
 import api.request_header as requests
 from decryptencrypt.debase64 import debase64
@@ -18,8 +19,11 @@ basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
 # response is 200
 def handle_response(response):
+    import main
     rsp_json = response.json()
     code = rsp_json['code']
+    error = view.error.Ui_Form()
+    error.show()
     if code == 1:
         # 获取班级测试任务的task_name
         api.logger.info(f"请求成功{response.content}")
@@ -28,11 +32,10 @@ def handle_response(response):
         pass
     elif code == 0 and rsp_json['msg'] == '加载单词卡片失败，请重新加载':
         api.logger.error("查找不到单词(第三方库转原型失败),请手动答题")
-        api.logger.error("请将问题提交到github")
-        exit('请手动答题,已退出')
+        error.show()
     else:
         api.logger.info(f"请求有问题{response.text}退出程序", stack_info=True)
-        exit(-1)
+        error.show()
 
 
 def is_close() -> bool:
@@ -194,11 +197,11 @@ def query_word(public_info, word):
     api.logger.info(f"查询单词{word}")
     # query word in the unit
     url = f'Course/StudyWordInfo?course_id={public_info.course_id}&list_id={public_info.now_unit}&word={word}&timestamp={create_timestamp()}&version=2.6.1.231204&app_type=1'
-    rsp = requests.rqs_session.get(basic_url + url)
-    # check request is success
-    handle_response(rsp)
+    word = requests.rqs_session.get(basic_url + url)
+    # 检查请求是否成功
+    handle_response(word)
     # decrypt  response
-    public_info.word_query_result = debase64(rsp.json())
+    public_info.word_query_result = debase64(word.json())
     api.logger.info("查询单词成功")
 
 

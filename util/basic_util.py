@@ -31,7 +31,6 @@ def get_todo_task(public_info):
                         todo_task_list.append(task)
                         # 未过期的任务放在todo_task_list中
     basic_util.logger.info(f'获取到:{todo_task_list}')
-    # public_info.class_task = []
     public_info.task_list = todo_task_list
 
 
