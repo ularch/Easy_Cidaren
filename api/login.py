@@ -40,7 +40,6 @@ def get_token(public_info):
 
 
 def verify_token(token):
-    import main
     # 初始化所有请求头
     requests.set_token(token)
     timestamp = create_timestamp()

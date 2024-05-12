@@ -2,8 +2,9 @@ import json
 import random
 import time
 from functools import wraps
-import view
 
+
+from view import error as error_view
 import api.request_header as requests
 from decryptencrypt.debase64 import debase64
 from decryptencrypt.encrypt_md5 import encrypt_md5
@@ -19,23 +20,24 @@ basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
 # response is 200
 def handle_response(response):
-    import main
-    rsp_json = response.json()
-    code = rsp_json['code']
-    error = view.error.Ui_Form()
-    error.show()
+    from PyQt6.QtWidgets import QApplication
+    import sys
+
+    response_json = response.json()
+    code = response_json['code']
+    # error_view.showUI()
     if code == 1:
-        # 获取班级测试任务的task_name
+        # 获取成功
         api.logger.info(f"请求成功{response.content}")
     # complete exam
-    elif code == 20001 and rsp_json['data'] or code == 20004:
+    elif code == 20001 and response_json['data'] or code == 20004:
         pass
-    elif code == 0 and rsp_json['msg'] == '加载单词卡片失败，请重新加载':
+    elif code == 0 and response_json['msg'] == '加载单词卡片失败，请重新加载':
         api.logger.error("查找不到单词(第三方库转原型失败),请手动答题")
-        error.show()
+        exit(-1)
     else:
         api.logger.info(f"请求有问题{response.text}退出程序", stack_info=True)
-        error.show()
+        exit(-1)
 
 
 def is_close() -> bool:
