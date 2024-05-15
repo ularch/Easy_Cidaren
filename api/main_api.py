@@ -103,7 +103,7 @@ def get_class_task(public_info, page_count: int):
     :param page_count:  第几页的数据
     :return:
     """
-    api.logger.info('获取10个班级任务')
+    api.logger.info(f'获取第{page_count}页任务')
     url = 'ClassTask/PageTask'
     timestamp = create_timestamp()
     sign = f"page_count={page_count}&page_size=10&search_type=0&timestamp={timestamp}&version=2.6.1.240122ajfajfamsnfaflfasakljdlalkflak"
@@ -116,18 +116,16 @@ def get_class_task(public_info, page_count: int):
         "sign": encrypt_md5(sign),
         "app_type": 1
     }
-    # 重置class_task
-    public_info.class_task = []
     # "task_type": 2 是班级测试任务 1 是班级自学任务
-    rsp = requests.class_task_request.post(url=basic_url + url, json=data)
+    task = requests.class_task_request.post(url=basic_url + url, json=data)
     # check response is success
-    handle_response(rsp) 
+    handle_response(task)
     # 转换成字典
-    rsp_dict = rsp.json()
+    task_dict = task.json()
     # sava public_info
-    public_info.class_task.append(rsp_dict['data'])
+    public_info.class_task.append(task_dict['data'])
     # number of task
-    public_info.task_total_count = rsp_dict['data']['total']
+    public_info.task_total_count = task_dict['data']['total']
 
 
 # # start

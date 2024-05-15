@@ -223,6 +223,8 @@ class UiMainWindow(QMainWindow):
                 get_class_task(public_info, now_page)
             # 获取需要完成的任务
             get_todo_task(public_info)
+            # 重置class_task
+            public_info.class_task = []
             # 获取任务名称
             if not public_info.task_list == []:
                 task_names = [task['task_name'] for task in public_info.task_list]

@@ -21,10 +21,6 @@ def get_token(public_info):
         f'timestamp={timestamp}&version=2.6.1.231204&wechat_code=041cUPFa1BKYCG0Lz0Ha1br9iG3cUPF8ajfajfamsnfaflfasakljdlalkflak')
     requests.rqs3_session.headers.update(
         {"Referer": f"https://app.vocabgo.com/student/?authorize=2&code={code}&state=STATE"})
-    # success code
-    # {"code":1,"msg":"success","data":{"auth_type":"UserToken","access":["student_or_teacher"],"token":"c8488f0d370a9097d3ee170260c56","subscribe":"1"},"jv":"0","cv":"0"}
-    # fail code
-    # {"code":0,"msg":"微信服务异常!","data":null,"jv":"0","cv":"0"}
     data = {"wechat_code": code, "timestamp": timestamp, "version": "2.6.1.231204",
             "sign": sign, "app_type": 1}
     rsp = requests.rqs3_session.post(basic_url + url, data=json.dumps(data)).json()
