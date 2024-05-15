@@ -212,6 +212,8 @@ class UiMainWindow(QMainWindow):
             elif self.test_task.isChecked():
                 public_info._task_choices = 2
                 ui.update_output_info("开始获取：班级测试任务")
+            # 重置class_task
+            public_info.class_task = []
             # 获取任务列表
             main.logger.info('开始获取任务')
             PublicInfo.task_type = 'ClassTask'
@@ -223,8 +225,6 @@ class UiMainWindow(QMainWindow):
                 get_class_task(public_info, now_page)
             # 获取需要完成的任务
             get_todo_task(public_info)
-            # 重置class_task
-            public_info.class_task = []
             # 获取任务名称
             if not public_info.task_list == []:
                 task_names = [task['task_name'] for task in public_info.task_list]
@@ -245,7 +245,7 @@ class UiMainWindow(QMainWindow):
             ui.update_output_info(f"开始任务{task_name}")
             # 开始任务 启动等待页面
             reply = QMessageBox.question(self, f"开始任务{task_name}",
-                                         f"确认开始任务{task_name}吗？\n任务开始后，页面将消失，将在后台自动刷题\n期间请勿关闭cmd窗口，关闭cmd窗口将结束运行",
+                                         f"确认开始任务{task_name}吗？\n任务开始后，页面将消失，将在后台自动刷题\n期间请勿关闭cmd窗口，关闭cmd窗口将结束运行\n如果刷题过程中程序报错，请重新打开软件重试",
                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                          QMessageBox.StandardButton.Yes)
             if reply == QMessageBox.StandardButton.Yes:
