@@ -5,6 +5,7 @@
 - 随时可能失效,**且用且珍惜**
 - 可选择过某一章节
 - 得分95+（异常情况下可能90+） 
+- 手机版见[ularch / Cidaren_Android](https://github.com/ularch/Cidaren_Android)
 
 
 ## 日志
