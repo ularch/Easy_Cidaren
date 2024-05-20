@@ -46,5 +46,5 @@ pip install PyQt6
 ```
 
 
-# token获取
+## token获取
 可使用本项目[get token](https://github.com/ularch/Cidaren_Automatic_Answer/tree/master/get%20token)文件夹下词达人token获取.exe快速获取（软件来源于网络，侵权请联系）
