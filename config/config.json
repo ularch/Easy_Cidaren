@@ -1,6 +1,6 @@
 {
-  "min_time": 1,
-  "max_time": 5,
+  "min_time": 0,
+  "max_time": 1,
   "spend_min_time": 5,
   "spend_max_time": 13,
   "api_choices": 1
