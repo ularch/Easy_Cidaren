@@ -1,0 +1,5 @@
+en_core_web_sm==3.7.1
+PyQt6==6.7.0
+PyQt6_sip==13.6.0
+Requests==2.31.0
+spacy==3.7.2
