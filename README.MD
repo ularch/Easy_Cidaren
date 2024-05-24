@@ -26,25 +26,24 @@
 
 **遵循MIT协议,仅供学习参考。**
 
-### **删除请联系harold.lach.lei@gmail.com**
+### **删除或有问题请联系harold.lach.lei@gmail.com**
 
-## 配置方法
-```angular2html
+## 使用方法
+
+### 安装python
++ 安装python3.12，不会的建议百度
+
+### 配置环境
+```
 pip install -r requirements.txt
 ```
 
-安装模型
-```angular2html
-pip install spacy
-```
-```angular2html
-python -m spacy download en_core_web_sm
-```
-安装GUI库
-```angular2html
-pip install PyQt6
-```
+## 获取token
++ 会抓包的可以自己去抓包 
++ 不会的可使用本项目[get token](https://github.com/ularch/Cidaren_Automatic_Answer/tree/master/get%20token)文件夹下词达人token获取.exe快速获取（软件来源于网络，侵权请联系）
++ 获取完token之后**一定要关闭**！！！词达人token获取.exe或者其他抓包程序，否则进入软件输入token登录后会闪退！！！
 
-
-## token获取
-可使用本项目[get token](https://github.com/ularch/Cidaren_Automatic_Answer/tree/master/get%20token)文件夹下词达人token获取.exe快速获取（软件来源于网络，侵权请联系）
+## 使用软件
++ 点击"点我运行"启动软件
++ 输入token，登录，开始使用
++ 在帮助栏有详细的使用帮助
