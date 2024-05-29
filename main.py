@@ -278,9 +278,9 @@ class UiMainWindow(QMainWindow):
             self.use_introduction = view.introduce.Ui_Form(public_info)
             self.use_introduction.show()
         elif m.text() == "关于词达人自动答题":
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://gitee.com/ularch/cidaren'))
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch/Cidaren_Automatic_Answer'))
         elif m.text() == "关于作者":
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://gitee.com/ularch'))
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch'))
 
 
 def stop_task():
