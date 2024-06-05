@@ -5,7 +5,7 @@ from PyQt6.QtGui import QAction
 from playsound import playsound
 
 import api.request_header as requests
-import view.setting, view.introduce, view.wait
+import view.setting, view.introduce
 from answer_questions.answer_questions import *
 from api.basic_api import get_all_unit, get_unit_words, get_book_all_words
 from api.login import verify_token
