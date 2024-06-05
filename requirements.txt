@@ -3,3 +3,4 @@ en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_
 PyQt6==6.7.0
 Requests==2.32.2
 Brotli==1.1.0
+playsound==1.2.2

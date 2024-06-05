@@ -4,13 +4,13 @@ import time
 from functools import wraps
 
 
-from view import error as error_view
 import api.request_header as requests
 from decryptencrypt.debase64 import debase64
 from decryptencrypt.encrypt_md5 import encrypt_md5
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
 from util.basic_util import create_timestamp
+from  view.error import showError
 
 # create logger
 api = Log('api')
@@ -34,9 +34,11 @@ def handle_response(response):
         pass
     elif code == 0 and response_json['msg'] == '加载单词卡片失败，请重新加载':
         api.logger.error("查找不到单词(第三方库转原型失败),请手动答题")
+        showError()
         exit(-1)
     else:
         api.logger.info(f"请求有问题{response.text}退出程序", stack_info=True)
+        showError()
         exit(-1)
 
 

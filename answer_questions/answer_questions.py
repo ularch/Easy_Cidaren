@@ -9,6 +9,7 @@ from util.basic_util import delete_other_char
 from util.select_mean import select_mean, handle_query_word_mean, filler_option, select_match_word, word_examples, \
     is_word_exist
 from util.word_revert import word_revert
+from view.error import showError
 
 query_answer = Log('query_answer')
 
@@ -195,5 +196,6 @@ def answer(public_info, mode):
         option = 0
         query_answer.logger.info(public_info.exam)
         query_answer.logger.info("其他题型,程序退出")
+        showError()
         exit(-1)
     return option

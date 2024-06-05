@@ -5,34 +5,10 @@ from decryptencrypt.encrypt_md5 import encrypt_md5
 from log.log import Log
 from util.basic_util import create_timestamp
 
-# basic url
+# 基础url
 basic_url = 'https://app.vocabgo.com/student/api/'
-# log init
+# 初始化log
 login = Log("login")
-
-
-def get_token(public_info):
-    # init requests header
-    requests.set_token('null')
-    code = public_info.code if public_info.code else exit('code不存在')
-    url = 'Auth/Wechat/LoginByWechatCode'
-    timestamp = create_timestamp()
-    sign = encrypt_md5(
-        f'timestamp={timestamp}&version=2.6.1.231204&wechat_code=041cUPFa1BKYCG0Lz0Ha1br9iG3cUPF8ajfajfamsnfaflfasakljdlalkflak')
-    requests.rqs3_session.headers.update(
-        {"Referer": f"https://app.vocabgo.com/student/?authorize=2&code={code}&state=STATE"})
-    data = {"wechat_code": code, "timestamp": timestamp, "version": "2.6.1.231204",
-            "sign": sign, "app_type": 1}
-    rsp = requests.rqs3_session.post(basic_url + url, data=json.dumps(data)).json()
-    rsp_data = rsp['data']
-    if rsp_data:
-        public_info._token = rsp_data['token']
-        # update request header token
-        requests.set_token(rsp_data['token'])
-        login.logger.info(f"token获取成功{rsp_data['token']}")
-    else:
-        login.logger.info("code 已经被使用请重新抓取")
-        exit('程序退出')
 
 
 def verify_token(token):

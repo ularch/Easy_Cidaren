@@ -4,6 +4,11 @@ import re
 
 
 def debase64(data: dict or str):
+    """
+    base64解码
+    :param data:
+    :return:
+    """
     # 后端服务器插入了一些乱码
     data = data["data"][32:]
     bs64_str = base64.b64decode(data.encode("utf-8")).decode("utf-8", errors='ignore')

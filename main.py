@@ -1,9 +1,11 @@
 import os
+import threading
 
 from PyQt6.QtGui import QAction
+from playsound import playsound
 
 import api.request_header as requests
-import view.setting, view.introduce
+import view.setting, view.introduce, view.wait
 from answer_questions.answer_questions import *
 from api.basic_api import get_all_unit, get_unit_words, get_book_all_words
 from api.login import verify_token
@@ -245,21 +247,26 @@ class UiMainWindow(QMainWindow):
             ui.update_output_info(f"开始任务{task_name}")
             # 开始任务 启动等待页面
             reply = QMessageBox.question(self, f"开始任务{task_name}",
-                                         f"确认开始任务{task_name}吗？\n任务开始后，页面将消失，将在后台自动刷题\n期间请勿关闭cmd窗口，关闭cmd窗口将结束运行\n如果刷题过程中程序报错，请重新打开软件重试",
+                                         f"确认开始任务{task_name}吗？\n任务开始后，主页面将消失，系统将在后台自动刷题\n期间请勿关闭cmd窗口，关闭cmd窗口将结束运行\n如果刷题过程中程序报错，请重新打开软件重试",
                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                          QMessageBox.StandardButton.Yes)
             if reply == QMessageBox.StandardButton.Yes:
+                # 隐藏主页面
                 self.hide()
                 # 关闭自建任务
                 task_info = public_info.class_task[0]
                 public_info.is_self_built = False
                 complete_test(task_info)
+                # 任务完成提示音乐
+                music_thread = threading.Thread(target=self.play_music)
+                music_thread.start()
                 # 任务完成 关闭等待页面
                 QtWidgets.QMessageBox.information(self, "任务完成！", f"已完成{task_name}")
                 main.logger.info('运行完成')
                 ui.update_output_info(f"{task_name}运行完成")
                 # 删除已完成任务
                 self.task_list.removeItem(task_index)
+                # 显示主页面
                 self.show()
 
     def open_settings(self, m):
@@ -282,6 +289,8 @@ class UiMainWindow(QMainWindow):
         elif m.text() == "关于作者":
             QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch'))
 
+    def play_music(self):
+        playsound(path + "\\view\\music.mp3")
 
 def stop_task():
     """
