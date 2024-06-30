@@ -176,7 +176,7 @@ class UiMainWindow(QMainWindow):
         """
         # 重置警告信息
         self.warn_info.setText("")
-        self.token = self.token_input.text()
+        self.token = self.token_input.text().rstrip('\n')
         if self.token == '':
             self.warn_info.setStyleSheet("color: red;")
             self.warn_info.setText("登录失败！请输入token！")

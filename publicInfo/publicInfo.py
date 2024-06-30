@@ -1,6 +1,8 @@
 import json
 import os
 
+from log.log import Log
+
 
 class PublicInfo:
     # 这俩暂时不知道有啥用
@@ -49,6 +51,8 @@ class PublicInfo:
         self.is_self_built = False  # bool
         self.all_unit_name = []
         self.source_option = []
+        pub_info = Log("public_info")
+        pub_info.logger.info("公共组件初始化成功")
 
     @property
     # only read
