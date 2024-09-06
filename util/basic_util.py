@@ -3,6 +3,8 @@ import time
 from log.log import Log
 
 basic_util = Log("basic_util")
+
+
 def filler_not_complete_unit(public_info) -> None:
     not_complete_unit = []
     for task in public_info.all_unit['task_list']:
@@ -48,7 +50,6 @@ def get_choices_task(public_info, task_name):
         public_info.class_task = todo_task
 
 
-
 # create timestamp
 def create_timestamp() -> int:
     return int(time.time() * 1000)
@@ -69,12 +70,12 @@ def extract_book_word(public_info):
 # look up the word in the unit
 def query_word_unit(public_info):
     all_unit = {}
-    # create all unit dict
-    for unit in public_info.course_all_unit_name:
+    # 创建所有单元字典
+    for unit in public_info.all_unit_name:
         all_unit.update({public_info.course_id + ':' + unit: []})
-    # word classify
+    # 单词分类
     for word_info in public_info.get_word_list_result["data"]['word_list']:
         all_unit[public_info.course_id + ":" + word_info['list_id']].append(word_info['word'])
-    # clear unit is null
+    # 清除无效单元
     all_unit = {key: value for key, value in all_unit.items() if value}
     public_info.word_list = all_unit
