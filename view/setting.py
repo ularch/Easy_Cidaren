@@ -1,4 +1,6 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QCursor
 from PyQt6.QtWidgets import QWidget
 
 
@@ -33,12 +35,16 @@ class Ui_Form(QWidget):
         self.verticalLayout.setObjectName("verticalLayout")
         self.label = QtWidgets.QLabel(parent=self.verticalLayoutWidget)
         self.label.setObjectName("label")
+        self.label.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        self.label.setToolTip("设置每一道题之间提交的最短间隔")
         self.verticalLayout.addWidget(self.label)
         self.min_time = QtWidgets.QSpinBox(parent=self.verticalLayoutWidget)
         self.min_time.setObjectName("min_time")
         self.verticalLayout.addWidget(self.min_time)
         self.label_2 = QtWidgets.QLabel(parent=self.verticalLayoutWidget)
         self.label_2.setObjectName("label_2")
+        self.label_2.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        self.label_2.setToolTip("设置每一道题之间提交的最长间隔")
         self.verticalLayout.addWidget(self.label_2)
         self.max_time = QtWidgets.QSpinBox(parent=self.verticalLayoutWidget)
         self.max_time.setObjectName("max_time")
@@ -58,12 +64,16 @@ class Ui_Form(QWidget):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.label_4 = QtWidgets.QLabel(parent=self.verticalLayoutWidget_2)
         self.label_4.setObjectName("label_4")
+        self.label_4.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        self.label_4.setToolTip("设置每一题提交后台显示的最短答题用时")
         self.verticalLayout_2.addWidget(self.label_4)
         self.min_time_2 = QtWidgets.QSpinBox(parent=self.verticalLayoutWidget_2)
         self.min_time_2.setObjectName("min_time_2")
         self.verticalLayout_2.addWidget(self.min_time_2)
         self.label_5 = QtWidgets.QLabel(parent=self.verticalLayoutWidget_2)
         self.label_5.setObjectName("label_5")
+        self.label_5.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        self.label_5.setToolTip("设置每一题提交后台显示的最长答题用时")
         self.verticalLayout_2.addWidget(self.label_5)
         self.max_time_2 = QtWidgets.QSpinBox(parent=self.verticalLayoutWidget_2)
         self.max_time_2.setObjectName("max_time_2")
