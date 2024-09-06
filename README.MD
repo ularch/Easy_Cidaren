@@ -4,7 +4,8 @@
 - 过班级任务
 - 随时可能失效,**且用且珍惜**
 - 可选择过某一章节
-- 得分95+（异常情况下可能90+） 
+- 得分95+（异常情况、自建任务可能80+）
+- 个别单词可能过不了
 - 手机版见[ularch / Cidaren_Android](https://github.com/ularch/Cidaren_Android)
 
 
