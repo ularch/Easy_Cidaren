@@ -29,8 +29,8 @@ def handle_response(response):
 def use_api_get_prototype(word: str) -> str:
     """
     利用api获取单词原型
-    :param word:
-    :return: word prototype
+    :param word: 目标单词
+    :return: 原型
     """
     basic_api.logger.info(f"单词{word}走api转原型")
     url = f'https://app.vocabgo.com/student/api/Student/Course/SearchWord?word={word}&timestamp=1710396115786&version=2.6.2.24031302&app_type=1'
@@ -50,8 +50,10 @@ def get_select_course(public_info):
     public_info.course_id = rsp.json()['data']['user_info']['course_id']
 
 
-# 获取课程所有单元
 def get_all_unit(public_info):
+    """
+    获取课程所有单元
+    """
     timestamp = create_timestamp()
     url = f'StudyTask/List?course_id={public_info.course_id}&timestamp={timestamp}&version=2.6.1.231204&app_type=1'
     user_data = requests.rqs_session.get(basic_url + url)

@@ -25,11 +25,9 @@ class Ui_Form(QWidget):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "程序停止"))
         self.label.setText(_translate("Form", "程序出现异常错误，已经停止运行，可通过控制台参看报错信息，\n"
-                                              "刷题进度已保存，可重启软件重试，一般情况下重试即可正常刷题\n"
+                                              "可能会略微影响分数，刷题进度已保存，可重启软件重试，一般情况下重试即可正常刷题\n"
                                               "如遇到无法运行的情况，请将问题反馈至作者主页邮箱"))
 
-    def closeEvent(self, event):
-        exit(-1)
 
 def showError():
     music_thread = threading.Thread(target=play_music)

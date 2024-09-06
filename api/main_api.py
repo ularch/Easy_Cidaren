@@ -93,7 +93,7 @@ def select_all_word(word_info, task_id: int, ) -> None:
             "timestamp": timestamp, "version": "2.6.1.231204", "sign": sign,
             "app_type": 1}
     rsp = requests.rqs3_session.post(basic_url + url, data=json.dumps(data))
-    # check request is success
+    # 检查请求是否成功
     handle_response(rsp)
 
 
