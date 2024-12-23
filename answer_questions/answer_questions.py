@@ -85,7 +85,9 @@ def word_form_mean(public_info: PublicInfo) -> int:
     # is listen
     exam = public_info.exam['stem']['content'].replace(' ', "")
     # 题干格式xxx{word}xxx
-    word = re.findall("{(.*)}", exam)
+    query_answer.logger.info(f"从{exam}提取单词")
+    word = re.findall("{(.*?)}", exam)
+    query_answer.logger.info(f"提取到{word}")
     word = word[0] if word else exam
     # 判断单词是否在单词列表中
     if word not in public_info.word_list:
@@ -99,9 +101,9 @@ def word_form_mean(public_info: PublicInfo) -> int:
             word = word_revert(word)
     # 请求单词释义
     query_word(public_info, word)
-    # filler mean
+    # 提取释义
     handle_query_word_mean(public_info)
-    # select option
+    # 选择选项
     query_answer.logger.info('选择意思')
     return select_mean(public_info)
 
