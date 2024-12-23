@@ -418,21 +418,21 @@ def complete_practice(unit: str, progress: int, task_id=None):
     get_exam(public_info)
     public_info.topic_code = public_info.exam['topic_code']
     main.logger.info("开始答题")
-    # topic_mode
+    # topic_mode 题型
     while True:
         main.logger.info("获取题目类型")
         if public_info.exam == 'complete':
             main.logger.info('该单元已完成')
-            # unit complete skip next unit
+            # 当前单元已完成
             break
         mode = public_info.exam['topic_mode']
         # handle answer (choice)
         if mode == 0:
-            # skip read cord
+            # 跳过单词阅读
             jump_read(public_info)
             continue
         option = answer(public_info, mode)
-        # sleep 1~5s
+        # 选项
         if option is None:
             public_info.topic_code = public_info.exam['topic_code']
             skip_exam(public_info)

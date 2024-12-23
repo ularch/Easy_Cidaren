@@ -17,7 +17,7 @@ query_answer = Log('query_answer')
 # submit
 def submit(public_info: PublicInfo, option: int or str or dict):
     """
-    submit answer
+    提交答案
     :param public_info:
     :param option: 选项索引或单词
     :return: None
@@ -75,15 +75,19 @@ def select_word(public_info) -> int or str or None:
     return None
 
 
-# word form mean
 def word_form_mean(public_info: PublicInfo) -> int:
+    """
+    英译汉
+    :param public_info:
+    :return:
+    """
     query_answer.logger.info("英译汉")
     # is listen
     exam = public_info.exam['stem']['content'].replace(' ', "")
+    # 题干格式xxx{word}xxx
     word = re.findall("{(.*)}", exam)
-    # is require regular type 1 is ... xxx {} type2 test
     word = word[0] if word else exam
-    # word is exist word_list
+    # 判断单词是否在单词列表中
     if word not in public_info.word_list:
         if word.endswith("ed") and word[:-2] in public_info.word_list:
             word = word[:-2]
@@ -91,9 +95,9 @@ def word_form_mean(public_info: PublicInfo) -> int:
             word = word[:-3]
         else:
             query_answer.logger.info(f"将{word}转原型")
-            # word tense trans source
+            # 单词转原型
             word = word_revert(word)
-    # query word mean
+    # 请求单词释义
     query_word(public_info, word)
     # filler mean
     handle_query_word_mean(public_info)
@@ -178,6 +182,7 @@ def answer(public_info, mode):
         option = 3
     elif mode == 15 or mode == 16 or mode == 21 or mode == 22:
         option = word_form_mean(public_info)
+        # 英译汉
     elif mode == 17 or mode == 18:
         option = mean_to_word(public_info)
     elif mode == 31:

@@ -1,4 +1,5 @@
 import base64
+import binascii
 import json
 import re
 
@@ -9,9 +10,18 @@ def debase64(data: dict or str):
     :param data:
     :return:
     """
-    # 后端服务器插入了一些乱码
-    data = data["data"][32:]
-    bs64_str = base64.b64decode(data.encode("utf-8")).decode("utf-8", errors='ignore')
+    data = data["data"]
+    try:
+        bs64_str = base64.b64decode(data.encode("utf-8")).decode("utf-8", errors='ignore')
+    except binascii.Error as e:
+        # 英译汉 插入乱码
+        char_list = list(data)
+        indices_to_remove = [0, 1, 2, 4, 5, 36, 47, 48, 59, 96, 107]
+        for index in sorted(indices_to_remove, reverse=True):
+            if 0 <= index < len(char_list):
+                del char_list[index]
+        new_data = ''.join(char_list)
+        bs64_str = base64.b64decode(new_data.encode("utf-8")).decode("utf-8", errors='ignore')
     # 正则小概率还是会报错,bs64解出来前面会乱码
     return json.loads(re.findall("{\".*", bs64_str)[0])
 

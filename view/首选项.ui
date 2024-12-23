@@ -120,6 +120,9 @@
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <widget class="QLabel" name="label_4">
+         <property name="cursor">
+          <cursorShape>WhatsThisCursor</cursorShape>
+         </property>
          <property name="text">
           <string>最短间隔：</string>
          </property>

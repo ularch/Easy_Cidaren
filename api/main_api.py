@@ -192,7 +192,7 @@ def check_is_self_built(func):
     return is_self_built
 
 
-# query word
+# 查询单词
 @check_is_self_built
 def query_word(public_info, word):
     time.sleep(random.randint(0, 2))
