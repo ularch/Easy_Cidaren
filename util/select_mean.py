@@ -1,3 +1,4 @@
+import random
 import re
 
 from api.main_api import query_word
@@ -20,20 +21,21 @@ def handle_query_word_mean(public_info) -> None:
         for mean in public_info.word_query_result['means']:
             means.append(' '.join(mean['mean']))
             # means.append(re.sub("（.*）", "", mean['content']['mean']))
+    select_module.logger.info(f"提取到正确选项：{means}")
     public_info.word_means = means
 
 
 # extract options
 def filler_option(public_info) -> list:
     """
-    提取返回的选以及排序优化
+    提取题目中返回的选项以及排序优化
     :param public_info:
     :return:
     """
-    # exam options
+    # 试题选项
     options = []
     source = []
-    # filler option
+    # 填充选项
     for option_info in public_info.exam["options"]:
         option = option_info['content']
         source.append(option)
@@ -42,21 +44,27 @@ def filler_option(public_info) -> list:
         else:
             options.append(option)
     public_info.source_option = source
+    select_module.logger.info(f"提取到题目选项{options}")
     return options
 
 
-# match options
 def select_mean(public_info) -> int:
+    """
+    英译汉 选择匹配的意思
+    :param public_info:
+    :return: 选择的匹配的选项
+    """
     options = filler_option(public_info)
-    # match option
+    # 匹配选项
     for index, option in enumerate(options, 0):
         for mean in public_info.word_means:
-            # exam option content is disorder,re-order
+            # 选项顺序混乱，重排序
             if sorted(option.replace(" ", '')) == sorted(mean.replace(" ", '')) or mean in option:
-                select_module.logger.info(f"匹配选项{option}")
+                select_module.logger.info(f"匹配第{index + 1}个选项选项[{option}]")
                 return index
-    # failed match 乱选一个0~3
-    return 2
+    # 匹配失败 随机提交一个
+    select_module.logger.warning("匹配失败，随机提交")
+    return random.randint(0, len(options) - 1)
 
 
 # select match word

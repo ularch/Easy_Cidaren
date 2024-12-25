@@ -103,8 +103,8 @@ def word_form_mean(public_info: PublicInfo) -> int:
     query_word(public_info, word)
     # 提取释义
     handle_query_word_mean(public_info)
-    # 选择选项
     query_answer.logger.info('选择意思')
+    # 选择正确释义
     return select_mean(public_info)
 
 

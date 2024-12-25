@@ -1,4 +1,5 @@
 import requests
+from requests import exceptions
 
 from decryptencrypt.encrypt_md5 import encrypt_md5
 

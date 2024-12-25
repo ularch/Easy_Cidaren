@@ -182,10 +182,21 @@ class UiMainWindow(QMainWindow):
             self.warn_info.setText("登录失败！请输入token！")
         else:
             result = verify_token(self.token)
-            if result == 0:
-                # token过期
-                self.warn_info.setStyleSheet("color: red;")
+            self.warn_info.setStyleSheet("color: red;")
+            if result == 1:
                 self.warn_info.setText("登录失败！token已过期，请重新获取！")
+            elif result == 2:
+                self.warn_info.setText("登录失败！HTTP请求错误！")
+            elif result == 3:
+                self.warn_info.setText("登录失败！请检查网络连接！")
+            elif result == 4:
+                self.warn_info.setText("登录失败！相应内容不是有效的JSON格式！")
+            elif result == 5:
+                self.warn_info.setText("登录失败！请检查token获取软件是否关闭！")
+            elif result == 6:
+                self.warn_info.setText("登录失败！请检查或关闭代理软件！")
+            elif result == 7:
+                self.warn_info.setText("登录失败！请检查网络连接！")
             else:
                 self.warn_info.setStyleSheet("color: green;")
                 self.warn_info.setText("登录成功！")

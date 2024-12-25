@@ -10,10 +10,10 @@ from decryptencrypt.encrypt_md5 import encrypt_md5
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
 from util.basic_util import create_timestamp
-from  view.error import showError
+from view.error import showError
 
 # create logger
-api = Log('api')
+api = Log('main_api')
 
 basic_url = 'https://app.vocabgo.com/student/api/Student/'
 

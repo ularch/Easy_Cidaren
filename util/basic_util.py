@@ -23,12 +23,12 @@ def get_todo_task(public_info):
     todo_task_list = []
     for tasks in public_info.class_task:
         for task in tasks['records']:
-            # over_status 2 未过期
+            # over_status 1 未开始 2 未过期 3 已过期
             if task['over_status'] == 2:
                 # 进度小于100%
                 if task['progress'] < 100:
-                    # 1为班级学习
-                    choice = public_info.task_choices
+                    # 1为班级学习任务，2为班级测试任务
+                    choice = public_info.task_type_choices
                     if task['task_type'] == choice:
                         todo_task_list.append(task)
                         # 未过期的任务放在todo_task_list中

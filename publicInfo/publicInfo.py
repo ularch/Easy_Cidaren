@@ -74,7 +74,7 @@ class PublicInfo:
         return self._token
 
     @property
-    def task_choices(self):
+    def task_type_choices(self):
         return self._task_choices
 
     @property
