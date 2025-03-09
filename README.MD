@@ -7,6 +7,7 @@
 - 得分95+（异常情况、自建任务可能80+）
 - 个别单词可能过不了
 - 手机版见[ularch / Cidaren_Android](https://github.com/ularch/Cidaren_Android)
+- 频繁需要安全验证，无法连续刷题的，在首选项设置里将刷题间隔调高，亲测3-5秒间隔可正常使用
 
 
 ## 日志
