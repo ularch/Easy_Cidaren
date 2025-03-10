@@ -1,7 +1,8 @@
 {
-  "min_time": 1,
+  "min_time": 3,
   "max_time": 5,
   "spend_min_time": 5,
-  "spend_max_time": 13,
-  "api_choices": 1
+  "spend_max_time": 15,
+  "br_choices": true,
+  "accept_encoding": "gzip, deflate, br"
 }

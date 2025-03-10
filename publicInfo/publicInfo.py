@@ -20,7 +20,7 @@ class PublicInfo:
             self._max_time = user_config['max_time']
             self._spend_min_time = user_config['spend_min_time']
             self._spend_max_time = user_config['spend_max_time']
-            self._api_choices = user_config['api_choices']
+            self._br_choices = user_config['br_choices']
             self._headers_accept_encoding = user_config['accept_encoding']
         # 任务列表
         self.task_list = ""
@@ -95,26 +95,28 @@ class PublicInfo:
         return self._spend_max_time
 
     @property
-    def api_choices(self) -> int:
-        return self._api_choices
-
-    @property
     def accept_encoding(self) -> str:
         return self._headers_accept_encoding
 
-    def input_info(self, min_time, max_time, min_time_2, max_time_2, choices_api):
+    @property
+    def br_choices(self) -> bool:
+        return self._br_choices
+
+    def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding):
         self._min_time = min_time
         self._max_time = max_time
         self._spend_min_time = min_time_2
         self._spend_max_time = max_time_2
-        self._api_choices = choices_api
+        self._br_choices = br_choices
+        self._headers_accept_encoding = accept_encoding
+
         with open(os.path.join(self.path, "config", "config.json"), 'r', encoding="utf-8") as f:
             data = json.load(f)
             data['min_time'] = self._min_time
             data['max_time'] = self._max_time
             data['spend_min_time'] = self._spend_min_time
             data['spend_max_time'] = self._spend_max_time
-            data['api_choices'] = self._api_choices
+            data['br_choices'] = self._br_choices
             data['accept_encoding'] = self._headers_accept_encoding
         data_str = json.dumps(data, indent=2)
         with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:

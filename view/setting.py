@@ -13,7 +13,7 @@ class Ui_Form(QWidget):
         self._max_time = self.public_info.max_time
         self._spend_min_time = self.public_info.spend_min_time
         self._spend_max_time = self.public_info.spend_max_time
-        self._api_choices = self.public_info.api_choices
+        self._br_choices = self.public_info.br_choices
         self.setupUi(self)
 
     def setupUi(self, Form):
@@ -24,7 +24,22 @@ class Ui_Form(QWidget):
         self.tabWidget.setObjectName("tabWidget")
         self.tab_1 = QtWidgets.QWidget()
         self.tab_1.setObjectName("tab_1")
-        self.groupBox = QtWidgets.QGroupBox(parent=self.tab_1)
+        self.scrollArea = QtWidgets.QScrollArea(parent=self.tab_1)
+        self.scrollArea.setGeometry(QtCore.QRect(0, 0, 361, 231))
+        self.scrollArea.setAutoFillBackground(False)
+        self.scrollArea.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        self.scrollArea.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.scrollArea.setLineWidth(1)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents_1 = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_1.setGeometry(QtCore.QRect(0, 0, 361, 231))
+        self.scrollAreaWidgetContents_1.setMinimumSize(QtCore.QSize(0, 195))
+        self.scrollAreaWidgetContents_1.setStyleSheet("background-color: rgb(249, 249, 249);")
+        self.scrollAreaWidgetContents_1.setObjectName("scrollAreaWidgetContents_1")
+        self.groupBox = QtWidgets.QGroupBox(parent=self.scrollAreaWidgetContents_1)
         self.groupBox.setGeometry(QtCore.QRect(10, 10, 331, 121))
         self.groupBox.setObjectName("groupBox")
         self.verticalLayoutWidget = QtWidgets.QWidget(parent=self.groupBox)
@@ -49,11 +64,22 @@ class Ui_Form(QWidget):
         self.max_time = QtWidgets.QSpinBox(parent=self.verticalLayoutWidget)
         self.max_time.setObjectName("max_time")
         self.verticalLayout.addWidget(self.max_time)
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents_1)
         self.tabWidget.addTab(self.tab_1, "")
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setEnabled(True)
         self.tab_2.setObjectName("tab_2")
-        self.groupBox_2 = QtWidgets.QGroupBox(parent=self.tab_2)
+        self.scrollArea_2 = QtWidgets.QScrollArea(parent=self.tab_2)
+        self.scrollArea_2.setGeometry(QtCore.QRect(0, 0, 361, 241))
+        self.scrollArea_2.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        self.scrollArea_2.setWidgetResizable(True)
+        self.scrollArea_2.setObjectName("scrollArea_2")
+        self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 361, 241))
+        self.scrollAreaWidgetContents_2.setMinimumSize(QtCore.QSize(0, 200))
+        self.scrollAreaWidgetContents_2.setStyleSheet("background-color: rgb(249, 249, 249);")
+        self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
+        self.groupBox_2 = QtWidgets.QGroupBox(parent=self.scrollAreaWidgetContents_2)
         self.groupBox_2.setGeometry(QtCore.QRect(10, 10, 331, 121))
         self.groupBox_2.setObjectName("groupBox_2")
         self.verticalLayoutWidget_2 = QtWidgets.QWidget(parent=self.groupBox_2)
@@ -78,24 +104,14 @@ class Ui_Form(QWidget):
         self.max_time_2 = QtWidgets.QSpinBox(parent=self.verticalLayoutWidget_2)
         self.max_time_2.setObjectName("max_time_2")
         self.verticalLayout_2.addWidget(self.max_time_2)
-        self.groupBox_3 = QtWidgets.QGroupBox(parent=self.tab_2)
-        self.groupBox_3.setGeometry(QtCore.QRect(10, 140, 331, 71))
+        self.groupBox_3 = QtWidgets.QGroupBox(parent=self.scrollAreaWidgetContents_2)
+        self.groupBox_3.setGeometry(QtCore.QRect(10, 140, 331, 51))
         self.groupBox_3.setObjectName("groupBox_3")
-        self.verticalLayoutWidget_3 = QtWidgets.QWidget(parent=self.groupBox_3)
-        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(10, 19, 311, 45))
-        self.verticalLayoutWidget_3.setObjectName("verticalLayoutWidget_3")
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_3)
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_3.setSpacing(6)
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.label_3 = QtWidgets.QLabel(parent=self.verticalLayoutWidget_3)
-        self.label_3.setObjectName("label_3")
-        self.verticalLayout_3.addWidget(self.label_3)
-        self.api_choices = QtWidgets.QComboBox(parent=self.verticalLayoutWidget_3)
-        self.api_choices.setObjectName("comboBox")
-        self.api_choices.addItem("官方api接口")
-        self.api_choices.addItem("本地模型")
-        self.verticalLayout_3.addWidget(self.api_choices)
+        self.br_checkBox = QtWidgets.QCheckBox(parent=self.groupBox_3)
+        self.br_checkBox.setGeometry(QtCore.QRect(10, 20, 311, 16))
+        self.br_checkBox.setChecked(True)
+        self.br_checkBox.setObjectName("br_checkBox")
+        self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
         self.tabWidget.addTab(self.tab_2, "")
         self.horizontalLayoutWidget = QtWidgets.QWidget(parent=Form)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(140, 310, 239, 31))
@@ -129,7 +145,7 @@ class Ui_Form(QWidget):
         self.max_time.setValue(self._max_time)
         self.min_time_2.setValue(self._spend_min_time)
         self.max_time_2.setValue(self._spend_max_time)
-        self.api_choices.setCurrentIndex(self._api_choices)
+        self.br_checkBox.setChecked(self._br_choices)
 
         self.retranslateUi(Form)
         self.tabWidget.setCurrentIndex(0)
@@ -149,26 +165,19 @@ class Ui_Form(QWidget):
         self.min_time_2.setSuffix(_translate("Form", "    秒"))
         self.label_5.setText(_translate("Form", "最长用时："))
         self.max_time_2.setSuffix(_translate("Form", "    秒"))
-        self.groupBox_3.setTitle(_translate("Form", "模型选择"))
-        self.label_3.setText(_translate("Form", "词形还原"))
+        self.groupBox_3.setTitle(_translate("Form", "系统设置（重启后生效）"))
+        self.br_checkBox.setText(_translate("Form", "启用br压缩"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Form", "高级设置"))
         self.confirmBtn.setText(_translate("Form", "确认"))
         self.cancelBtn.setText(_translate("Form", "取消"))
         self.inputBtn.setText(_translate("Form", "应用"))
 
     def confirm(self):
-        self.warn_info.clear()
-        if self.max_time.value() < self.min_time.value():
-            self.warn_info.setText("修改失败！最长间隔不得短于最短间隔！")
-        elif self.max_time_2.value() < self.min_time_2.value():
-            self.warn_info.setText("设置失败！最长用时不得短于最短用时！")
-        else:
-            min_time = self.min_time.value()
-            max_time = self.max_time.value()
-            min_time_2 = self.min_time_2.value()
-            max_time_2 = self.max_time_2.value()
-            choices_api = self.api_choices.currentIndex()
-            self.public_info.input_info(min_time, max_time, min_time_2, max_time_2, choices_api)
+        """
+        点击应用事件
+        :return:
+        """
+        if self.input():
             self.close()
 
     def cancel(self):
@@ -185,5 +194,10 @@ class Ui_Form(QWidget):
             max_time = self.max_time.value()
             min_time_2 = self.min_time_2.value()
             max_time_2 = self.max_time_2.value()
-            choices_api = self.api_choices.currentIndex()
-            self.public_info.input_info(min_time, max_time, min_time_2, max_time_2, choices_api)
+            br_choices = self.br_checkBox.isChecked()
+            if br_choices:
+                accept_encoding = 'gzip, deflate, br'
+            else:
+                accept_encoding = 'gzip, deflate'
+            self.public_info.input_info(min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding)
+            return True

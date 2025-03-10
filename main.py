@@ -31,6 +31,9 @@ class UiMainWindow(QMainWindow):
         self.setupUi(self)
 
     def setupUi(self, MainWindow):
+        """
+        绘制ui
+        """
         MainWindow.setObjectName("MainWindow")
         MainWindow.setFixedSize(720, 280)
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
@@ -282,7 +285,7 @@ class UiMainWindow(QMainWindow):
 
     def open_settings(self, m):
         """
-        设置栏
+        首选项设置栏
         """
         if m.text() == "首选项...":
             self.settings = view.setting.Ui_Form(public_info)
@@ -301,6 +304,9 @@ class UiMainWindow(QMainWindow):
             QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch'))
 
     def play_music(self):
+        """
+        播放结束提示音乐
+        """
         playsound(path + "\\view\\music.mp3")
 
 def stop_task():
