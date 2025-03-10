@@ -14,13 +14,14 @@ class PublicInfo:
         self.get_word_list_result = {}
         self.path = path
         with open(os.path.join(self.path, "config", "config.json"), 'r', encoding='utf-8') as f:
-            # user config
+            # 用户配置文件
             user_config = json.load(f)
             self._min_time = user_config['min_time']
             self._max_time = user_config['max_time']
             self._spend_min_time = user_config['spend_min_time']
             self._spend_max_time = user_config['spend_max_time']
             self._api_choices = user_config['api_choices']
+            self._headers_accept_encoding = user_config['accept_encoding']
         # 任务列表
         self.task_list = ""
         # query_answer
@@ -97,6 +98,10 @@ class PublicInfo:
     def api_choices(self) -> int:
         return self._api_choices
 
+    @property
+    def accept_encoding(self) -> str:
+        return self._headers_accept_encoding
+
     def input_info(self, min_time, max_time, min_time_2, max_time_2, choices_api):
         self._min_time = min_time
         self._max_time = max_time
@@ -110,6 +115,7 @@ class PublicInfo:
             data['spend_min_time'] = self._spend_min_time
             data['spend_max_time'] = self._spend_max_time
             data['api_choices'] = self._api_choices
+            data['accept_encoding'] = self._headers_accept_encoding
         data_str = json.dumps(data, indent=2)
         with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
             f.write(data_str)

@@ -190,7 +190,7 @@ class UiMainWindow(QMainWindow):
             elif result == 3:
                 self.warn_info.setText("登录失败！请检查网络连接！")
             elif result == 4:
-                self.warn_info.setText("登录失败！相应内容不是有效的JSON格式！")
+                self.warn_info.setText("登录失败！响应内容不是有效的JSON格式！")
             elif result == 5:
                 self.warn_info.setText("登录失败！请检查token获取软件是否关闭！")
             elif result == 6:
@@ -463,6 +463,7 @@ if __name__ == '__main__':
     # 初始化公共组件
     main.logger.info("初始化公共组件")
     public_info = PublicInfo(path)
+
     # 创建窗口对象
     app = QApplication(sys.argv)
     ui = UiMainWindow()

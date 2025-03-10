@@ -1,7 +1,13 @@
+import os
+
 import requests
 from requests import exceptions
+from publicInfo.publicInfo import PublicInfo
 
 from decryptencrypt.encrypt_md5 import encrypt_md5
+
+path = os.path.dirname(__file__)
+root_path = os.path.dirname(path)
 
 Token = ''
 user_age = 'Mozilla/5.0 (Linux; Android 8.1.2; LIO-AN00 Build/LIO-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/92.0.4515.131 Safari/537.36 MMWEBID/4462 MicroMessenger/8.0.20.2100(0x28001438) Process/toolsmp WeChat/arm64 Weixin Android Tablet NetType/WIFI Language/zh_CN ABI/arm64'
@@ -16,7 +22,7 @@ headers = {"Host": "app.vocabgo.com",
            "Sec-Fetch-Mode": "cors",
            "Sec-Fetch-Dest": "empty",
            "Referer": "https://app.vocabgo.com/student/",
-           "Accept-Encoding": "gzip, deflate, br"
+           "Accept-Encoding": PublicInfo(root_path).accept_encoding
            }
 
 rqs_session = rqs2_session = rqs3_session = class_task_request = rsq_self_built = ''
@@ -52,3 +58,9 @@ def set_token(token):
          "X-Requested-With": 'com.tencent.mm'})
     rsq_self_built.headers.pop('Authorization-V')
     rsq_self_built.headers.pop('Abc')
+
+if __name__ == '__main__':
+    path = os.path.dirname(__file__)
+    root_path = os.path.dirname(path)
+    print(root_path)
+    print(PublicInfo(root_path).accept_encoding)

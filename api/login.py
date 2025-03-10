@@ -1,6 +1,7 @@
 import json
 
 import api.request_header as requests
+import brotli
 from decryptencrypt.encrypt_md5 import encrypt_md5
 from log.log import Log
 from util.basic_util import create_timestamp
@@ -17,6 +18,7 @@ def verify_token(token):
     url = f'Student/Main?timestamp={timestamp}&version=2.6.1.231204&app_type=1'
     try:
         response = requests.rqs_session.get(basic_url + url)
+        login.logger.info(f'压缩编码格式：{response.headers.get('Content-Encoding')}')
         response.raise_for_status()  # 检查HTTP状态码
         result = response.json()
 
