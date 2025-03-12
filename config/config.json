@@ -4,5 +4,7 @@
   "spend_min_time": 5,
   "spend_max_time": 15,
   "br_choices": true,
-  "accept_encoding": "gzip, deflate, br"
+  "accept_encoding": "gzip, deflate, br",
+  "version": "1.1.0",
+  "know_version": "1.1.0"
 }

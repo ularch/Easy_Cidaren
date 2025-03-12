@@ -1,16 +1,25 @@
-## 词达人自动刷题脚本
+<div align="center">
+    <h1>Cidaren_Automatic_Answer</h1>
+<p>词达人自动刷题|自动过班级任务、自学任务|<a href="https://github.com/github123666/cidaren">github123666/cidaren</a>魔改项目</p>
+</div>
+<div align="center">
+    <img src="https://img.shields.io/badge/condition-activity-blue">
+    <img src="https://img.shields.io/github/v/release/ularch/Cidaren_Automatic_Answer?color=green">
+    <img src="https://img.shields.io/github/license/ularch/Cidaren_Automatic_Answer">
+</div>
+
+## 功能简介
 `词达人自动过班级任务,自学任务`
-- 自动过自学任务
-- 过班级任务
+- 自动过**自学任务**
+- 自动过**班级任务**
 - 随时可能失效,**且用且珍惜**
-- 可选择过某一章节
-- 得分95+（异常情况、自建任务可能80+）
-- 个别单词可能过不了
-- 手机版见[ularch / Cidaren_Android](https://github.com/ularch/Cidaren_Android)
-- 频繁需要安全验证，无法连续刷题的，在首选项设置里将刷题间隔调高，亲测3-5秒间隔可正常使用
+- 可手动选择指定任务
+- **得分95+**（异常情况、自建任务可能80）
 
 
 ## 日志
+<details> <summary> <b>展开</b> </summary>
+
 **2024-12-23**
 + 修复“英译汉”题型报错
 
@@ -21,37 +30,33 @@
 + 更新GUI
 
 **2023-04-26**
-+ 在原有源码的基础上添加了手动选择章节功能
++ 在原项目的基础上添加了手动选择章节功能
 + 将token等设置从config文件改为了在控制台输入
 
-<!-- <details> <summary> <b>日志(点击查看进程)</b> </summary>
-
-</details> -->
+</details>
 
 
 ## 声明
-本项目初始源码来源自 [github123666/cidaren](https://github.com/github123666/cidaren)
++ 原项目[github123666/cidaren](https://github.com/github123666/cidaren)
++ 仅供学习参考，**严禁盗卖盈利！**
 
-**遵循MIT协议,仅供学习参考。**
+### **侵权或有疑问请联系harold.lach.lei@gmail.com**
 
-### **删除或有问题请联系harold.lach.lei@gmail.com**
 
-## 使用方法
+## 快速上手
 
-### 安装python
-+ 安装python3.12，不会的建议百度
-
-### 配置环境
+### 第一次使用
+1. 安装[python3.12](https://www.python.org/downloads/release/python-3123/)
+2. 前往[release](https://github.com/ularch/Cidaren_Automatic_Answer/releases/latest)下载最新版压缩包
+3. 解压下载到的最新版压缩包
+4. 双击运行程序文件夹中的`点我配置环境.bat`<br>或手动运行
 ```
 pip install -r requirements.txt
 ```
-
-## 获取token
-+ 会抓包的可以自己去抓包 
-+ 不会的可使用本项目[get token](https://github.com/ularch/Cidaren_Automatic_Answer/tree/master/get%20token)文件夹下词达人token获取.exe快速获取（软件来源于网络，侵权请联系）
-+ 获取完token之后**一定要关闭**！！！词达人token获取.exe或者其他抓包程序，否则进入软件输入token登录后会闪退！！！
-
-## 使用软件
-+ 点击"点我运行"启动软件
-+ 输入token，登录，开始使用
-+ 在帮助栏有详细的使用帮助
+### 后续使用
+1. 双击运行`点我运行.exe`弹出cmd页面
+2. 运行过程中全程不要关闭cmd（黑色页面）
+3. 在弹出的图形界面中点击`帮助`->`获取token`打开token获取软件（软件来源网络，侵权请联系）
+4. 将`词达人token获取.exe`软件置于后台，打开电脑端微信，登录并进入微信公众号`词达人`->`学生端`，随便点击几个页面
+5. 返回`词达人token获取.exe`，复制软件中显示的内容（token）
+6. 返回图形界面，将token粘贴进`用户token`栏，点击登录

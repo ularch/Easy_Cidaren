@@ -1,11 +1,12 @@
 import os
+import subprocess
 import threading
 
 from PyQt6.QtGui import QAction
 from playsound import playsound
 
 import api.request_header as requests
-import view.setting, view.introduce
+import view.setting, view.introduce, view.update
 from answer_questions.answer_questions import *
 from api.basic_api import get_all_unit, get_unit_words, get_book_all_words
 from api.login import verify_token
@@ -14,6 +15,7 @@ from log.log import Log
 from publicInfo.publicInfo import PublicInfo
 from util.basic_util import get_todo_task, extract_book_word, query_word_unit, get_choices_task
 from util.handle_word_list import handle_word_result
+from api.update import get_update, get_update_detail
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtWidgets import QMainWindow, QApplication, QMessageBox
@@ -107,6 +109,7 @@ class UiMainWindow(QMainWindow):
         self.menubar.setEnabled(True)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 720, 33))
         self.menubar.setObjectName("menubar")
+        self.menubar.setStyleSheet("QMenuBar { background-color: white;}")
         self.menu = QtWidgets.QMenu(parent=self.menubar)
         self.menu.setObjectName("menu")
         self.menu_2 = QtWidgets.QMenu(parent=self.menubar)
@@ -125,6 +128,8 @@ class UiMainWindow(QMainWindow):
         self.action_6.setObjectName("action_6")
         self.action_7 = QtGui.QAction(parent=MainWindow)
         self.action_7.setObjectName("action_7")
+        self.action_8 = QtGui.QAction(parent=MainWindow)
+        self.action_8.setObjectName("action_8")
         self.menu.addAction(self.action)
         # 设置菜单名项点击事件
         self.menu.triggered[QAction].connect((self.open_settings))
@@ -132,11 +137,12 @@ class UiMainWindow(QMainWindow):
         self.menu_2.addSeparator()
         self.menu_2.addAction(self.action_6)
         self.menu_2.addAction(self.action_7)
+        self.menu_2.addSeparator()
+        self.menu_2.addAction(self.action_8)
         # 帮助菜单点击事件
         self.menu_2.triggered[QAction].connect((self.open_helper))
         self.menubar.addAction(self.menu.menuAction())
         self.menubar.addAction(self.menu_2.menuAction())
-
         self.retranslate_ui(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -161,6 +167,7 @@ class UiMainWindow(QMainWindow):
         self.action_4.setText(_translate("MainWindow", "使用教程"))
         self.action_6.setText(_translate("MainWindow", "关于词达人自动答题"))
         self.action_7.setText(_translate("MainWindow", "关于作者"))
+        self.action_8.setText(_translate("MainWindow", "获取token"))
 
     def update_output_info(self, info):
         """
@@ -302,12 +309,21 @@ class UiMainWindow(QMainWindow):
             QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch/Cidaren_Automatic_Answer'))
         elif m.text() == "关于作者":
             QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch'))
+        elif m.text() == "获取token":
+            self.get_token()
 
     def play_music(self):
         """
         播放结束提示音乐
         """
         playsound(path + "\\view\\music.mp3")
+
+    def get_token(self):
+        exe_path = path + "\\get token\\词达人token获取.exe"
+        try:
+            subprocess.Popen([exe_path], shell=True)
+        except :
+            main.logger.info("词达人token获取.exe打开失败")
 
 def stop_task():
     """
@@ -472,6 +488,13 @@ if __name__ == '__main__':
 
     # 创建窗口对象
     app = QApplication(sys.argv)
+    # 判断更新
+    if public_info.version < get_update() and public_info.know_version < get_update():
+        update = view.update.Ui_Form(public_info)
+        update.show()
+        app.exec()
+
+    # 主界面
     ui = UiMainWindow()
     ui.show()
     app.exec()

@@ -22,6 +22,8 @@ class PublicInfo:
             self._spend_max_time = user_config['spend_max_time']
             self._br_choices = user_config['br_choices']
             self._headers_accept_encoding = user_config['accept_encoding']
+            self._version = user_config['version']
+            self._know_version = user_config['know_version']
         # 任务列表
         self.task_list = ""
         # query_answer
@@ -102,6 +104,14 @@ class PublicInfo:
     def br_choices(self) -> bool:
         return self._br_choices
 
+    @property
+    def version(self) -> str:
+        return self._version
+
+    @property
+    def know_version(self) -> str:
+        return self._know_version
+
     def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding):
         self._min_time = min_time
         self._max_time = max_time
@@ -121,3 +131,11 @@ class PublicInfo:
         data_str = json.dumps(data, indent=2)
         with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
             f.write(data_str)
+
+    def ignore_version(self, version):
+        with open(os.path.join(self.path, "config", "config.json"), 'r', encoding="utf-8") as f:
+            data = json.load(f)
+            data['know_version'] = version
+            self._know_version = version
+        with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
