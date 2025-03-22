@@ -259,7 +259,7 @@ class UiMainWindow(QMainWindow):
                 ui.update_output_info("获取失败！没有待完成的任务！")
 
     def start(self):
-        if not public_info.class_task == []:
+        if not public_info.task_list == []:
             main.logger.info("开始任务")
             # 获取所选任务名称
             task_name = self.task_list.currentText()

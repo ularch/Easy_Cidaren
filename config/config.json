@@ -5,6 +5,6 @@
   "spend_max_time": 15,
   "br_choices": true,
   "accept_encoding": "gzip, deflate, br",
-  "version": "1.1.1",
-  "know_version": "1.1.1"
+  "version": "1.1.2",
+  "know_version": "1.1.2"
 }
