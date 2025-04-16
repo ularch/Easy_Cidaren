@@ -20,6 +20,9 @@
 ## 日志
 <details> <summary> <b>展开</b> </summary>
 
+**2025-03-12**
++ 添加自动检测更新功能
+
 **2024-12-23**
 + 修复“英译汉”题型报错
 
@@ -40,7 +43,9 @@
 + 原项目[github123666/cidaren](https://github.com/github123666/cidaren)
 + 仅供学习参考，**严禁盗卖盈利！**
 
-### **侵权或有疑问请联系harold.lach.lei@gmail.com**
+### **侵权或有疑问请联系**
++ 邮箱：harold.lach.lei@gmail.com
++ Telegram：[harold_lach_lei](https://t.me/Harold_Lach_Lei)
 
 
 ## 快速上手
