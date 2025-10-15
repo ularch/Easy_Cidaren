@@ -35,9 +35,15 @@ def use_api_get_prototype(word: str) -> str:
     basic_api.logger.info(f"单词{word}走api转原型")
     url = f'https://app.vocabgo.com/student/api/Student/Course/SearchWord?word={word}&timestamp=1710396115786&version=2.6.2.24031302&app_type=1'
     prototype = requests.rqs_session.get(url=url)
-    # 检查获取原型成功
+    prototype.encoding = 'utf-8'  # 设置编码
     handle_response(prototype)
-    result = re.findall('span>(.+?)</span>', prototype.json()['data']['word_mean']['meaning'])
+
+    # 提取并解码数据
+    meaning_str = prototype.json()['data']['word_mean']['meaning']
+    # 处理转义字符
+    decoded_meaning = bytes(meaning_str, 'utf-8').decode('unicode_escape')
+    # 正则匹配
+    result = re.findall(r'<span>(.+?)</span>', decoded_meaning)
     return None if not result else result[0]
 
 

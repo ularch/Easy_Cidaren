@@ -148,7 +148,7 @@ class UiMainWindow(QMainWindow):
 
     def retranslate_ui(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "词达人自动答题"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "词达人自动答题v1.1.3（github免费开源，严禁倒卖，作者ularch）"))
         self.output_info.setHtml(_translate("MainWindow", f"<pre>{UiMainWindow.output}</pre>"))
         self.label.setText(_translate("MainWindow", "用户token："))
         self.login.setText(_translate("MainWindow", "登录"))
@@ -186,7 +186,14 @@ class UiMainWindow(QMainWindow):
         """
         # 重置警告信息
         self.warn_info.setText("")
-        self.token = self.token_input.text().rstrip('\n')
+        # 修复获取token问题
+        input_text = self.token_input.text()
+        if '\n' in input_text:
+            # 如果包含换行符，只取第一行
+            self.token = input_text.split('\n')[0].strip()
+        else:
+            # 如果不包含换行符，直接使用
+            self.token = input_text.strip()
         if self.token == '':
             self.warn_info.setStyleSheet("color: red;")
             self.warn_info.setText("登录失败！请输入token！")
@@ -259,7 +266,7 @@ class UiMainWindow(QMainWindow):
                 ui.update_output_info("获取失败！没有待完成的任务！")
 
     def start(self):
-        if not public_info.task_list == []:
+        if not public_info.task_list == [] and not public_info.class_task == []:
             main.logger.info("开始任务")
             # 获取所选任务名称
             task_name = self.task_list.currentText()
@@ -349,7 +356,7 @@ def class_task_answer():
         mode = public_info.exam['topic_mode']
         main.logger.info(f'题目类型{mode}')
         if mode == 0:
-            # skip read cord
+            # 跳过阅读卡片
             jump_read(public_info)
             continue
         option = answer(public_info, mode)

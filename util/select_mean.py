@@ -6,7 +6,7 @@ from log.log import Log
 from util.word_revert import word_revert
 
 # log module
-select_module = Log("select_module")
+select_module = Log("select_mean")
 
 
 #

@@ -11,7 +11,7 @@ from util.select_mean import select_mean, handle_query_word_mean, filler_option,
 from util.word_revert import word_revert
 from view.error import showError
 
-query_answer = Log('query_answer')
+query_answer = Log('answer_questions')
 
 
 # submit
@@ -38,6 +38,9 @@ def submit(public_info: PublicInfo, option: int or str or dict):
 
 # skip read word
 def jump_read(public_info):
+    """
+    跳过阅读卡片
+    """
     time.sleep(random.randint(1, 3))
     query_answer.logger.info("跳过阅读单词卡片")
     next_exam(public_info)
@@ -72,6 +75,7 @@ def select_word(public_info) -> int or str or None:
                         if usage_info['sen_mean_cn'] == word_mean:
                             return delete_other_char(usage_info['sen_content'])
     query_answer.logger.info("查询失败,准备跳过")
+    # exit(-1)
     return None
 
 
@@ -108,8 +112,12 @@ def word_form_mean(public_info: PublicInfo) -> int:
     return select_mean(public_info)
 
 
-# mean to word
 def mean_to_word(public_info):
+    """
+    看义选词
+    :param public_info:
+    :return:
+    """
     # mode 17
     word_mean = public_info.exam['stem']['content']
     # match answer
@@ -177,6 +185,14 @@ def complete_sentence(public_info):
 
 
 def answer(public_info, mode):
+    '''
+    15 看词选义（一星）
+    16 看词选义（二星）
+    17 看义选词（一星）
+    18 看义选词（二星）
+    :param mode: 题型编号
+    :return:
+    '''
     if mode == 11:
         option = word_form_mean(public_info)
     elif mode == 13:
@@ -202,7 +218,7 @@ def answer(public_info, mode):
     else:
         option = 0
         query_answer.logger.info(public_info.exam)
-        query_answer.logger.info("其他题型,程序退出")
+        query_answer.logger.info(f"其他题型{mode},程序退出")
         showError()
         exit(-1)
     return option
