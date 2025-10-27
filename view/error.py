@@ -24,13 +24,20 @@ class Ui_Form(QDialog):
         self.label.setGeometry(QtCore.QRect(20, 20, 351, 80))
         self.label.setObjectName("label")
         
+        # 添加打开日志文件夹按钮
+        self.openLogsButton = QtWidgets.QPushButton(parent=Form)
+        self.openLogsButton.setGeometry(QtCore.QRect(210, 110, 80, 24))
+        self.openLogsButton.setObjectName("openLogsButton")
+        
         # 添加关闭按钮
         self.closeButton = QtWidgets.QPushButton(parent=Form)
-        self.closeButton.setGeometry(QtCore.QRect(160, 110, 80, 24))
+        self.closeButton.setGeometry(QtCore.QRect(300, 110, 80, 24))
         self.closeButton.setObjectName("closeButton")
         
         # 连接关闭按钮的点击事件
         self.closeButton.clicked.connect(self.accept)
+        # 连接打开日志文件夹按钮的点击事件
+        self.openLogsButton.clicked.connect(self.open_logs_folder)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -39,11 +46,30 @@ class Ui_Form(QDialog):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "任务停止"))
         self.label.setText(_translate("Form", "任务出现异常错误，已经停止运行，可通过控制台参看报错信息，\n"
-                                              "可将完整报错信息发给作者，以便改进程序，\n"
+                                              "可将完整日志文件发给作者，以便改进程序，\n"
                                               "可能会略微影响分数，刷题进度已保存，可尝试重试任务\n"
-                                              "如遇到无法运行的情况，请将问题反馈至作者主页邮箱"))
+                                              "如遇到无法运行的情况，请将问题反馈至作者主页邮箱或提交issue"))
+        # 翻译打开日志文件夹按钮文本
+        self.openLogsButton.setText(_translate("Form", "日志文件夹"))
         # 翻译关闭按钮文本
         self.closeButton.setText(_translate("Form", "关闭"))
+
+    def open_logs_folder(self):
+        """
+        打开日志文件夹
+        """
+        import subprocess
+        import sys
+
+        logs_path = os.path.join(os.path.dirname(__file__), '..', 'logs')
+        os.makedirs(logs_path, exist_ok=True)
+
+        if sys.platform == 'win32':
+            os.startfile(logs_path)
+        elif sys.platform == 'darwin':  # macOS
+            subprocess.Popen(['open', logs_path])
+        else:  # linux
+            subprocess.Popen(['xdg-open', logs_path])
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -190,7 +190,7 @@ class UiMainWindow(QMainWindow):
         # 帮助菜单点击事件
         self.menu_2.triggered[QAction].connect((self.open_helper))
         # 连接打开日志文件夹的动作
-        self.action_open_logs.triggered.connect(self.open_logs_folder)
+        self.action_open_logs.triggered.connect(Log.open_logs_folder)
         self.menubar.addAction(self.menu.menuAction())
         self.menubar.addAction(self.menu_2.menuAction())
         self.retranslate_ui(MainWindow)
@@ -281,24 +281,6 @@ class UiMainWindow(QMainWindow):
                 requests.set_token(self.token)
                 # 同时自动获取任务
                 self.get_task_list()
-
-    def open_logs_folder(self):
-        """
-        打开日志文件夹
-        """
-        import os
-        import subprocess
-        import sys
-        
-        logs_path = os.path.join(os.path.dirname(__file__), './log/logs')
-        os.makedirs(logs_path, exist_ok=True)
-        
-        if sys.platform == 'win32':
-            os.startfile(logs_path)
-        elif sys.platform == 'darwin':  # macOS
-            subprocess.Popen(['open', logs_path])
-        else:  # linux
-            subprocess.Popen(['xdg-open', logs_path])
 
     def get_task_list(self):
         """

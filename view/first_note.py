@@ -24,7 +24,7 @@ class Ui_Form(QWidget):
         self.confirmBtn.setGeometry(QtCore.QRect(310, 170, 75, 24))
         self.confirmBtn.setObjectName("pushButton")
         self.confirmBtn_3 = QtWidgets.QPushButton(parent=Form)
-        self.confirmBtn_3.setGeometry(QtCore.QRect(200, 170, 75, 24))
+        self.confirmBtn_3.setGeometry(QtCore.QRect(230, 170, 75, 24))
         self.confirmBtn_3.setObjectName("pushButton_3")
         self.textBrowser = QtWidgets.QTextBrowser(parent=Form)
         self.textBrowser.setGeometry(QtCore.QRect(10, 10, 381, 150))

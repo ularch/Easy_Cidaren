@@ -7,6 +7,7 @@ import glob
 log_dir = os.path.join(os.path.dirname(__file__), '.', 'logs')
 os.makedirs(log_dir, exist_ok=True)
 
+
 # 清理旧的日志文件，只保留最近的20个
 def clean_old_logs():
     log_files = glob.glob(os.path.join(log_dir, "app_*.log"))
@@ -17,6 +18,7 @@ def clean_old_logs():
         except OSError:
             pass  # 如果删除失败，忽略错误
 
+
 # 执行清理操作
 clean_old_logs()
 
@@ -26,7 +28,7 @@ log_filename = os.path.join(log_dir, f"app_{timestamp}.log")
 
 # 配置日志格式和处理器
 logging.basicConfig(
-    format="[%(asctime)s] %(name)s %(levelname)s: %(message)s", 
+    format="[%(asctime)s] %(name)s %(levelname)s: %(message)s",
     datefmt="%Y-%m-%d %I:%M:%S",
     level=logging.INFO,
     handlers=[
@@ -37,5 +39,25 @@ logging.basicConfig(
 
 
 class Log:
+    open_logs_folder = None
+
     def __init__(self, logger_name: str):
         self.logger = logging.getLogger(logger_name)
+
+    def open_logs_folder(self):
+        """
+        打开日志文件夹
+        """
+        import os
+        import subprocess
+        import sys
+
+        logs_path = os.path.join(os.path.dirname(__file__), './logs')
+        os.makedirs(logs_path, exist_ok=True)
+
+        if sys.platform == 'win32':
+            os.startfile(logs_path)
+        elif sys.platform == 'darwin':  # macOS
+            subprocess.Popen(['open', logs_path])
+        else:  # linux
+            subprocess.Popen(['xdg-open', logs_path])
