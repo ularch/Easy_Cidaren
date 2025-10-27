@@ -43,7 +43,8 @@
 
 ## 声明
 + 原项目[github123666/cidaren](https://github.com/github123666/cidaren)
-+ 仅供学习参考，**严禁盗卖盈利！**
++ 仅供学习参考，**严禁盗卖盈利！**使用后果由使用者承担
++ 请勿在任何平台公开发布本项目
 
 ### **侵权或有疑问请联系**
 + 邮箱：harold.lach.lei@gmail.com
@@ -52,18 +53,10 @@
 
 ## 快速上手
 
-### 第一次使用
-1. 安装[python3.12](https://www.python.org/downloads/release/python-3123/)
-2. 前往[release](https://github.com/ularch/Easy_Cidaren/releases/latest)下载最新版压缩包
-3. 解压下载到的最新版压缩包
-4. 双击运行程序文件夹中的`点我配置环境.bat`<br>或手动运行
-```
-pip install -r requirements.txt
-```
-### 后续使用
-1. 双击运行`点我运行.exe`弹出cmd页面
-2. 运行过程中全程不要关闭cmd（黑色页面）
-3. 在弹出的图形界面中点击`帮助`->`获取token`打开token获取软件（软件来源网络，侵权请联系），电脑黑色模式会有问题，顶栏看不清
+### 直接使用软件
+1. 前往[release](https://github.com/ularch/Easy_Cidaren/releases/latest)下载最新版exe
+2. 双击Easy_Cidaren.exe运行程序
+3. 在弹出的图形界面中点击`帮助`->`获取token`打开token获取软件（软件来源网络，侵权请联系）**全程不要关闭黑色cmd窗口**
 4. 将`词达人token获取.exe`软件置于后台，打开电脑端微信，登录并进入微信公众号`词达人`->`学生端`，随便点击几个页面
 5. 返回`词达人token获取.exe`，复制软件中显示的内容（token）
 <br>词达人更新后，软件获取到的内容中第一行为词达人token，
@@ -71,3 +64,23 @@ pip install -r requirements.txt
 ![img.png](assets/img.png)
 6. 返回图形界面，将token粘贴进`用户token`栏，点击登录
 7. 使用期间除获取token外，任何设备**不要登录词达人**，否则会刷新token
+### 本地python运行
+#### 首次使用
+1. 安装[python3.12](https://www.python.org/downloads/release/python-3123/)
+2. 前往[release](https://github.com/ularch/Easy_Cidaren/releases/latest)下载最新版压缩包
+3. 解压下载到的最新版压缩包
+4. 双击运行程序文件夹中的`点我配置环境.bat`运行<br>或手动运行
+```
+pip install -r requirements.txt
+```
+#### 后续使用
+1. 双击运行`点我运行.exe`弹出cmd页面
+2. 运行过程中全程不要关闭cmd（黑色页面）
+3. 后续与使用软件相同
+
+## 支持项目
+<div align="center">
+<img src="assets/support.jpg" alt="" style="height: 300px">
+</div>
+
+[![Stargazers over time](https://starchart.cc/ularch/Easy_Cidaren.svg?variant=adaptive)](https://starchart.cc/ularch/Easy_Cidaren)
