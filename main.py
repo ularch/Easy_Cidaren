@@ -4,7 +4,7 @@ import threading
 import sys
 import winsound
 
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QIcon
 from playsound import playsound
 
 import api.request_header as requests
@@ -40,6 +40,10 @@ class UiMainWindow(QMainWindow):
         """
         MainWindow.setObjectName("MainWindow")
         MainWindow.setFixedSize(720, 280)
+        # 设置窗口图标
+        icon_path = os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico')
+        if os.path.exists(icon_path):
+            MainWindow.setWindowIcon(QIcon(icon_path))
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.output_info = QtWidgets.QTextBrowser(parent=self.centralwidget)
@@ -170,6 +174,9 @@ class UiMainWindow(QMainWindow):
         self.action_7.setObjectName("action_7")
         self.action_8 = QtGui.QAction(parent=MainWindow)
         self.action_8.setObjectName("action_8")
+        # 添加打开日志文件夹的动作
+        self.action_open_logs = QtGui.QAction(parent=MainWindow)
+        self.action_open_logs.setObjectName("action_open_logs")
         self.menu.addAction(self.action)
         # 设置菜单名项点击事件
         self.menu.triggered[QAction].connect((self.open_settings))
@@ -179,8 +186,11 @@ class UiMainWindow(QMainWindow):
         self.menu_2.addAction(self.action_7)
         self.menu_2.addSeparator()
         self.menu_2.addAction(self.action_8)
+        self.menu_2.addAction(self.action_open_logs)
         # 帮助菜单点击事件
         self.menu_2.triggered[QAction].connect((self.open_helper))
+        # 连接打开日志文件夹的动作
+        self.action_open_logs.triggered.connect(self.open_logs_folder)
         self.menubar.addAction(self.menu.menuAction())
         self.menubar.addAction(self.menu_2.menuAction())
         self.retranslate_ui(MainWindow)
@@ -209,6 +219,7 @@ class UiMainWindow(QMainWindow):
         self.action_6.setText(_translate("MainWindow", "关于词达人自动答题"))
         self.action_7.setText(_translate("MainWindow", "关于作者"))
         self.action_8.setText(_translate("MainWindow", "获取token"))
+        self.action_open_logs.setText(_translate("MainWindow", "打开日志文件夹"))
 
     def update_output_info(self, info):
         """
@@ -270,6 +281,24 @@ class UiMainWindow(QMainWindow):
                 requests.set_token(self.token)
                 # 同时自动获取任务
                 self.get_task_list()
+
+    def open_logs_folder(self):
+        """
+        打开日志文件夹
+        """
+        import os
+        import subprocess
+        import sys
+        
+        logs_path = os.path.join(os.path.dirname(__file__), './log/logs')
+        os.makedirs(logs_path, exist_ok=True)
+        
+        if sys.platform == 'win32':
+            os.startfile(logs_path)
+        elif sys.platform == 'darwin':  # macOS
+            subprocess.Popen(['open', logs_path])
+        else:  # linux
+            subprocess.Popen(['xdg-open', logs_path])
 
     def get_task_list(self):
         """
@@ -550,9 +579,9 @@ if __name__ == '__main__':
 
     # 创建窗口对象
     app = QApplication(sys.argv)
-    # 第一次使用提示
+    # 首次使用提示
     if not public_info.read:
-        main.logger.info("第一次使用")
+        main.logger.info("显示首次使用提示页面")
         note = view.first_note.Ui_Form(public_info)
         note.show()
         app.exec()

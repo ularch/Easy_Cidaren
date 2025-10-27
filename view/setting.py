@@ -1,6 +1,6 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QCursor
+from PyQt6.QtGui import QCursor, QIcon
 from PyQt6.QtWidgets import QWidget
 
 
@@ -19,6 +19,11 @@ class Ui_Form(QWidget):
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 344)
+        # 设置窗口图标
+        import os
+        icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.ico')
+        if os.path.exists(icon_path):
+            Form.setWindowIcon(QIcon(icon_path))
         self.tabWidget = QtWidgets.QTabWidget(parent=Form)
         self.tabWidget.setGeometry(QtCore.QRect(20, 20, 361, 261))
         self.tabWidget.setObjectName("tabWidget")

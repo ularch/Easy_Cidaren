@@ -1,9 +1,9 @@
+import os
 import sys
 
 from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget, QApplication
-
-import publicInfo
 
 
 class Ui_Form(QWidget):
@@ -14,7 +14,12 @@ class Ui_Form(QWidget):
 
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(400, 200)
+        Form.resize(400, 220)
+        # 设置窗口图标
+        icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.ico')
+        if os.path.exists(icon_path):
+            Form.setWindowIcon(QIcon(icon_path))
+        self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
         self.confirmBtn = QtWidgets.QPushButton(parent=Form)
         self.confirmBtn.setGeometry(QtCore.QRect(310, 170, 75, 24))
         self.confirmBtn.setObjectName("pushButton")

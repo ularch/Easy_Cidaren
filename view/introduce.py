@@ -1,15 +1,24 @@
+import os
+import sys
+
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QWidget, QApplication
 
 
 class Ui_Form(QWidget):
-    def __init__(self, public_info):
+    def __init__(self):
         super(Ui_Form, self).__init__()
         self.setupUi(self)
 
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(400, 200)
+        Form.resize(400, 300)
+        # 设置窗口图标
+        icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.ico')
+        if os.path.exists(icon_path):
+            Form.setWindowIcon(QIcon(icon_path))
+        self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
         self.label = QtWidgets.QLabel(parent=Form)
         self.label.setGeometry(QtCore.QRect(20, 10, 361, 171))
         self.label.setObjectName("label")

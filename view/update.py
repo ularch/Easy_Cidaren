@@ -1,28 +1,27 @@
+import os
 import sys
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QCursor
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget, QApplication
 
-from api.update import get_update, get_update_detail
-from log.log import Log
-
-update = Log("update")
+import api.update as update
 
 
 class Ui_Form(QWidget):
     def __init__(self, public_info):
         super(Ui_Form, self).__init__()
         self.public_info = public_info
-        self._now_version = public_info.version
-        self._new_version = get_update()
-        self._update_detail = get_update_detail()
         self.setupUi(self)
 
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 200)
+        # 设置窗口图标
+        icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.ico')
+        if os.path.exists(icon_path):
+            Form.setWindowIcon(QIcon(icon_path))
+        self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
         self.label = QtWidgets.QLabel(parent=Form)
         self.label.setGeometry(QtCore.QRect(10, 10, 381, 16))
         self.label.setObjectName("label")

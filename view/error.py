@@ -3,6 +3,7 @@ import sys
 import threading
 
 from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget, QApplication, QDialog
 
 
@@ -14,6 +15,10 @@ class Ui_Form(QDialog):
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 150)
+        # 设置窗口图标
+        icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.ico')
+        if os.path.exists(icon_path):
+            Form.setWindowIcon(QIcon(icon_path))
         self.setModal(True)  # 设置为模态对话框
         self.label = QtWidgets.QLabel(parent=Form)
         self.label.setGeometry(QtCore.QRect(20, 20, 351, 80))
