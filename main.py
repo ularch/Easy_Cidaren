@@ -1,12 +1,14 @@
 import os
 import subprocess
 import threading
+import sys
+import winsound
 
 from PyQt6.QtGui import QAction
 from playsound import playsound
 
 import api.request_header as requests
-import view.setting, view.introduce, view.update
+import view.setting, view.introduce, view.update, view.first_note, view.error
 from answer_questions.answer_questions import *
 from api.basic_api import get_all_unit, get_unit_words, get_book_all_words
 from api.login import verify_token
@@ -109,12 +111,50 @@ class UiMainWindow(QMainWindow):
         self.menubar.setEnabled(True)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 720, 33))
         self.menubar.setObjectName("menubar")
-        self.menubar.setStyleSheet("QMenuBar { background-color: white;}")
+        # 让菜单栏根据系统主题自适应，同时确保在各种主题下都有良好的可见性
+        self.menubar.setStyleSheet("""
+            QMenuBar {
+                background-color: palette(menu);
+                color: palette(text);
+                border: none;
+            }
+            QMenuBar::item {
+                background: transparent;
+                color: palette(text);
+            }
+            QMenuBar::item:selected {
+                background: palette(highlight);
+            }
+            QMenuBar::item:pressed {
+                background: palette(highlight);
+            }
+            QMenu {
+                background-color: palette(menu);
+                color: palette(text);
+            }
+            QMenu::item {
+                color: palette(text);
+            }
+            QMenu::item:selected {
+                background-color: palette(highlight);
+            }
+        """)
+
+        # 添加菜单栏和主内容区域之间的分隔线
+        self.menu_separator = QtWidgets.QFrame(parent=MainWindow)
+        self.menu_separator.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+        self.menu_separator.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.menu_separator.setObjectName("menu_separator")
+
         self.menu = QtWidgets.QMenu(parent=self.menubar)
         self.menu.setObjectName("menu")
         self.menu_2 = QtWidgets.QMenu(parent=self.menubar)
         self.menu_2.setObjectName("menu_2")
         MainWindow.setMenuBar(self.menubar)
+
+        # 设置分隔线的位置和大小
+        self.menu_separator.setGeometry(QtCore.QRect(0, 33, 720, 3))
+
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
@@ -148,7 +188,8 @@ class UiMainWindow(QMainWindow):
 
     def retranslate_ui(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "词达人自动答题v1.1.3（github免费开源，严禁倒卖，作者ularch）"))
+        MainWindow.setWindowTitle(
+            _translate("MainWindow", f"词达人自动答题v{public_info.version}（github免费开源，严禁倒卖，作者ularch）"))
         self.output_info.setHtml(_translate("MainWindow", f"<pre>{UiMainWindow.output}</pre>"))
         self.label.setText(_translate("MainWindow", "用户token："))
         self.login.setText(_translate("MainWindow", "登录"))
@@ -266,38 +307,48 @@ class UiMainWindow(QMainWindow):
                 ui.update_output_info("获取失败！没有待完成的任务！")
 
     def start(self):
-        if not public_info.task_list == [] and not public_info.class_task == []:
-            main.logger.info("开始任务")
-            # 获取所选任务名称
-            task_name = self.task_list.currentText()
-            task_index = self.task_list.currentIndex()
-            get_choices_task(public_info, task_name)
-            ui.update_output_info(f"开始任务{task_name}")
-            # 开始任务 启动等待页面
-            reply = QMessageBox.question(self, f"开始任务{task_name}",
-                                         f"确认开始任务{task_name}吗？\n任务开始后，主页面将消失，系统将在后台自动刷题\n期间请勿关闭cmd窗口，关闭cmd窗口将结束运行\n如果刷题过程中程序报错，请重新打开软件重试",
-                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                         QMessageBox.StandardButton.Yes)
-            if reply == QMessageBox.StandardButton.Yes:
-                # 隐藏主页面
-                self.hide()
-                # 关闭自建任务
-                task_info = public_info.class_task[0]
-                public_info.is_self_built = False
-                complete_test(task_info)
-                # 任务完成提示音乐
-                music_thread = threading.Thread(target=self.play_music)
-                music_thread.start()
-                # 任务完成 关闭等待页面
-                QtWidgets.QMessageBox.information(self, "任务完成！", f"已完成{task_name}")
-                main.logger.info('运行完成')
-                ui.update_output_info(f"{task_name}运行完成")
-                # 删除已完成任务
-                self.task_list.removeItem(task_index)
-                # 显示主页面
-                self.show()
+        try:
+            if not public_info.task_list == [] and not public_info.class_task == []:
+                main.logger.info("开始任务")
+                # 获取所选任务名称
+                task_name = self.task_list.currentText()
+                task_index = self.task_list.currentIndex()
+                get_choices_task(public_info, task_name)
+                ui.update_output_info(f"开始任务{task_name}")
+                # 开始任务 启动等待页面
+                reply = QMessageBox.question(self, f"开始任务{task_name}",
+                                             f"确认开始任务{task_name}吗？\n任务开始后，主页面将消失，系统将在后台自动刷题\n期间请勿关闭cmd窗口，关闭cmd窗口将结束运行\n如果刷题过程中程序报错，请重新打开软件重试",
+                                             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                             QMessageBox.StandardButton.Yes)
+                if reply == QMessageBox.StandardButton.Yes:
+                    # 隐藏主页面
+                    self.hide()
+                    # 关闭自建任务
+                    task_info = public_info.class_task[0]
+                    public_info.is_self_built = False
+                    complete_test(task_info)
+                    # 任务完成提示音乐
+                    music_thread = threading.Thread(target=self.play_music)
+                    music_thread.start()
+                    # 任务完成 关闭等待页面
+                    QtWidgets.QMessageBox.information(self, "任务完成！", f"已完成{task_name}")
+                    main.logger.info('运行完成')
+                    ui.update_output_info(f"{task_name}运行完成")
+                    # 删除已完成任务
+                    self.task_list.removeItem(task_index)
+                    # 显示主页面
+                    self.show()
+        except Exception as e:
+            main.logger.error(f"运行出错，错误信息：{e}")
+            ui.update_output_info(f"运行出错，错误信息：{e}")
+            # 显示错误页面
+            error = view.error.Ui_Form()
+            error.exec()
+            # 显示主页面
+            self.show()
 
     def open_settings(self, m):
+
         """
         首选项设置栏
         """
@@ -313,7 +364,7 @@ class UiMainWindow(QMainWindow):
             self.use_introduction = view.introduce.Ui_Form(public_info)
             self.use_introduction.show()
         elif m.text() == "关于词达人自动答题":
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch/Cidaren_Automatic_Answer'))
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch/Easy_Cidaren'))
         elif m.text() == "关于作者":
             QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch'))
         elif m.text() == "获取token":
@@ -323,20 +374,26 @@ class UiMainWindow(QMainWindow):
         """
         播放结束提示音乐
         """
-        playsound(path + "\\view\\music.mp3")
+        try:
+            playsound(path + "/assets/music.wav")
+        except Exception:
+            # 电脑用户名为英文时无法使用playsound播放
+            main.logger.info("使用winsound播放")
+            winsound.PlaySound(path + "/assets/music.wav", winsound.SND_FILENAME)
 
     def get_token(self):
         exe_path = path + "\\get token\\词达人token获取.exe"
         try:
             subprocess.Popen([exe_path], shell=True)
-        except :
+        except:
             main.logger.info("词达人token获取.exe打开失败")
+
 
 def stop_task():
     """
     结束任务
     """
-    quit()
+    sys.exit()
 
 
 def class_task_answer():
@@ -351,7 +408,7 @@ def class_task_answer():
     while True:
         main.logger.info("获取题目类型")
         if public_info.exam == 'complete':
-            # unit complete skip next unit
+            # 单元完成
             break
         mode = public_info.exam['topic_mode']
         main.logger.info(f'题目类型{mode}')
@@ -483,8 +540,6 @@ def complete_practice(unit: str, progress: int, task_id=None):
 
 
 if __name__ == '__main__':
-    import sys
-
     main = Log("main")
     main.logger.info("初始化主页面")
     # 路径
@@ -495,6 +550,13 @@ if __name__ == '__main__':
 
     # 创建窗口对象
     app = QApplication(sys.argv)
+    # 第一次使用提示
+    if not public_info.read:
+        main.logger.info("第一次使用")
+        note = view.first_note.Ui_Form(public_info)
+        note.show()
+        app.exec()
+
     # 判断更新
     if public_info.version < get_update() and public_info.know_version < get_update():
         update = view.update.Ui_Form(public_info)
@@ -502,6 +564,13 @@ if __name__ == '__main__':
         app.exec()
 
     # 主界面
-    ui = UiMainWindow()
-    ui.show()
-    app.exec()
+    try:
+        ui = UiMainWindow()
+        ui.show()
+        app.exec()
+    except Exception as e:
+        main.logger.error(e)
+        main.logger.error("程序异常")
+        ui = view.error.Ui_Form()
+        ui.show()
+        app.exec()

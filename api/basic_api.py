@@ -1,12 +1,8 @@
-import json
 import re
-import spacy
-import time
 
 import api.request_header as requests
 from log.log import Log
 from util.basic_util import create_timestamp
-from view.error import showError
 
 # init log
 basic_api = Log("basic_api")
@@ -21,8 +17,7 @@ def handle_response(response):
     if response.json()['code'] == 1:
         basic_api.logger.info(f"请求成功{response.content}")
     else:
-        basic_api.logger.info(f"请求有问题{response.text}退出程序")
-        showError()
+        basic_api.logger.error(f"请求有问题{response.text}退出程序")
         exit(-1)
 
 

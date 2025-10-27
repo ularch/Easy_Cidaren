@@ -24,6 +24,8 @@ class PublicInfo:
             self._headers_accept_encoding = user_config['accept_encoding']
             self._version = user_config['version']
             self._know_version = user_config['know_version']
+            self._read = user_config['read']
+
         # 任务列表
         self.task_list = ""
         # query_answer
@@ -111,6 +113,18 @@ class PublicInfo:
     @property
     def know_version(self) -> str:
         return self._know_version
+
+    @property
+    def read(self) -> bool:
+        return self._read
+
+    def read_seen(self):
+        with open(os.path.join(self.path, "config", "config.json"), 'r', encoding="utf-8") as f:
+            data = json.load(f)
+            data['read'] = True
+            self._read = True
+        with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding):
         self._min_time = min_time

@@ -78,7 +78,7 @@ def select_match_word(public_info, word_mean) -> int:
         for mean in public_info.word_means:
             if sorted(word_mean.replace(" ", '')) == sorted(mean.replace(" ", '')):
                 return public_info.source_option.index(word)
-    select_module.logger.info("匹配失败,猜第3个选项")
+    select_module.logger.error("匹配失败,猜第3个选项")
     return 2
 
 

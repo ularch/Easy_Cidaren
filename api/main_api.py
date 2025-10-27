@@ -10,7 +10,6 @@ from decryptencrypt.encrypt_md5 import encrypt_md5
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
 from util.basic_util import create_timestamp
-from view.error import showError
 
 # create logger
 api = Log('main_api')
@@ -34,11 +33,9 @@ def handle_response(response):
         pass
     elif code == 0 and response_json['msg'] == '加载单词卡片失败，请重新加载':
         api.logger.error("查找不到单词(第三方库转原型失败),请手动答题")
-        showError()
         exit(-1)
     else:
-        api.logger.info(f"请求有问题{response.text}退出程序", stack_info=True)
-        showError()
+        api.logger.error(f"请求有问题{response.text}退出程序", stack_info=True)
         exit(-1)
 
 
@@ -130,7 +127,7 @@ def get_class_task(public_info, page_count: int):
     public_info.task_total_count = task_dict['data']['total']
 
 
-# # start
+# start
 
 def get_exam(public_info):
     api.logger.info("获取第一题")
@@ -167,7 +164,7 @@ def next_exam(public_info):
               'timestamp': create_timestamp(),
               'topic_code': public_info.topic_code,
               'version': '2.6.2.24031302'}
-    sign = encrypt_md5("&".join([f'{key}={value}' for key, value in params.items()]) + 'ajfajfamsnfaflfasakljdlalkflak')
+    sign = encrypt_md5("&".join([f'{key}={value}' for key, value in params.items()]) + 'ajfajfamsnfaflfasakljdlalkflak') # 加密
     params.update({'sign': sign})
     data = requests.rqs2_session.post(basic_url + url, data=json.dumps(params))
     # 检查请求是否成功

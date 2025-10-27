@@ -24,7 +24,7 @@ def verify_token(token):
 
         # 判断是否过期 code = 1 为未过期
         if result['code'] != 1:
-            login.logger.info("【token已过期】")
+            login.logger.error("【token已过期】")
             return 1
         else:
             return result
@@ -36,7 +36,7 @@ def verify_token(token):
         return 3
     except json.JSONDecodeError as e:
         login.logger.error(f"【响应内容不是有效的JSON格式】: {e}")
-        login.logger.info(f"响应内容: {response.text}")
+        login.logger.error(f"响应内容: {response.text}")
         return 4
     except requests.exceptions.SSLError as e:
         login.logger.error(f"【SSL错误】：{e}")

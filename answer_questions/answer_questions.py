@@ -9,7 +9,6 @@ from util.basic_util import delete_other_char
 from util.select_mean import select_mean, handle_query_word_mean, filler_option, select_match_word, word_examples, \
     is_word_exist
 from util.word_revert import word_revert
-from view.error import showError
 
 query_answer = Log('answer_questions')
 
@@ -157,7 +156,7 @@ def full_sentence(public_info) -> int or str:
         else:
             if option['content'] == word:
                 return option_word
-    query_answer.logger.info("补全句子失败,猜第3个选项")
+    query_answer.logger.error("补全句子失败,猜第3个选项")
     # submit 1#0,0#2 or 1 应该分开写提升正确率
     return public_info.exam['options'][2]['answer_tag']
 
@@ -180,7 +179,7 @@ def complete_sentence(public_info):
                 result = word_examples(public_info, [word])
                 if result:
                     return result
-    query_answer.logger.info(f"找不到答案,提交{word}")
+    query_answer.logger.error(f"找不到答案,提交{word}")
     return word
 
 
@@ -217,8 +216,7 @@ def answer(public_info, mode):
         query_answer.logger.info(f'补全单词结果{option}')
     else:
         option = 0
-        query_answer.logger.info(public_info.exam)
-        query_answer.logger.info(f"其他题型{mode},程序退出")
-        showError()
+        query_answer.logger.error(public_info.exam)
+        query_answer.logger.error(f"其他题型{mode},程序退出")
         exit(-1)
     return option

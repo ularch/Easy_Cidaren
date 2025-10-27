@@ -1,11 +1,13 @@
 <div align="center">
-    <h1>Cidaren_Automatic_Answer</h1>
+<img src="assets/icon.ico">
+    <h1>Easy_Cidaren</h1>
+    <h4>Cidaren_Automatic_Answer</h4>
 <p>词达人自动刷题|自动过班级任务、自学任务|<a href="https://github.com/github123666/cidaren">github123666/cidaren</a>魔改项目</p>
 </div>
 <div align="center">
     <img src="https://img.shields.io/badge/condition-activity-blue">
-    <img src="https://img.shields.io/github/v/release/ularch/Cidaren_Automatic_Answer?color=green">
-    <img src="https://img.shields.io/github/license/ularch/Cidaren_Automatic_Answer">
+    <img src="https://img.shields.io/github/v/release/ularch/Easy_Cidaren?color=green">
+    <img src="https://img.shields.io/github/downloads/ularch/Easy_Cidaren/total">
 </div>
 
 ## 功能简介
@@ -52,7 +54,7 @@
 
 ### 第一次使用
 1. 安装[python3.12](https://www.python.org/downloads/release/python-3123/)
-2. 前往[release](https://github.com/ularch/Cidaren_Automatic_Answer/releases/latest)下载最新版压缩包
+2. 前往[release](https://github.com/ularch/Easy_Cidaren/releases/latest)下载最新版压缩包
 3. 解压下载到的最新版压缩包
 4. 双击运行程序文件夹中的`点我配置环境.bat`<br>或手动运行
 ```
@@ -66,6 +68,6 @@ pip install -r requirements.txt
 5. 返回`词达人token获取.exe`，复制软件中显示的内容（token）
 <br>词达人更新后，软件获取到的内容中第一行为词达人token，
 `新版本已修复，可直复制进脚本，若出错可手动复制尝试`
-![img.png](img.png)
+![img.png](assets/img.png)
 6. 返回图形界面，将token粘贴进`用户token`栏，点击登录
 7. 使用期间除获取token外，任何设备**不要登录词达人**，否则会刷新token

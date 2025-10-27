@@ -14,5 +14,5 @@ def zh_en(public_info, zh: str) -> None:
     # public_info.zh_en = rsp[0][0][0]
 
 
-if __name__ == '__main__':
-    zh_en('aa', '测试案例')
+# if __name__ == '__main__':
+#     zh_en('aa', '测试案例')
