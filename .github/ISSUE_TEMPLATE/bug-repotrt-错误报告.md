@@ -1,7 +1,7 @@
 ---
 name: bug repotrt/错误报告
 about: 提交bug帮助项目改进
-title: BUG
+title: [bug] 请补充标题内容
 labels: bug
 assignees: ularch
 
