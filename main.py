@@ -3,6 +3,7 @@ import subprocess
 import threading
 import sys
 import winsound
+import time
 
 from PyQt6.QtGui import QAction, QIcon
 from playsound import playsound
@@ -21,6 +22,184 @@ from api.update import get_update, get_update_detail
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtWidgets import QMainWindow, QApplication, QMessageBox, QFileDialog
+from PyQt6.QtCore import QThread, pyqtSignal
+
+
+class TaskWorker(QThread):
+    """
+    工作线程类，用于在后台执行任务
+    """
+    task_finished = pyqtSignal(str)  # 任务完成信号
+    task_error = pyqtSignal(str)    # 任务错误信号
+    task_progress = pyqtSignal(str) # 任务进度信号
+
+    def __init__(self, task_info):
+        super().__init__()
+        self.task_info = task_info
+        self._is_running = True
+        self.start_time = None
+
+    def run(self):
+        """
+        开始运行
+        """
+        try:
+            self.start_time = time.time()  # 记录任务开始时间
+            self.complete_test(self.task_info)
+            if self._is_running:
+                elapsed_time = time.time() - self.start_time  # 计算用时
+                self.task_finished.emit(f"任务已完成，用时 {elapsed_time:.2f} 秒")
+        except Exception as e:
+            if self._is_running:
+                self.task_error.emit(str(e))
+
+    def stop(self):
+        """
+        停止任务
+        """
+        self._is_running = False
+        
+    def complete_test(self, task_info: dict):
+        """
+        带有停止检查的完成班级任务
+        """
+        task_name = task_info['task_name']
+        # course_id 课程id (course_id)
+        public_info.course_id = task_info['course_id']
+        main.logger.info(f'开始执行任务：{task_name}')
+        # 获取单元id (list_id)
+        main.logger.info('用课程course_id获取单元list_id')
+        # 获取该用户所有单元
+        main.logger.info('获取该课程的所有单元')
+        get_all_unit(public_info)
+        # release_id 任务id
+        public_info.release_id = task_info['release_id']
+        all_unit_name = []
+        for unit in public_info.all_unit['task_list']:
+            # 检查是否需要停止
+            if not self._is_running:
+                return
+                
+            unit_name = unit['task_name']
+            all_unit_name.append(unit_name)
+            public_info.all_unit_name.append(unit['list_id'])
+            # 验证单元名与任务名相等
+            if unit_name == task_name:
+                public_info.now_unit = unit['list_id']
+                public_info.task_id = unit['task_id']
+                break
+        unit_progress = task_info['progress']
+        # 自建任务
+        if task_name not in all_unit_name:
+            public_info.is_self_built = True
+            main.logger.info(f"{task_name}为自建任务")
+            if task_info['task_type'] == 1:
+                main.logger.info("完成自学任务的自建任务")
+                main.logger.info('获取该自建任务的单词')
+                public_info.task_id = task_info['task_id']
+                get_unit_words(public_info)
+                main.logger.info("获取提交单词")
+                query_word_unit(public_info)
+                if (unit_progress < 2 and public_info.get_word_list_result['data']['exist_little_task'] != 1) or \
+                        public_info.get_word_list_result['data']['exist_little_task'] == 2:
+                    select_all_word(public_info.word_list, public_info.task_id)
+            else:
+                main.logger.info("开始班级自建任务")
+                # 获取书籍所有单词
+            get_book_all_words(public_info)
+            # 处理单词
+            extract_book_word(public_info)
+            # 答题
+            self.class_task_answer()
+        else:
+            # 班级自学任务
+            if task_info['task_type'] == 1:
+                main.logger.info('开始班级自学任务')
+                self.complete_practice(public_info.now_unit, unit_progress, task_info['task_id'])
+            else:
+                # 班级测试任务
+                main.logger.info('开始班级测试任务')
+                # 获取单元所有单词
+                get_unit_words(public_info)
+                handle_word_result(public_info)
+                public_info.task_id = task_info['task_id']
+                self.class_task_answer()
+
+    def class_task_answer(self):
+        """
+        带有停止检查的测试任务及自建任务
+        """
+        token = PublicInfo.token
+        # 获取第一个试题
+        get_exam(public_info)
+        public_info.topic_code = public_info.exam['topic_code']
+        main.logger.info("开始答题")
+        while self._is_running:
+            main.logger.info("获取题目类型")
+            if public_info.exam == 'complete':
+                # 单元完成
+                break
+            mode = public_info.exam['topic_mode']
+            main.logger.info(f'题目类型{mode}')
+            if mode == 0:
+                # 跳过阅读卡片
+                jump_read(public_info)
+                continue
+            option = answer(public_info, mode)
+            if option is None:
+                public_info.topic_code = public_info.exam['topic_code']
+                skip_exam(public_info)
+            else:
+                submit(public_info, option)
+            # 暂停
+            time.sleep(random.randint(public_info.min_time, public_info.max_time))
+
+    def complete_practice(self, unit: str, progress: int, task_id=None):
+        """
+        班级任务和自学任务共用
+        :param task_id: 任务id
+        :param unit: 单元名称
+        :param progress: 单元进度
+        """
+        main.logger.info(f"获取该{unit}单元的单词")
+        public_info.now_unit = unit
+        public_info.task_id = task_id
+        # 获取单元所有单词
+        get_unit_words(public_info)
+        main.logger.info("处理words")
+        handle_word_result(public_info)
+        main.logger.info("选择该单元所有单词")
+        # {"CET4_pre:CET4_pre_10":["survey","apply","defasdfa"]} word
+        # 未完成单元选择所有单词
+        if (progress < 2 and public_info.get_word_list_result['data']['exist_little_task'] != 1) or \
+                public_info.get_word_list_result['data']['exist_little_task'] == 2:
+            select_all_word({f"{public_info.course_id}:{unit}": public_info.word_list}, public_info.task_id)
+        # 获取第一个试题
+        get_exam(public_info)
+        public_info.topic_code = public_info.exam['topic_code']
+        main.logger.info("开始答题")
+        # topic_mode 题型
+        while self._is_running:
+            main.logger.info("获取题目类型")
+            if public_info.exam == 'complete':
+                main.logger.info('该单元已完成')
+                # 当前单元已完成
+                break
+            mode = public_info.exam['topic_mode']
+            # 处理答案（选项）
+            if mode == 0:
+                # 跳过单词阅读
+                jump_read(public_info)
+                continue
+            option = answer(public_info, mode)
+            # 选项
+            if option is None:
+                public_info.topic_code = public_info.exam['topic_code']
+                skip_exam(public_info)
+            else:
+                submit(public_info, option)
+            # 暂停
+            time.sleep(random.randint(public_info.min_time, public_info.max_time))
 
 
 class UiMainWindow(QMainWindow):
@@ -32,6 +211,8 @@ class UiMainWindow(QMainWindow):
     def __init__(self):
         super(UiMainWindow, self).__init__()
         self.token = ''
+        self.task_worker = None
+        self.task_index = 0
         self.setupUi(self)
 
     def setupUi(self, MainWindow):
@@ -105,7 +286,7 @@ class UiMainWindow(QMainWindow):
         self.stop_task.setGeometry(QtCore.QRect(150, 200, 111, 24))
         self.stop_task.setObjectName("stop_task")
         # 停止任务点击事件
-        self.stop_task.clicked.connect(stop_task)
+        self.stop_task.clicked.connect(self.stop_current_task)
         self.follow_output = QtWidgets.QRadioButton(parent=self.centralwidget)
         self.follow_output.setGeometry(QtCore.QRect(607, 19, 101, 16))
         self.follow_output.setObjectName("follow_output")
@@ -211,7 +392,7 @@ class UiMainWindow(QMainWindow):
         self.learn_task.setText(_translate("MainWindow", "班级自学任务"))
         self.test_task.setText(_translate("MainWindow", "班级测试任务"))
         self.start_task.setText(_translate("MainWindow", "开始任务"))
-        self.stop_task.setText(_translate("MainWindow", "结束任务"))
+        self.stop_task.setText(_translate("MainWindow", "中止任务"))
         self.follow_output.setText(_translate("MainWindow", "随新消息滚动"))
         self.menu.setTitle(_translate("MainWindow", "设置"))
         self.menu_2.setTitle(_translate("MainWindow", "帮助"))
@@ -324,40 +505,76 @@ class UiMainWindow(QMainWindow):
                 main.logger.info("开始任务")
                 # 获取所选任务名称
                 task_name = self.task_list.currentText()
-                task_index = self.task_list.currentIndex()
+                self.task_index = self.task_list.currentIndex()
                 get_choices_task(public_info, task_name)
                 ui.update_output_info(f"开始任务{task_name}")
                 # 开始任务 启动等待页面
                 reply = QMessageBox.question(self, f"开始任务{task_name}",
-                                             f"确认开始任务{task_name}吗？\n任务开始后，主页面将消失，系统将在后台自动刷题\n期间请勿关闭cmd窗口，关闭cmd窗口将结束运行\n如果刷题过程中程序报错，请重新打开软件重试",
+                                             f"确认开始任务{task_name}吗？\n任务开始后，主页面将无法操作，可点击“中止任务”按钮手动中止任务\n系统将在后台自动执行刷题\n运行期间请勿关闭程序窗口",
                                              QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                              QMessageBox.StandardButton.Yes)
                 if reply == QMessageBox.StandardButton.Yes:
-                    # 隐藏主页面
-                    self.hide()
                     # 关闭自建任务
                     task_info = public_info.class_task[0]
                     public_info.is_self_built = False
-                    complete_test(task_info)
-                    # 任务完成提示音乐
-                    music_thread = threading.Thread(target=self.play_music)
-                    music_thread.start()
-                    # 任务完成 关闭等待页面
-                    QtWidgets.QMessageBox.information(self, "任务完成！", f"已完成{task_name}")
-                    main.logger.info('运行完成')
-                    ui.update_output_info(f"{task_name}运行完成")
-                    # 删除已完成任务
-                    self.task_list.removeItem(task_index)
-                    # 显示主页面
-                    self.show()
+                    
+                    # 禁用所有控件（除了停止任务按钮）
+                    self.set_ui_enabled(False)
+                    
+                    # 创建并启动工作线程
+                    self.task_worker = TaskWorker(task_info)
+                    self.task_worker.task_finished.connect(self.on_task_finished)
+                    self.task_worker.task_error.connect(self.on_task_error)
+                    self.task_worker.task_progress.connect(self.update_output_info)
+                    self.task_worker.start()
+                    
+                    self.update_output_info("任务已在后台开始执行...")
+            else:
+                self.update_output_info("没有可执行的任务")
         except Exception as e:
             main.logger.error(f"运行出错，错误信息：{e}")
-            ui.update_output_info(f"运行出错，错误信息：{e}")
-            # 显示错误页面
-            error = view.error.Ui_Form()
-            error.exec()
-            # 显示主页面
-            self.show()
+            self.update_output_info(f"运行出错，错误信息：{e}")
+
+    def on_task_finished(self, message):
+        """任务完成时调用"""
+        # 重新启用所有控件
+        self.set_ui_enabled(True)
+        
+        # 任务完成提示音乐
+        music_thread = threading.Thread(target=self.play_music)
+        music_thread.start()
+        
+        # 任务完成提示
+        QtWidgets.QMessageBox.information(self, "任务完成！", message)
+        main.logger.info(f'{message}')
+        task_name = public_info.class_task[0]['task_name']
+        self.update_output_info(f"{task_name}运行完成")
+        self.update_output_info(message)  # 显示任务用时信息
+        
+        # 删除已完成任务
+        self.task_list.removeItem(self.task_index)
+        
+        # 清理工作线程
+        if self.task_worker:
+            self.task_worker.deleteLater()
+            self.task_worker = None
+
+    def on_task_error(self, error_message):
+        """任务出错时调用"""
+        # 重新启用所有控件
+        self.set_ui_enabled(True)
+        
+        main.logger.error(f"运行出错，错误信息：{error_message}")
+        self.update_output_info(f"运行出错，错误信息：{error_message}")
+        
+        # 显示错误页面
+        error = view.error.Ui_Form()
+        error.exec()
+        
+        # 清理工作线程
+        if self.task_worker:
+            self.task_worker.deleteLater()
+            self.task_worker = None
 
     def open_settings(self, m):
 
@@ -420,155 +637,55 @@ class UiMainWindow(QMainWindow):
         except:
             main.logger.info("词达人token获取.exe打开失败")
 
+    def set_ui_enabled(self, enabled):
+        """启用或禁用主界面控件"""
+        # 禁用/启用登录相关控件
+        self.token_input.setEnabled(enabled)
+        self.login.setEnabled(enabled)
+        
+        # 禁用/启用任务相关控件
+        self.learn_task.setEnabled(enabled)
+        self.test_task.setEnabled(enabled)
+        self.task_list.setEnabled(enabled)
+        self.start_task.setEnabled(enabled)
+        
+        # 菜单栏的启用/禁用
+        self.menu.setEnabled(enabled)
+        self.menu_2.setEnabled(enabled)
+        
+        # 特别处理停止任务按钮 - 始终启用
+        if not enabled:
+            self.stop_task.setEnabled(True)
 
-def stop_task():
-    """
-    结束任务
-    """
-    sys.exit()
-
-
-def class_task_answer():
-    """
-    测试任务及自建任务
-    """
-    token = PublicInfo.token
-    # 获取第一个试题
-    get_exam(public_info)
-    public_info.topic_code = public_info.exam['topic_code']
-    main.logger.info("开始答题")
-    while True:
-        main.logger.info("获取题目类型")
-        if public_info.exam == 'complete':
-            # 单元完成
-            break
-        mode = public_info.exam['topic_mode']
-        main.logger.info(f'题目类型{mode}')
-        if mode == 0:
-            # 跳过阅读卡片
-            jump_read(public_info)
-            continue
-        option = answer(public_info, mode)
-        if option is None:
-            public_info.topic_code = public_info.exam['topic_code']
-            skip_exam(public_info)
+    def stop_current_task(self):
+        """停止当前任务"""
+        if self.task_worker and self.task_worker.isRunning():
+            reply = QMessageBox.question(
+                self, 
+                "确认停止", 
+                "确定要停止当前任务吗？", 
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
+                QMessageBox.StandardButton.No
+            )
+            
+            if reply == QMessageBox.StandardButton.Yes:
+                # 停止工作线程
+                self.task_worker.stop()
+                self.task_worker.quit()
+                self.task_worker.wait()
+                
+                # 重新启用所有控件
+                self.set_ui_enabled(True)
+                
+                self.update_output_info("任务已手动停止")
+                QMessageBox.information(self, "任务停止", "任务已成功停止")
+                
+                # 清理工作线程
+                self.task_worker.deleteLater()
+                self.task_worker = None
+                main.logger.info("任务已手动停止")
         else:
-            submit(public_info, option)
-        # 暂停
-        time.sleep(random.randint(public_info.min_time, public_info.max_time))
-
-
-def complete_test(task_info: dict):
-    """
-    完成班级任务
-    :param task_info: 任务信息
-    """
-    task_name = task_info['task_name']
-    # course_id 课程id (course_id)
-    public_info.course_id = task_info['course_id']
-    main.logger.info(f'开始执行任务：{task_name}')
-    # 获取单元id (list_id)
-    main.logger.info('用课程course_id获取单元list_id')
-    # 获取该用户所有单元
-    main.logger.info('获取该课程的所有单元')
-    get_all_unit(public_info)
-    # release_id 任务id
-    public_info.release_id = task_info['release_id']
-    all_unit_name = []
-    for unit in public_info.all_unit['task_list']:
-        unit_name = unit['task_name']
-        all_unit_name.append(unit_name)
-        public_info.all_unit_name.append(unit['list_id'])
-        # 验证单元名与任务名相等
-        if unit_name == task_name:
-            public_info.now_unit = unit['list_id']
-            public_info.task_id = unit['task_id']
-            break
-    unit_progress = task_info['progress']
-    # 自建任务
-    if task_name not in all_unit_name:
-        public_info.is_self_built = True
-        main.logger.info(f"{task_name}为自建任务")
-        if task_info['task_type'] == 1:
-            main.logger.info("完成自学任务的自建任务")
-            main.logger.info('获取该自建任务的单词')
-            public_info.task_id = task_info['task_id']
-            get_unit_words(public_info)
-            main.logger.info("获取提交单词")
-            query_word_unit(public_info)
-            if (unit_progress < 2 and public_info.get_word_list_result['data']['exist_little_task'] != 1) or \
-                    public_info.get_word_list_result['data']['exist_little_task'] == 2:
-                select_all_word(public_info.word_list, public_info.task_id)
-        else:
-            main.logger.info("开始班级自建任务")
-            # get all the words for the book
-        get_book_all_words(public_info)
-        # extract word
-        extract_book_word(public_info)
-        # answer
-        class_task_answer()
-    else:
-        # 班级自学任务
-        if task_info['task_type'] == 1:
-            main.logger.info('开始班级自学任务')
-            complete_practice(public_info.now_unit, unit_progress, task_info['task_id'])
-        else:
-            # 班级测试任务
-            main.logger.info('开始班级测试任务')
-            # 获取单元所有单词
-            get_unit_words(public_info)
-            handle_word_result(public_info)
-            public_info.task_id = task_info['task_id']
-            class_task_answer()
-
-
-def complete_practice(unit: str, progress: int, task_id=None):
-    """
-    班级任务和自学共用
-    :param task_id: 任务id
-    :param unit:  单元名称
-    :param progress: 单元进度
-    :return: None
-    """
-    main.logger.info(f"获取该{unit}单元的单词")
-    public_info.now_unit = unit
-    public_info.task_id = task_id
-    # get all the words in the unit
-    get_unit_words(public_info)
-    main.logger.info("处理words")
-    handle_word_result(public_info)
-    main.logger.info("选择该单元所有单词")
-    # {"CET4_pre:CET4_pre_10":["survey","apply","defasdfa"]} word
-    # not complete unit choice all word
-    if (progress < 2 and public_info.get_word_list_result['data']['exist_little_task'] != 1) or \
-            public_info.get_word_list_result['data']['exist_little_task'] == 2:
-        select_all_word({f"{public_info.course_id}:{unit}": public_info.word_list}, public_info.task_id)
-    # get first exam
-    get_exam(public_info)
-    public_info.topic_code = public_info.exam['topic_code']
-    main.logger.info("开始答题")
-    # topic_mode 题型
-    while True:
-        main.logger.info("获取题目类型")
-        if public_info.exam == 'complete':
-            main.logger.info('该单元已完成')
-            # 当前单元已完成
-            break
-        mode = public_info.exam['topic_mode']
-        # handle answer (choice)
-        if mode == 0:
-            # 跳过单词阅读
-            jump_read(public_info)
-            continue
-        option = answer(public_info, mode)
-        # 选项
-        if option is None:
-            public_info.topic_code = public_info.exam['topic_code']
-            skip_exam(public_info)
-        else:
-            submit(public_info, option)
-        # 暂停
-        time.sleep(random.randint(public_info.min_time, public_info.max_time))
+            return
 
 
 if __name__ == '__main__':
