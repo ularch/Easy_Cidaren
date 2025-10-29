@@ -14,7 +14,9 @@ class Ui_Form(QWidget):
 
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(400, 220)
+        Form.resize(400, 200)
+        # 固定窗口大小，禁止缩放
+        Form.setFixedSize(400, 200)
         # 设置窗口图标
         icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.ico')
         if os.path.exists(icon_path):
@@ -48,7 +50,7 @@ class Ui_Form(QWidget):
                                             "<!DOCTYPE HTML>"
                                             "<html><head><meta charset=\"utf-8\" /></head><body>"
                                             "<h1>本软件为免费软件</h1>"
-                                            "如果你从其他地方付费获得本软件，请立即退款并举报，<br>本软件完全免费并在github开源（https://github.com/ularch/Cidaren_Automatic_Answer），<br>本软件仅用于学习交流，任何后果由使用者承担"
+                                            "本软件开源(https://github.com/ularch/Easy_Cidaren)且免费，任何人都可以直接下载并使用，Easy_Cidaren 不会在任何平台对软件本体及源码进行交易售卖、收取费用等活动（比如：咸鱼、淘宝、哔哩哔哩）。<br><strong>如果你是花钱购买的本软件，请及时退款并举报商家。<strong>"
                                             "</body></html>"))
 
     def cancel(self):

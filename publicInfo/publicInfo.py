@@ -25,6 +25,8 @@ class PublicInfo:
             self._version = user_config['version']
             self._know_version = user_config['know_version']
             self._read = user_config['read']
+            self._play_music = user_config.get('play_music', True)  # 默认为True
+            self._music_path = user_config.get('music_path', "")  # 默认为空，使用默认音乐
 
         # 任务列表
         self.task_list = ""
@@ -107,6 +109,14 @@ class PublicInfo:
         return self._br_choices
 
     @property
+    def play_music(self) -> bool:
+        return self._play_music
+
+    @property
+    def music_path(self) -> str:
+        return self._music_path
+
+    @property
     def version(self) -> str:
         return self._version
 
@@ -126,13 +136,17 @@ class PublicInfo:
         with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-    def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding):
+    def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music=None, music_path=None):
         self._min_time = min_time
         self._max_time = max_time
         self._spend_min_time = min_time_2
         self._spend_max_time = max_time_2
         self._br_choices = br_choices
         self._headers_accept_encoding = accept_encoding
+        if play_music is not None:
+            self._play_music = play_music
+        if music_path is not None:
+            self._music_path = music_path
 
         with open(os.path.join(self.path, "config", "config.json"), 'r', encoding="utf-8") as f:
             data = json.load(f)
@@ -142,6 +156,10 @@ class PublicInfo:
             data['spend_max_time'] = self._spend_max_time
             data['br_choices'] = self._br_choices
             data['accept_encoding'] = self._headers_accept_encoding
+            if play_music is not None:
+                data['play_music'] = self._play_music
+            if music_path is not None:
+                data['music_path'] = self._music_path
         data_str = json.dumps(data, indent=2)
         with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
             f.write(data_str)

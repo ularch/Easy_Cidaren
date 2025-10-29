@@ -23,6 +23,9 @@
 ## 日志
 <details> <summary> <b>展开</b> </summary>
 
+**2025-10-27**
++ 发布v1.3.0版本
+
 **2025-03-12**
 + 添加自动检测更新功能
 
@@ -44,7 +47,7 @@
 
 ## 声明
 + 原项目[github123666/cidaren](https://github.com/github123666/cidaren)
-+ 仅供学习参考，**严禁盗卖盈利！**使用后果由使用者承担
++ 仅供学习参考，**严禁盗卖盈利！** 使用后果由使用者承担
 + 请勿在任何平台公开发布本项目
 
 ### **侵权或有疑问请联系**
@@ -55,8 +58,8 @@
 ## 快速上手
 
 ### 直接使用软件
-1. 前往[release](https://github.com/ularch/Easy_Cidaren/releases/latest)下载最新版exe
-2. 双击Easy_Cidaren.exe运行程序
+1. 前往[release](https://github.com/ularch/Easy_Cidaren/releases/latest)下载最新版压缩包
+2. 解压后双击Easy_Cidaren.exe运行程序
 3. 在弹出的图形界面中点击`帮助`->`获取token`打开token获取软件（软件来源网络，侵权请联系）**全程不要关闭黑色cmd窗口**
 4. 将`词达人token获取.exe`软件置于后台，打开电脑端微信，登录并进入微信公众号`词达人`->`学生端`，随便点击几个页面
 5. 返回`词达人token获取.exe`，复制软件中显示的内容（token）

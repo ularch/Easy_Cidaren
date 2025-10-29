@@ -20,7 +20,7 @@ from util.handle_word_list import handle_word_result
 from api.update import get_update, get_update_detail
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtWidgets import QMainWindow, QApplication, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QApplication, QMessageBox, QFileDialog
 
 
 class UiMainWindow(QMainWindow):
@@ -174,7 +174,7 @@ class UiMainWindow(QMainWindow):
         self.action_7.setObjectName("action_7")
         self.action_8 = QtGui.QAction(parent=MainWindow)
         self.action_8.setObjectName("action_8")
-        # 添加打开日志文件夹的动作
+        # 导出日志文件夹
         self.action_open_logs = QtGui.QAction(parent=MainWindow)
         self.action_open_logs.setObjectName("action_open_logs")
         self.menu.addAction(self.action)
@@ -186,11 +186,12 @@ class UiMainWindow(QMainWindow):
         self.menu_2.addAction(self.action_7)
         self.menu_2.addSeparator()
         self.menu_2.addAction(self.action_8)
+        self.action_open_logs.setText("导出日志文件")
         self.menu_2.addAction(self.action_open_logs)
         # 帮助菜单点击事件
         self.menu_2.triggered[QAction].connect((self.open_helper))
-        # 连接打开日志文件夹的动作
-        self.action_open_logs.triggered.connect(Log.open_logs_folder)
+        # 连接导出日志文件的动作
+        # self.action_open_logs.triggered.connect(Log.open_logs_folder)
         self.menubar.addAction(self.menu.menuAction())
         self.menubar.addAction(self.menu_2.menuAction())
         self.retranslate_ui(MainWindow)
@@ -199,7 +200,7 @@ class UiMainWindow(QMainWindow):
     def retranslate_ui(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(
-            _translate("MainWindow", f"词达人自动答题v{public_info.version}（github免费开源，严禁倒卖，作者ularch）"))
+            _translate("MainWindow", f"EasyCidaren_v{public_info.version}（github免费开源，严禁倒卖，作者ularch）"))
         self.output_info.setHtml(_translate("MainWindow", f"<pre>{UiMainWindow.output}</pre>"))
         self.label.setText(_translate("MainWindow", "用户token："))
         self.login.setText(_translate("MainWindow", "登录"))
@@ -216,10 +217,10 @@ class UiMainWindow(QMainWindow):
         self.menu_2.setTitle(_translate("MainWindow", "帮助"))
         self.action.setText(_translate("MainWindow", "首选项..."))
         self.action_4.setText(_translate("MainWindow", "使用教程"))
-        self.action_6.setText(_translate("MainWindow", "关于词达人自动答题"))
+        self.action_6.setText(_translate("MainWindow", "关于Easy_Cidaren"))
         self.action_7.setText(_translate("MainWindow", "关于作者"))
         self.action_8.setText(_translate("MainWindow", "获取token"))
-        self.action_open_logs.setText(_translate("MainWindow", "打开日志文件夹"))
+        self.action_open_logs.setText(_translate("MainWindow", "导出日志文件"))
 
     def update_output_info(self, info):
         """
@@ -372,25 +373,45 @@ class UiMainWindow(QMainWindow):
         帮助栏
         """
         if m.text() == "使用教程":
-            self.use_introduction = view.introduce.Ui_Form(public_info)
+            self.use_introduction = view.introduce.Ui_Form()
             self.use_introduction.show()
-        elif m.text() == "关于词达人自动答题":
+        elif m.text() == "关于Easy_Cidaren":
             QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch/Easy_Cidaren'))
         elif m.text() == "关于作者":
             QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch'))
         elif m.text() == "获取token":
             self.get_token()
+        elif m.text() == "导出日志文件":
+            from log.log import export_logs
+            export_logs(self)
 
     def play_music(self):
         """
-        播放结束提示音乐
+        播放提示音乐
+        :return:
         """
+        # 检查是否设置了自定义音乐路径
+        if hasattr(public_info, 'music_path') and public_info.music_path:
+            # 检查文件是否存在
+            if os.path.exists(public_info.music_path):
+                music_path = public_info.music_path
+            else:
+                # 文件不存在，使用默认音乐
+                music_path = path + "/assets/music.wav"
+                main.logger.error("自定义音乐文件不存在，使用默认音乐")
+        else:
+            # 使用默认音乐
+            music_path = path + "/assets/music.wav"
         try:
-            playsound(path + "/assets/music.wav")
-        except Exception:
-            # 电脑用户名为英文时无法使用playsound播放
-            main.logger.info("使用winsound播放")
-            winsound.PlaySound(path + "/assets/music.wav", winsound.SND_FILENAME)
+            # 首先尝试使用playsound播放
+            playsound(music_path)
+        except Exception as e:
+            # playsound播放失败时，使用winsound播放
+            main.logger.info(f"playsound播放失败，使用winsound播放: {e}")
+            try:
+                winsound.PlaySound(music_path, winsound.SND_FILENAME)
+            except Exception as e2:
+                main.logger.info(f"winsound播放失败: {e2}")
 
     def get_token(self):
         exe_path = path + "\\get token\\词达人token获取.exe"
@@ -558,6 +579,7 @@ if __name__ == '__main__':
     # 初始化公共组件
     main.logger.info("初始化公共组件")
     public_info = PublicInfo(path)
+    main.logger.info(f"当前版本号：{public_info.version}")
 
     # 创建窗口对象
     app = QApplication(sys.argv)

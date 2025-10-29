@@ -5,7 +5,9 @@
   "spend_max_time": 15,
   "br_choices": true,
   "accept_encoding": "gzip, deflate, br",
-  "version": "1.3.1",
-  "know_version": "1.3.1",
-  "read": false
+  "version": "1.4.0",
+  "know_version": "1.4.0",
+  "read": false,
+  "play_music": true,
+  "music_path": ""
 }

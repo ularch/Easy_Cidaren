@@ -17,10 +17,13 @@ class Ui_Form(QWidget):
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 200)
+        # 固定窗口大小，禁止缩放
+        Form.setFixedSize(400, 200)
         # 设置窗口图标
         icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.ico')
         if os.path.exists(icon_path):
             Form.setWindowIcon(QIcon(icon_path))
+
         self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
         self.label = QtWidgets.QLabel(parent=Form)
         self.label.setGeometry(QtCore.QRect(10, 10, 381, 16))

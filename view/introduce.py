@@ -14,6 +14,8 @@ class Ui_Form(QWidget):
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 300)
+        # 固定窗口大小，禁止缩放
+        Form.setFixedSize(400, 300)
         # 设置窗口图标
         icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.ico')
         if os.path.exists(icon_path):
