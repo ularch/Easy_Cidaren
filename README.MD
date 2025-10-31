@@ -84,7 +84,7 @@ pip install -r requirements.txt
 
 ## 支持项目
 <div align="center">
-<img src="assets/support.png" alt="" style="height: 300px">
+🌟 请点点右上角的 Star，多多支持本项目开发~
 </div>
 
 [![Stargazers over time](https://starchart.cc/ularch/Easy_Cidaren.svg?variant=adaptive)](https://starchart.cc/ularch/Easy_Cidaren)
