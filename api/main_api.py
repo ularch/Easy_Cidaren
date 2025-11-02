@@ -19,24 +19,22 @@ basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
 # response is 200
 def handle_response(response):
-    from PyQt6.QtWidgets import QApplication
-    import sys
 
     response_json = response.json()
     code = response_json['code']
     # error_view.showUI()
     if code == 1:
         # 获取成功
-        api.logger.info(f"请求成功{response.content}")
+        api.logger.info(f"请求成功{response.text}")
     # complete exam
     elif code == 20001 and response_json['data'] or code == 20004:
         pass
     elif code == 0 and response_json['msg'] == '加载单词卡片失败，请重新加载':
         api.logger.error("查找不到单词(第三方库转原型失败),请手动答题")
-        exit(-1)
+        raise Exception("查找不到单词,请手动答题")
     else:
-        api.logger.error(f"请求有问题{response.text}退出程序", stack_info=True)
-        exit(-1)
+        api.logger.error(f"请求有问题{response.text}中止程序", stack_info=True)
+        raise Exception("请求有问题，中止程序")
 
 
 def is_close() -> bool:

@@ -15,10 +15,10 @@ def handle_response(response):
     response is 200
     """
     if response.json()['code'] == 1:
-        basic_api.logger.info(f"请求成功{response.content}")
+        basic_api.logger.info(f"请求成功{response.text}")
     else:
         basic_api.logger.error(f"请求有问题{response.text}退出程序")
-        exit(-1)
+        raise Exception("请求有问题，中止程序")
 
 
 def use_api_get_prototype(word: str) -> str:
