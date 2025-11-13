@@ -18,11 +18,13 @@ def debase64(data: dict or str):
 
     bs64.logger.info(f"开始解码{data}")
     try:
-        bs64_str = base64.b64decode(data.encode("utf-8")).decode("utf-8", errors='ignore')
-    except binascii.Error as e:
+        bs64_str = base64.b64decode(data.encode("utf-8")).decode("utf-8")
+    except:
         # 英译汉 插入乱码
         char_list = list(data)
-        indices_to_remove = [0, 1, 2, 4, 5, 36, 47, 48, 59, 96, 107]
+        # indices_to_remove = [0, 1, 2, 4, 5, 36, 47, 48, 59, 96, 107] #上一次的混淆
+        indices_to_remove = [0, 1, 2, 4, 5, 6, 7, 48, 49, 66, 149, 150, 284, 374, 375]
+
         for index in sorted(indices_to_remove, reverse=True):
             if 0 <= index < len(char_list):
                 del char_list[index]
@@ -52,4 +54,5 @@ def debase64(data: dict or str):
 
 if __name__ == '__main__':
     debase64(
-        "W8sKKQcaedyghDUDafl7IsKC1ZUvepM5eyJ3b3JkIjoiZGVzdGlueSIsInRvcGljX2NvZGUiOiJsRmlIaVhxWGJZU05Wb0c5ZDVWcmwybVlkRnFPV3B1YnE2cWlwSzZIa0dkcGpaUnRhV2VPbEdpVFhaT1ZaWk9OWlZ5V2JHcHBjVzF4WW1pVWIyMXRaSkdVYUpMQ2tHaHNqWlp1WUhDWWIyZHVhWEZrYTQ2U1ptT2RiV3R2YjJsbFkzQ1diV3h2YjJ4dlltZWRtVzlsbDV4bFpKUT0iLCJvdmVyX3N0YXR1cyI6MSwiYW5zd2VyX3Jlc3VsdCI6MSwiY2xlYW5fc3RhdHVzIjoyLCJhbnN3ZXJfY29ycmVjdHMiOlsyXX0=")
+        "EZeJ2uxyJ3b3JkIjoiZG9taW5hdGUiLCJ0b3BpY19jb2RlIoLjoibEZoNWRveHNtTEmlUVmx5SGVIdUxiSmV2WkplU2FsbGlXcHFvbzU3VHhhcVpnNDlxYVdPYmJXdGlqR3FWWmIyK1lHR1JabUp4NvYjI1cmEzR2FhV2hzYjI1cllwREFscE9SalpSbGFXZVRaVzlzWjJsd2NadU5abHlXYUc5dmNIQnNZbWlPYW1obmEydHRiR2Fha0dsbWs1eHZiV3FPYVpNPSIsIm92ZXJfc3RhtdHVzIjoxLCJhbnN3ZXJfcmVzdWx0IjoxLCJjbGVhbl9zdGF0dXMiOjIsImFuc3dlcl9jb3JyZWN0cyI6WzJdfQ=="
+    )

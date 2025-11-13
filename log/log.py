@@ -10,11 +10,11 @@ log_dir = os.path.join(os.path.dirname(__file__), '.', 'logs')
 os.makedirs(log_dir, exist_ok=True)
 
 
-# 清理旧的日志文件，只保留最近的20个
+# 清理旧的日志文件，只保留最近的200个
 def clean_old_logs():
     log_files = glob.glob(os.path.join(log_dir, "app_*.log"))
     log_files.sort(key=os.path.getmtime, reverse=True)
-    for old_file in log_files[20:]:
+    for old_file in log_files[200:]:
         try:
             os.remove(old_file)
         except OSError:
