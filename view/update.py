@@ -12,6 +12,9 @@ class Ui_Form(QWidget):
     def __init__(self, public_info):
         super(Ui_Form, self).__init__()
         self.public_info = public_info
+        self._now_version = public_info.version  # 初始化当前版本
+        self._new_version = update.get_update()  # 获取最新版本
+        self._update_detail = update.get_update_detail()  # 获取更新详情
         self.setupUi(self)
 
     def setupUi(self, Form):
@@ -60,7 +63,7 @@ class Ui_Form(QWidget):
         # 点击忽略事件
         self.confirmBtn_3.clicked.connect(self.ignore)
 
-        update.logger.info("检测到更新")
+        update.update.logger.info("检测到更新")
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
