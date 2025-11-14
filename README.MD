@@ -10,6 +10,9 @@
     <img src="https://img.shields.io/github/downloads/ularch/Easy_Cidaren/total">
 </div>
 
+## 现在的问题是，官方的base64在特定位置插入混淆字符的加密方法不止一种
+### 如果有大佬有更好的思路可以尝试一下
+
 ## 功能简介
 `词达人自动过班级任务,自学任务`
 - 自动过**自学任务**
