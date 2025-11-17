@@ -2,6 +2,9 @@ import platform
 import subprocess
 import re
 import os
+from pathlib import Path
+if platform.system() == "Windows":
+    import winreg
 
 class ProxyManager:
     def __init__(self):
@@ -58,6 +61,113 @@ class ProxyManager:
             'HTTPS_PROXY': os.environ.get('HTTPS_PROXY', ''),
         }
 
+    def _get_windows_proxy_settings(self):
+        """获取 Windows 当前的代理设置"""
+        try:
+            key = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+                0,
+                winreg.KEY_READ
+            )
+            
+            try:
+                proxy_enable, _ = winreg.QueryValueEx(key, "ProxyEnable")
+            except FileNotFoundError:
+                proxy_enable = 0
+            
+            try:
+                proxy_server, _ = winreg.QueryValueEx(key, "ProxyServer")
+            except FileNotFoundError:
+                proxy_server = ""
+            
+            try:
+                proxy_override, _ = winreg.QueryValueEx(key, "ProxyOverride")
+            except FileNotFoundError:
+                proxy_override = ""
+            
+            winreg.CloseKey(key)
+            
+            return {
+                'enabled': bool(proxy_enable),
+                'server': proxy_server,
+                'override': proxy_override
+            }
+        except Exception as e:
+            print(f"⚠️ 读取代理设置失败: {e}")
+            return None
+
+    def _set_windows_proxy_settings(self, enabled, server="", override="<local>"):
+        """设置 Windows 代理"""
+        try:
+            key = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+                0,
+                winreg.KEY_WRITE
+            )
+            
+            winreg.SetValueEx(key, "ProxyEnable", 0, winreg.REG_DWORD, 1 if enabled else 0)
+            winreg.SetValueEx(key, "ProxyServer", 0, winreg.REG_SZ, server)
+            winreg.SetValueEx(key, "ProxyOverride", 0, winreg.REG_SZ, override)
+            
+            winreg.CloseKey(key)
+            
+            # 通知系统代理设置已更改
+            import ctypes
+            INTERNET_OPTION_SETTINGS_CHANGED = 39
+            INTERNET_OPTION_REFRESH = 37
+            internet_set_option = ctypes.windll.Wininet.InternetSetOptionW
+            internet_set_option(0, INTERNET_OPTION_SETTINGS_CHANGED, 0, 0)
+            internet_set_option(0, INTERNET_OPTION_REFRESH, 0, 0)
+            
+            return True
+        except Exception as e:
+            print(f"⚠️ 设置代理失败: {e}")
+            return False
+
+    def _windows_store_has_cert(self, store_name):
+        """检测指定证书存储是否已有 mitmproxy 证书"""
+        try:
+            ps_cmd = (
+                f"(Get-ChildItem -Path Cert:\\CurrentUser\\{store_name} "
+                f"| Where-Object {{$_.Subject -like '*mitmproxy*'}} | Measure).Count"
+            )
+            result = subprocess.run(
+                ["powershell", "-NoLogo", "-NoProfile", "-Command", ps_cmd],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=10
+            )
+            return int(result.stdout.strip() or "0") > 0
+        except Exception:
+            return False
+
+    def _ensure_windows_mitm_cert(self):
+        """自动导入 mitmproxy 证书到 Windows 系统"""
+        cert_path = Path.home() / ".mitmproxy" / "mitmproxy-ca-cert.cer"
+        if not cert_path.exists():
+            print("⚠️ 未找到 mitmproxy 证书，将在首次运行 mitmdump 时自动生成")
+            return
+
+        for store in ("Root", "CA"):
+            if self._windows_store_has_cert(store):
+                continue
+            try:
+                subprocess.run(
+                    ["certutil", "-addstore", "-f", "-user", store, str(cert_path)],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.STDOUT,
+                    timeout=10
+                )
+                print(f"🔐 已将 mitmproxy 证书导入 CurrentUser\\{store}")
+            except subprocess.CalledProcessError:
+                print(f"⚠️ 导入证书到 {store} 失败，可手动执行：certutil -addstore -f -user {store} \"{cert_path}\"")
+            except Exception as e:
+                print(f"⚠️ 导入证书时出错: {e}")
+
     def enable_proxy(self, host="127.0.0.1", port=8888):
         print("🔧 启用系统代理...")
 
@@ -80,10 +190,20 @@ class ProxyManager:
                 )
 
         elif self.os == "Windows":
-            subprocess.run(
-                ["netsh", "winhttp", "set", "proxy", f"{host}:{port}"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
+            # 先确保证书已导入
+            self._ensure_windows_mitm_cert()
+            
+            # 保存当前代理设置
+            self.original_settings['windows'] = self._get_windows_proxy_settings()
+            
+            # 设置新代理
+            proxy_server = f"{host}:{port}"
+            self._set_windows_proxy_settings(
+                enabled=True,
+                server=proxy_server,
+                override="<local>"
             )
+            print(f"🔧 已设置系统代理: {proxy_server}")
 
         elif self.os == "Linux":
             # 保存当前环境变量
@@ -139,10 +259,21 @@ class ProxyManager:
                     )
 
         elif self.os == "Windows":
-            subprocess.run(
-                ["netsh", "winhttp", "reset", "proxy"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
-            )
+            if 'windows' in self.original_settings:
+                settings = self.original_settings['windows']
+                
+                if settings is None:
+                    # 如果读取失败，直接关闭代理
+                    self._set_windows_proxy_settings(enabled=False, server="")
+                else:
+                    # 恢复原始设置
+                    self._set_windows_proxy_settings(
+                        enabled=settings['enabled'],
+                        server=settings['server'],
+                        override=settings['override']
+                    )
+                
+                print("🔧 已恢复原始代理设置")
 
         elif self.os == "Linux":
             if 'linux_env' in self.original_settings:
