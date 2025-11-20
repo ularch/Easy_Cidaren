@@ -11,10 +11,13 @@
 </div>
 
 ## 现在的问题是，官方的base64在特定位置插入混淆字符的加密方法不止一种
+
 ### 如果有大佬有更好的思路可以尝试一下
 
 ## 功能简介
+
 `词达人自动过班级任务,自学任务`
+
 - 自动过**自学任务**
 - 自动过**班级任务**
 - 暂不支持词达人官方VIP课程（可能会有问题）
@@ -22,70 +25,99 @@
 - 可手动选择指定任务
 - **得分95+**（异常情况、自建任务可能80+）
 
-
 ## 日志
+
 <details> <summary> <b>展开</b> </summary>
 
 **2025-10-27**
+
 + 发布v1.3.0版本
 
 **2025-03-12**
+
 + 添加自动检测更新功能
 
 **2024-12-23**
+
 + 修复“英译汉”题型报错
 
 **2024-09-06**
+
 + 修复自建自学任务的已知问题
 
 **2024-05-02**
+
 + 更新GUI
 
 **2023-04-26**
+
 + 在原项目的基础上添加了手动选择章节功能
 + 将token等设置从config文件改为了在控制台输入
 
 </details>
 
-
 ## 声明
+
 + 原项目[github123666/cidaren](https://github.com/github123666/cidaren)
 + 仅供学习参考，**严禁盗卖盈利！** 使用后果由使用者承担
 + 请勿在任何平台公开发布本项目
 
 ### **侵权或有疑问请联系**
+
 + 邮箱：harold.lach.lei@gmail.com
 + Telegram：[harold_lach_lei](https://t.me/Harold_Lach_Lei)
-
 
 ## 快速上手
 
 ### 直接使用软件
+
 1. 前往[release](https://github.com/ularch/Easy_Cidaren/releases/latest)下载最新版压缩包
 2. 解压后双击Easy_Cidaren.exe运行程序
-3. 在弹出的图形界面中点击`帮助`->`获取token`打开token获取软件（软件来源网络，侵权请联系）**全程不要关闭黑色cmd窗口**
-4. 将`词达人token获取.exe`软件置于后台，打开电脑端微信，登录并进入微信公众号`词达人`->`学生端`，随便点击几个页面
-5. 返回`词达人token获取.exe`，复制软件中显示的内容（token）
-<br>词达人更新后，软件获取到的内容中第一行为词达人token，
-`新版本已修复，可直复制进脚本，若出错可手动复制尝试`
-![img.png](assets/img.png)
-6. 返回图形界面，将token粘贴进`用户token`栏，点击登录
-7. 使用期间除获取token外，任何设备**不要登录词达人**，否则会刷新token
+3. 获取 token (两种方法任选其一):
+
+**方法一：使用内置 token 获取工具（推荐）**
+
+- 在弹出的图形界面中点击 `帮助`->`获取token`打开token获取软件（软件来源网络，侵权请联系）**全程不要关闭黑色cmd窗口**
+- 将 `词达人token获取.exe`软件置于后台，打开电脑端微信，登录并进入微信公众号 `词达人`->`学生端`，随便点击几个页面
+- 返回 `词达人token获取.exe`，复制软件中显示的内容（token）
+  `<br>`词达人更新后，软件获取到的内容中第一行为词达人token，
+  `新版本已修复，可直复制进脚本，若出错可手动复制尝试`
+  ![img.png](assets/img.png)
+- 返回图形界面，将token粘贴进 `用户token`栏，点击登录
+- 使用期间除获取token外，任何设备**不要登录词达人**，否则会刷新token
+
+**方法二：命令行获取（macOS用户可选择这个）**
+
+```bash
+   cd "get token/fetch_token"
+   python main.py
+```
+
+- 将链接[https://app.vocabgo.com/student/]()复制到任意微信聊天框中并发送
+- 点击链接以使用微信浏览器打开
+- Token 会保存在 `./get token/fetch_token/token.txt` 文件中，手动粘贴到输入框
+
 ### 本地python运行
+
 #### 首次使用
+
 1. 安装[python3.12](https://www.python.org/downloads/release/python-3123/)
 2. 前往[release](https://github.com/ularch/Easy_Cidaren/releases/latest)下载最新版压缩包
 3. 解压下载到的最新版压缩包
-4. 双击运行程序文件夹中的`点我配置环境.bat`运行<br>或手动运行
+4. 双击运行程序文件夹中的 `点我配置环境.bat`运行`<br>`或手动运行
+
 ```
 pip install -r requirements.txt
 ```
+
 #### 后续使用
-1. 双击运行`点我运行.exe`弹出cmd页面
+
+1. 双击运行 `点我运行.exe`弹出cmd页面
 2. 运行过程中全程不要关闭cmd（黑色页面）
 3. 后续与使用软件相同
 
 ## 支持项目
+
 <div align="center">
 🌟 请点点右上角的 Star，多多支持本项目开发~
 </div>
