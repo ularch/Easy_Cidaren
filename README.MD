@@ -15,7 +15,7 @@
 - 因为倒卖太多了，导致本脚本的滥用，外加官方封堵此类型脚本，本项目决定从1.5.0版本开始不再开源，但依旧免费发布
 - 请勿宣传本软件，请勿滥用本软件，低调使用，且用且珍惜，切记，此类型脚本官方可以很轻松的封堵！！
 - 本脚本仅供个人学习使用，请勿用于商业用途
-- 有问题请前往[讨论区](https://github.com/ularch/Easy_Cidaren/discussions)，发现bug请提交[Issue](https://github.com/ularch/Easy_Cidaren/issues)
+- 有问题请前往[讨论区](https://github.com/ularch/Easy_Cidaren/discussions)，发现bug请提交[Issue](https://github.com/ularch/Easy_Cidaren/issues)（请使用模板格式提交，上传完整log地址，否则不予处理）
 
 ## 功能简介
 
