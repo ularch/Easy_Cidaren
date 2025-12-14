@@ -166,6 +166,7 @@ pip install -r requirements.txt
 3. 后续与使用软件相同
 
 ## 支持项目
+**[请我喝杯奶茶☕️](https://afdian.com/a/ularch)**
 
 <div align="center">
 🌟 请点点右上角的 Star，多多支持本项目开发~
