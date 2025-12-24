@@ -16,6 +16,22 @@ api = Log('main_api')
 
 basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
+EXAM_VERSIONS = ('2.6.1.231204', '2.6.1.240305', '2.6.1.240122', '2.6.2.24031302')
+EXAM_HEADER_OVERRIDES = (None, {'Accept-Encoding': 'gzip, deflate'}, {'Accept-Encoding': 'identity'})
+
+
+class CardDataError(Exception):
+    pass
+
+
+def _headers_desc(headers):
+    if not headers:
+        return 'default'
+    enc = headers.get('Accept-Encoding')
+    if enc:
+        return f'Accept-Encoding={enc}'
+    return 'custom'
+
 
 # response is 200
 def handle_response(response):
@@ -29,6 +45,9 @@ def handle_response(response):
     # complete exam
     elif code == 20001 and response_json['data'] or code == 20004:
         pass
+    elif code == 120:
+        api.logger.warning(f"卡片数据错误：{response.text}")
+        raise CardDataError(response_json.get('msg', '卡片数据错误'))
     elif code == 0 and response_json['msg'] == '加载单词卡片失败，请重新加载':
         api.logger.error("查找不到单词(第三方库转原型失败),请手动答题")
         raise Exception("查找不到单词,请手动答题")
@@ -130,20 +149,41 @@ def get_class_task(public_info, page_count: int):
 def get_exam(public_info):
     api.logger.info("获取第一题")
     url = f'{PublicInfo.task_type}/StartAnswer'
-    params = {'task_id': public_info.task_id or -1, 'task_type': PublicInfo.task_type_int,
-              'opt_img_w': '684',
-              'opt_font_size': '37', 'opt_font_c': '%23000000', 'it_img_w': '804', 'it_font_size': '42',
-              'timestamp': create_timestamp(), 'version': '2.6.1.240122', 'app_type': '1'}
+    base_params = {'task_id': public_info.task_id or -1, 'task_type': PublicInfo.task_type_int,
+                   'opt_img_w': '684',
+                   'opt_font_size': '37', 'opt_font_c': '%23000000', 'it_img_w': '804', 'it_font_size': '42',
+                   'timestamp': create_timestamp(), 'app_type': '1'}
     if PublicInfo.task_type_int == 2:
-        params.update({'release_id': public_info.release_id})
+        base_params.update({'release_id': public_info.release_id})
     else:
-        params.update({'course_id': public_info.course_id})
-    rsp = requests.class_task_request.get(url=basic_url + url, params=params)
-    # check response is success
-    handle_response(rsp)
-    #  decrypt response
-    public_info.exam = debase64(rsp.json())
-    api.logger.info("写入成功")
+        base_params.update({'course_id': public_info.course_id})
+
+    last_error = None
+    for version in EXAM_VERSIONS:
+        params = dict(base_params)
+        params['version'] = version
+        for headers in EXAM_HEADER_OVERRIDES:
+            try:
+                rsp = requests.class_task_request.get(url=basic_url + url, params=params, headers=headers)
+                # check response is success
+                handle_response(rsp)
+                # decrypt response
+                public_info.exam = debase64(rsp.json(), required_keys=("topic_code",))
+                if not isinstance(public_info.exam, dict) or 'topic_mode' not in public_info.exam:
+                    api.logger.warning(
+                        f"StartAnswer missing topic_mode (version={version}, headers={_headers_desc(headers)})"
+                    )
+                    continue
+                api.logger.info(f"写入成功 (version={version}, headers={_headers_desc(headers)})")
+                return
+            except Exception as e:
+                last_error = e
+                api.logger.warning(f"StartAnswer decode failed (version={version}, headers={_headers_desc(headers)})")
+                continue
+    api.logger.error("StartAnswer decode failed; please retry later.")
+    if last_error:
+        raise last_error
+    raise Exception("StartAnswer decode failed")
 
 
 # next exam
@@ -153,25 +193,47 @@ def next_exam(public_info):
     max_time = public_info.spend_max_time * 500
     api.logger.info("获取下一题")
     url = f'{PublicInfo.task_type}/SubmitAnswerAndSave'
-    params = {'it_font_size': 42,
-              'it_img_w': 804,
-              'opt_font_c': '#000000',
-              'opt_font_size': 37,
-              'opt_img_w': 684,
-              'time_spent': random.randint(min_time, max_time),
-              'timestamp': create_timestamp(),
-              'topic_code': public_info.topic_code,
-              'version': '2.6.2.24031302'}
-    sign = encrypt_md5("&".join([f'{key}={value}' for key, value in params.items()]) + 'ajfajfamsnfaflfasakljdlalkflak') # 加密
-    params.update({'sign': sign})
-    data = requests.rqs2_session.post(basic_url + url, data=json.dumps(params))
-    # 检查请求是否成功
-    handle_response(data)
-    if data.json()['msg'] == '任务已完成！' or data.json()['msg'] == '需要选词！':
-        public_info.exam = 'complete'
-    # decrypt response
-    else:
-        public_info.exam = debase64(data.json())
+    base_params = {'it_font_size': 42,
+                   'it_img_w': 804,
+                   'opt_font_c': '#000000',
+                   'opt_font_size': 37,
+                   'opt_img_w': 684,
+                   'time_spent': random.randint(min_time, max_time),
+                   'timestamp': create_timestamp(),
+                   'topic_code': public_info.topic_code}
+
+    last_error = None
+    for version in EXAM_VERSIONS:
+        params = dict(base_params)
+        params['version'] = version
+        sign = encrypt_md5("&".join([f'{key}={value}' for key, value in params.items()]) + 'ajfajfamsnfaflfasakljdlalkflak')  # 加密
+        params.update({'sign': sign})
+        for headers in EXAM_HEADER_OVERRIDES:
+            try:
+                data = requests.rqs2_session.post(basic_url + url, data=json.dumps(params), headers=headers)
+                # 检查请求是否成功
+                handle_response(data)
+                msg = data.json().get('msg')
+                if msg in ('任务已完成！', '需要选词！'):
+                    public_info.exam = 'complete'
+                    return
+                # decrypt response
+                public_info.exam = debase64(data.json(), required_keys=("topic_code",))
+                if not isinstance(public_info.exam, dict) or 'topic_mode' not in public_info.exam:
+                    api.logger.warning(
+                        f"SubmitAnswerAndSave missing topic_mode (version={version}, headers={_headers_desc(headers)})"
+                    )
+                    continue
+                api.logger.info(f"写入成功 (version={version}, headers={_headers_desc(headers)})")
+                return
+            except Exception as e:
+                last_error = e
+                api.logger.warning(f"SubmitAnswerAndSave decode failed (version={version}, headers={_headers_desc(headers)})")
+                continue
+    api.logger.error("SubmitAnswerAndSave decode failed; please retry later.")
+    if last_error:
+        raise last_error
+    raise Exception("SubmitAnswerAndSave decode failed")
 
 
 def check_is_self_built(func):
@@ -193,13 +255,36 @@ def query_word(public_info, word):
     time.sleep(random.randint(0, 2))
     api.logger.info(f"查询单词{word}")
     # query word in the unit
-    url = f'Course/StudyWordInfo?course_id={public_info.course_id}&list_id={public_info.now_unit}&word={word}&timestamp={create_timestamp()}&version=2.6.1.231204&app_type=1'
-    word = requests.rqs_session.get(basic_url + url)
-    # 检查请求是否成功
-    handle_response(word)
-    # decrypt  response
-    public_info.word_query_result = debase64(word.json())
-    api.logger.info("查询单词成功")
+    base_params = {
+        'course_id': public_info.course_id,
+        'list_id': public_info.now_unit,
+        'word': word,
+        'app_type': 1,
+    }
+    last_error = None
+    for version in EXAM_VERSIONS:
+        for headers in EXAM_HEADER_OVERRIDES:
+            params = dict(base_params)
+            params['timestamp'] = create_timestamp()
+            params['version'] = version
+            try:
+                rsp = requests.rqs_session.get(basic_url + 'Course/StudyWordInfo', params=params, headers=headers)
+                # 检查请求是否成功
+                handle_response(rsp)
+                # decrypt response
+                public_info.word_query_result = debase64(rsp.json(), required_keys=("means", "options"))
+                api.logger.info(f"查询单词成功 (version={version}, headers={_headers_desc(headers)})")
+                return
+            except Exception as e:
+                last_error = e
+                api.logger.warning(
+                    f"StudyWordInfo decode failed (version={version}, headers={_headers_desc(headers)})"
+                )
+                continue
+    api.logger.error("StudyWordInfo decode failed; please retry later.")
+    if last_error:
+        raise last_error
+    raise Exception("StudyWordInfo decode failed")
 
 
 # submit word

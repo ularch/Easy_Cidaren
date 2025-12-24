@@ -25,8 +25,15 @@ class PublicInfo:
             self._version = user_config['version']
             self._know_version = user_config['know_version']
             self._read = user_config['read']
-            self._play_music = user_config.get('play_music', True)  # 默认为True
+            self._auto_confirm = user_config.get('auto_confirm', False)
+            self._show_finish_dialog = user_config.get('show_finish_dialog', True)
+            self._play_music = user_config.get('play_music', False)  # 默认为False
             self._music_path = user_config.get('music_path', "")  # 默认为空，使用默认音乐
+            self._auto_next_task = user_config.get('auto_next_task', True)
+            self._auto_next_order = user_config.get('auto_next_order', 'desc')
+            self._auto_next_delay_sec = user_config.get('auto_next_delay_sec', 2)
+            self._auto_open_token_tool = user_config.get('auto_open_token_tool', True)
+            self._play_error_sound = user_config.get('play_error_sound', True)
 
         # 任务列表
         self.task_list = ""
@@ -117,6 +124,26 @@ class PublicInfo:
         return self._music_path
 
     @property
+    def auto_next_task(self) -> bool:
+        return self._auto_next_task
+
+    @property
+    def auto_next_order(self) -> str:
+        return self._auto_next_order
+
+    @property
+    def auto_next_delay_sec(self) -> int:
+        return self._auto_next_delay_sec
+
+    @property
+    def auto_open_token_tool(self) -> bool:
+        return self._auto_open_token_tool
+
+    @property
+    def play_error_sound(self) -> bool:
+        return self._play_error_sound
+
+    @property
     def version(self) -> str:
         return self._version
 
@@ -128,6 +155,14 @@ class PublicInfo:
     def read(self) -> bool:
         return self._read
 
+    @property
+    def auto_confirm(self) -> bool:
+        return self._auto_confirm
+
+    @property
+    def show_finish_dialog(self) -> bool:
+        return self._show_finish_dialog
+
     def read_seen(self):
         with open(os.path.join(self.path, "config", "config.json"), 'r', encoding="utf-8") as f:
             data = json.load(f)
@@ -136,7 +171,7 @@ class PublicInfo:
         with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-    def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music=None, music_path=None):
+    def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music=None, music_path=None, auto_confirm=None, show_finish_dialog=None, auto_next_task=None, auto_next_order=None, auto_next_delay_sec=None, auto_open_token_tool=None, play_error_sound=None):
         self._min_time = min_time
         self._max_time = max_time
         self._spend_min_time = min_time_2
@@ -147,6 +182,20 @@ class PublicInfo:
             self._play_music = play_music
         if music_path is not None:
             self._music_path = music_path
+        if auto_confirm is not None:
+            self._auto_confirm = auto_confirm
+        if show_finish_dialog is not None:
+            self._show_finish_dialog = show_finish_dialog
+        if auto_next_task is not None:
+            self._auto_next_task = auto_next_task
+        if auto_next_order is not None:
+            self._auto_next_order = auto_next_order
+        if auto_next_delay_sec is not None:
+            self._auto_next_delay_sec = auto_next_delay_sec
+        if auto_open_token_tool is not None:
+            self._auto_open_token_tool = auto_open_token_tool
+        if play_error_sound is not None:
+            self._play_error_sound = play_error_sound
 
         with open(os.path.join(self.path, "config", "config.json"), 'r', encoding="utf-8") as f:
             data = json.load(f)
@@ -160,6 +209,20 @@ class PublicInfo:
                 data['play_music'] = self._play_music
             if music_path is not None:
                 data['music_path'] = self._music_path
+            if auto_confirm is not None:
+                data['auto_confirm'] = self._auto_confirm
+            if show_finish_dialog is not None:
+                data['show_finish_dialog'] = self._show_finish_dialog
+            if auto_next_task is not None:
+                data['auto_next_task'] = self._auto_next_task
+            if auto_next_order is not None:
+                data['auto_next_order'] = self._auto_next_order
+            if auto_next_delay_sec is not None:
+                data['auto_next_delay_sec'] = self._auto_next_delay_sec
+            if auto_open_token_tool is not None:
+                data['auto_open_token_tool'] = self._auto_open_token_tool
+            if play_error_sound is not None:
+                data['play_error_sound'] = self._play_error_sound
         data_str = json.dumps(data, indent=2)
         with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
             f.write(data_str)

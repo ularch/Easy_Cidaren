@@ -1,0 +1,19 @@
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+log/logs/
+
+# IDE
+.idea/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Binaries (keep repo clean)
+*.dll
+*.exe

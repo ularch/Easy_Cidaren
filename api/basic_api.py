@@ -1,6 +1,7 @@
 import re
 
 import api.request_header as requests
+from decryptencrypt.debase64 import debase64
 from log.log import Log
 from util.basic_util import create_timestamp
 
@@ -74,11 +75,43 @@ def get_unit_words(public_info):
     else:
         # 测试任务
         url_params.update({'list_id': public_info.now_unit})
-    word_data = requests.rqs_session.get(basic_url + 'StudyTask/Info', params=url_params)
-    # 检查请求是否成功
-    handle_response(word_data)
-    word_data_json = word_data.json()
-    public_info.get_word_list_result = word_data_json
+
+    versions = ['2.6.1.240305', '2.6.2.24031302', '2.6.1.231204']
+    header_overrides = [None, {'Accept-Encoding': 'gzip, deflate'}, {'Accept-Encoding': 'identity'}]
+
+    def _extract_data(data_obj):
+        if isinstance(data_obj, dict):
+            if isinstance(data_obj.get('data'), dict):
+                return data_obj['data']
+            return data_obj
+        return None
+
+    last_error = None
+    for version in versions:
+        url_params['version'] = version
+        for headers in header_overrides:
+            try:
+                word_data = requests.rqs_session.get(basic_url + 'StudyTask/Info', params=url_params, headers=headers)
+                # 检查请求是否成功
+                handle_response(word_data)
+                word_data_json = word_data.json()
+                payload = word_data_json.get('data')
+                if isinstance(payload, str):
+                    decoded = debase64(word_data_json, required_keys=("word_list",))
+                    if isinstance(decoded, dict):
+                        word_data_json['data'] = decoded.get('data', decoded)
+                data_dict = _extract_data(word_data_json)
+                if isinstance(data_dict, dict) and 'word_list' in data_dict:
+                    public_info.get_word_list_result = word_data_json
+                    return
+            except Exception as e:
+                last_error = e
+                continue
+
+    basic_api.logger.error("StudyTask/Info decode failed; please retry later.")
+    if last_error:
+        raise last_error
+    raise Exception("StudyTask/Info decode failed")
 
 
 def get_book_all_words(public_info):

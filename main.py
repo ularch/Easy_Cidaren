@@ -2,6 +2,7 @@ import os
 import subprocess
 import threading
 import sys
+import shutil
 import winsound
 import time
 
@@ -13,7 +14,7 @@ import view.setting, view.introduce, view.update, view.first_note, view.error
 from answer_questions.answer_questions import *
 from api.basic_api import get_all_unit, get_unit_words, get_book_all_words
 from api.login import verify_token
-from api.main_api import get_exam, select_all_word, get_class_task, skip_exam
+from api.main_api import get_exam, select_all_word, get_class_task, skip_exam, CardDataError
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
 from util.basic_util import get_todo_task, extract_book_word, query_word_unit, get_choices_task
@@ -31,13 +32,24 @@ class TaskWorker(QThread):
     """
     task_finished = pyqtSignal(str)  # 任务完成信号
     task_error = pyqtSignal(str)    # 任务错误信号
-    task_progress = pyqtSignal(str) # 任务进度信号
+    task_progress = pyqtSignal(dict) # 任务进度信号
 
     def __init__(self, task_info):
         super().__init__()
         self.task_info = task_info
         self._is_running = True
         self.start_time = None
+        self._unit_total = 0
+        self._unit_done = 0
+        self._progress_refresh_every = 5
+        self._missing_topic_mode_retries = 0
+        self._optimistic_progress_buffer = 5
+        try:
+            base_percent = int(task_info.get('progress', 0))
+        except Exception:
+            base_percent = 0
+        self._unit_base_percent = max(0, min(100, base_percent))
+        self._last_server_progress = self._unit_base_percent
 
     def run(self):
         """
@@ -45,8 +57,10 @@ class TaskWorker(QThread):
         """
         try:
             self.start_time = time.time()  # 记录任务开始时间
+            self._emit_unit_progress(self._unit_base_percent)
             self.complete_test(self.task_info)
             if self._is_running:
+                self._emit_unit_progress(100)
                 elapsed_time = time.time() - self.start_time  # 计算用时
                 self.task_finished.emit(f"任务已完成，用时 {elapsed_time:.2f} 秒")
         except Exception as e:
@@ -58,6 +72,48 @@ class TaskWorker(QThread):
         停止任务
         """
         self._is_running = False
+
+    def _set_unit_total(self, total_count):
+        total = int(total_count) if total_count else 0
+        self._unit_total = max(total, 1)
+        self._unit_done = 0
+        self._emit_unit_progress(self._unit_base_percent)
+        self._refresh_unit_progress()
+
+    def _emit_unit_progress(self, percent):
+        if not self._is_running:
+            return
+        value = max(0, min(100, int(percent)))
+        self.task_progress.emit({"unit": value})
+
+    def _step_unit_progress(self):
+        if not self._is_running:
+            return
+        self._unit_done += 1
+        if self._unit_total > 0:
+            estimated = self._unit_base_percent + (self._unit_done / self._unit_total) * (100 - self._unit_base_percent)
+            estimated = max(estimated, self._last_server_progress)
+            cap = min(estimated, min(self._last_server_progress + self._optimistic_progress_buffer, 100))
+            self._emit_unit_progress(cap)
+        if self._progress_refresh_every and self._unit_done % self._progress_refresh_every == 0:
+            self._refresh_unit_progress()
+
+    def _refresh_unit_progress(self):
+        if not public_info.now_unit:
+            return
+        try:
+            get_all_unit(public_info)
+            for unit in public_info.all_unit.get('task_list', []):
+                if unit.get('list_id') == public_info.now_unit:
+                    progress = unit.get('progress')
+                    if progress is not None:
+                        progress = int(progress)
+                        if progress >= self._last_server_progress:
+                            self._last_server_progress = progress
+                        self._emit_unit_progress(self._last_server_progress)
+                    return
+        except Exception as e:
+            main.logger.warning(f"进度刷新失败: {e}")
         
     def complete_test(self, task_info: dict):
         """
@@ -130,6 +186,7 @@ class TaskWorker(QThread):
         带有停止检查的测试任务及自建任务
         """
         token = PublicInfo.token
+        self._set_unit_total(len(public_info.word_list))
         # 获取第一个试题
         get_exam(public_info)
         public_info.topic_code = public_info.exam['topic_code']
@@ -139,20 +196,37 @@ class TaskWorker(QThread):
             if public_info.exam == 'complete':
                 # 单元完成
                 break
-            mode = public_info.exam['topic_mode']
+            mode = None
+            if isinstance(public_info.exam, dict):
+                mode = public_info.exam.get('topic_mode')
+            if mode is None:
+                self._missing_topic_mode_retries += 1
+                if self._missing_topic_mode_retries > 3:
+                    raise Exception("题目数据缺少topic_mode")
+                main.logger.warning("题目数据缺少topic_mode，尝试重新获取")
+                get_exam(public_info)
+                continue
+            self._missing_topic_mode_retries = 0
             main.logger.info(f'题目类型{mode}')
             if mode == 0:
                 # 跳过阅读卡片
                 jump_read(public_info)
                 continue
-            option = answer(public_info, mode)
+            try:
+                option = answer(public_info, mode)
+            except CardDataError as e:
+                main.logger.warning(f"卡片数据错误，跳过该题: {e}")
+                skip_exam(public_info)
+                continue
             if option is None:
                 public_info.topic_code = public_info.exam['topic_code']
                 skip_exam(public_info)
             else:
                 submit(public_info, option)
+            self._step_unit_progress()
             # 暂停
             time.sleep(random.randint(public_info.min_time, public_info.max_time))
+        self._emit_unit_progress(100)
 
     def complete_practice(self, unit: str, progress: int, task_id=None):
         """
@@ -168,6 +242,7 @@ class TaskWorker(QThread):
         get_unit_words(public_info)
         main.logger.info("处理words")
         handle_word_result(public_info)
+        self._set_unit_total(len(public_info.word_list))
         main.logger.info("选择该单元所有单词")
         # {"CET4_pre:CET4_pre_10":["survey","apply","defasdfa"]} word
         # 未完成单元选择所有单词
@@ -185,21 +260,153 @@ class TaskWorker(QThread):
                 main.logger.info('该单元已完成')
                 # 当前单元已完成
                 break
-            mode = public_info.exam['topic_mode']
+            mode = None
+            if isinstance(public_info.exam, dict):
+                mode = public_info.exam.get('topic_mode')
+            if mode is None:
+                self._missing_topic_mode_retries += 1
+                if self._missing_topic_mode_retries > 3:
+                    raise Exception("题目数据缺少topic_mode")
+                main.logger.warning("题目数据缺少topic_mode，尝试重新获取")
+                get_exam(public_info)
+                continue
+            self._missing_topic_mode_retries = 0
             # 处理答案（选项）
             if mode == 0:
                 # 跳过单词阅读
                 jump_read(public_info)
                 continue
-            option = answer(public_info, mode)
+            try:
+                option = answer(public_info, mode)
+            except CardDataError as e:
+                main.logger.warning(f"卡片数据错误，跳过该题: {e}")
+                skip_exam(public_info)
+                continue
             # 选项
             if option is None:
                 public_info.topic_code = public_info.exam['topic_code']
                 skip_exam(public_info)
             else:
                 submit(public_info, option)
+            self._step_unit_progress()
             # 暂停
             time.sleep(random.randint(public_info.min_time, public_info.max_time))
+        self._emit_unit_progress(100)
+
+
+class TokenWorker(QThread):
+    token_captured = pyqtSignal(str)
+    token_error = pyqtSignal(str)
+    token_status = pyqtSignal(str)
+
+    def __init__(self, base_path):
+        super().__init__()
+        self.base_path = base_path
+        self._stop_event = threading.Event()
+        self._mitm_process = None
+        self._proxy = None
+
+    def run(self):
+        fetch_dir = os.path.join(self.base_path, "get token", "fetch_token")
+        addon_path = os.path.join(fetch_dir, "addon.py")
+        token_file = os.path.join(fetch_dir, "token.txt")
+
+        if not os.path.exists(addon_path):
+            self.token_error.emit("缺少获取token脚本")
+            return
+
+        mitm_path = shutil.which("mitmdump")
+        if not mitm_path:
+            self.token_error.emit("未检测到mitmdump，请先安装mitmproxy")
+            return
+
+        if fetch_dir not in sys.path:
+            sys.path.insert(0, fetch_dir)
+        try:
+            from proxy_manager import ProxyManager
+        except Exception as e:
+            self.token_error.emit(f"代理模块加载失败: {e}")
+            return
+
+        try:
+            if os.path.exists(token_file):
+                os.remove(token_file)
+        except Exception:
+            pass
+
+        self._proxy = ProxyManager()
+        self.token_status.emit("正在启动获取token...")
+        try:
+            self._proxy.enable_proxy()
+        except Exception as e:
+            self.token_error.emit(f"启用代理失败: {e}")
+            return
+
+        startupinfo = None
+        creationflags = 0
+        if sys.platform == 'win32':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            creationflags = 0x08000000
+
+        try:
+            self._mitm_process = subprocess.Popen(
+                [
+                    mitm_path,
+                    "-s", addon_path,
+                    "--listen-port", "8888",
+                    "--quiet",
+                    "--set", "console_eventlog_verbosity=error"
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                startupinfo=startupinfo,
+                creationflags=creationflags,
+                cwd=fetch_dir
+            )
+        except Exception as e:
+            self._cleanup()
+            self.token_error.emit(f"启动mitmdump失败: {e}")
+            return
+
+        token = ""
+        while not self._stop_event.is_set():
+            if os.path.exists(token_file):
+                try:
+                    with open(token_file, "r", encoding="utf-8") as f:
+                        token = f.read().strip()
+                    if token:
+                        break
+                except Exception:
+                    pass
+            if self._mitm_process and self._mitm_process.poll() is not None:
+                break
+            time.sleep(0.5)
+
+        if token:
+            self.token_captured.emit(token)
+        else:
+            self.token_error.emit("未获取到token")
+        self._cleanup()
+
+    def stop(self):
+        self._stop_event.set()
+        self._cleanup()
+
+    def _cleanup(self):
+        if self._mitm_process and self._mitm_process.poll() is None:
+            try:
+                self._mitm_process.terminate()
+                self._mitm_process.wait(timeout=3)
+            except Exception:
+                pass
+        self._mitm_process = None
+        if self._proxy:
+            try:
+                self._proxy.disable_proxy()
+            except Exception:
+                pass
+        self._proxy = None
 
 
 class UiMainWindow(QMainWindow):
@@ -213,6 +420,9 @@ class UiMainWindow(QMainWindow):
         self.token = ''
         self.task_worker = None
         self.task_index = 0
+        self._total_tasks = 0
+        self._completed_tasks = 0
+        self._current_unit_progress = 0
         self.setupUi(self)
 
     def setupUi(self, MainWindow):
@@ -220,7 +430,8 @@ class UiMainWindow(QMainWindow):
         绘制ui
         """
         MainWindow.setObjectName("MainWindow")
-        MainWindow.setFixedSize(720, 280)
+        MainWindow.resize(720, 320)
+        MainWindow.setMinimumSize(720, 320)
         # 设置窗口图标
         icon_path = os.path.join(os.path.dirname(__file__), 'assets', 'icon.ico')
         if os.path.exists(icon_path):
@@ -230,6 +441,22 @@ class UiMainWindow(QMainWindow):
         self.output_info = QtWidgets.QTextBrowser(parent=self.centralwidget)
         self.output_info.setGeometry(QtCore.QRect(460, 40, 256, 181))
         self.output_info.setObjectName("textBrowser")
+        self.unit_progress_label = QtWidgets.QLabel(parent=self.centralwidget)
+        self.unit_progress_label.setGeometry(QtCore.QRect(460, 230, 120, 16))
+        self.unit_progress_label.setObjectName("unit_progress_label")
+        self.unit_progress_bar = QtWidgets.QProgressBar(parent=self.centralwidget)
+        self.unit_progress_bar.setGeometry(QtCore.QRect(460, 246, 256, 16))
+        self.unit_progress_bar.setObjectName("unit_progress_bar")
+        self.unit_progress_bar.setRange(0, 100)
+        self.unit_progress_bar.setValue(0)
+        self.overall_progress_label = QtWidgets.QLabel(parent=self.centralwidget)
+        self.overall_progress_label.setGeometry(QtCore.QRect(460, 264, 120, 16))
+        self.overall_progress_label.setObjectName("overall_progress_label")
+        self.overall_progress_bar = QtWidgets.QProgressBar(parent=self.centralwidget)
+        self.overall_progress_bar.setGeometry(QtCore.QRect(460, 280, 256, 16))
+        self.overall_progress_bar.setObjectName("overall_progress_bar")
+        self.overall_progress_bar.setRange(0, 100)
+        self.overall_progress_bar.setValue(0)
         self.label = QtWidgets.QLabel(parent=self.centralwidget)
         self.label.setGeometry(QtCore.QRect(20, 20, 71, 16))
         self.label.setObjectName("label")
@@ -386,6 +613,8 @@ class UiMainWindow(QMainWindow):
         self.label.setText(_translate("MainWindow", "用户token："))
         self.login.setText(_translate("MainWindow", "登录"))
         self.label_3.setText(_translate("MainWindow", "输出信息："))
+        self.unit_progress_label.setText(_translate("MainWindow", "单元进度："))
+        self.overall_progress_label.setText(_translate("MainWindow", "总体进度："))
         self.label_4.setText(_translate("MainWindow", "用户信息："))
         self.user_info.setText(_translate("MainWindow", "未获取"))
         self.label_6.setText(_translate("MainWindow", "待完成任务："))
@@ -413,6 +642,24 @@ class UiMainWindow(QMainWindow):
         if self.follow_output.isChecked():
             scrollbar = self.output_info.verticalScrollBar()
             scrollbar.setValue(scrollbar.maximum())
+
+    def _update_overall_progress(self):
+        if self._total_tasks <= 0:
+            self.overall_progress_bar.setValue(0)
+            return
+        overall = ((self._completed_tasks + (self._current_unit_progress / 100)) / self._total_tasks) * 100
+        overall = max(0, min(100, int(overall)))
+        self.overall_progress_bar.setValue(overall)
+
+    def update_task_progress(self, progress_info):
+        if not isinstance(progress_info, dict):
+            return
+        unit_progress = progress_info.get("unit")
+        if unit_progress is None:
+            return
+        self._current_unit_progress = max(0, min(100, int(unit_progress)))
+        self.unit_progress_bar.setValue(self._current_unit_progress)
+        self._update_overall_progress()
 
     def token_login(self):
         """
@@ -498,6 +745,11 @@ class UiMainWindow(QMainWindow):
                 ui.update_output_info("获取成功！")
             else:
                 ui.update_output_info("获取失败！没有待完成的任务！")
+            self._total_tasks = len(public_info.task_list)
+            self._completed_tasks = 0
+            self._current_unit_progress = 0
+            self.unit_progress_bar.setValue(0)
+            self._update_overall_progress()
 
     def start(self):
         try:
@@ -507,12 +759,22 @@ class UiMainWindow(QMainWindow):
                 task_name = self.task_list.currentText()
                 self.task_index = self.task_list.currentIndex()
                 get_choices_task(public_info, task_name)
+                if public_info.class_task:
+                    base_progress = int(public_info.class_task[0].get('progress', 0) or 0)
+                else:
+                    base_progress = 0
+                self._current_unit_progress = max(0, min(100, base_progress))
+                self.unit_progress_bar.setValue(self._current_unit_progress)
+                self._update_overall_progress()
                 ui.update_output_info(f"开始任务{task_name}")
                 # 开始任务 启动等待页面
-                reply = QMessageBox.question(self, f"开始任务{task_name}",
-                                             f"确认开始任务{task_name}吗？\n任务开始后，主页面将无法操作，可点击“中止任务”按钮手动中止任务\n系统将在后台自动执行刷题\n运行期间请勿关闭程序窗口",
-                                             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                             QMessageBox.StandardButton.Yes)
+                if getattr(public_info, "auto_confirm", False):
+                    reply = QMessageBox.StandardButton.Yes
+                else:
+                    reply = QMessageBox.question(self, f"开始任务{task_name}",
+                    f"确认开始任务{task_name}吗？\n任务开始后，主页面将无法操作，可点击“中止任务”按钮手动中止任务\n系统将在后台自动执行刷题\n运行期间请勿关闭程序窗口",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.Yes)
                 if reply == QMessageBox.StandardButton.Yes:
                     # 关闭自建任务
                     task_info = public_info.class_task[0]
@@ -525,7 +787,7 @@ class UiMainWindow(QMainWindow):
                     self.task_worker = TaskWorker(task_info)
                     self.task_worker.task_finished.connect(self.on_task_finished)
                     self.task_worker.task_error.connect(self.on_task_error)
-                    self.task_worker.task_progress.connect(self.update_output_info)
+                    self.task_worker.task_progress.connect(self.update_task_progress)
                     self.task_worker.start()
                     
                     self.update_output_info("任务已在后台开始执行...")
@@ -539,13 +801,20 @@ class UiMainWindow(QMainWindow):
         """任务完成时调用"""
         # 重新启用所有控件
         self.set_ui_enabled(True)
-        
+        self._current_unit_progress = 100
+        self.unit_progress_bar.setValue(100)
+        if self._total_tasks > 0:
+            self._completed_tasks = min(self._completed_tasks + 1, self._total_tasks)
+        self._update_overall_progress()
+
         # 任务完成提示音乐
-        music_thread = threading.Thread(target=self.play_music)
-        music_thread.start()
+        if getattr(public_info, "play_music", False):
+            music_thread = threading.Thread(target=self.play_music)
+            music_thread.start()
         
         # 任务完成提示
-        QtWidgets.QMessageBox.information(self, "任务完成！", message)
+        if getattr(public_info, "show_finish_dialog", True):
+            QtWidgets.QMessageBox.information(self, "任务完成！", message)
         main.logger.info(f'{message}')
         task_name = public_info.class_task[0]['task_name']
         self.update_output_info(f"{task_name}运行完成")
@@ -553,6 +822,22 @@ class UiMainWindow(QMainWindow):
         
         # 删除已完成任务
         self.task_list.removeItem(self.task_index)
+        if getattr(public_info, "auto_next_task", True) and self.task_list.count() > 0:
+            next_index = None
+            if getattr(public_info, "auto_next_order", "desc") == "asc":
+                if self.task_index - 1 >= 0:
+                    next_index = self.task_index - 1
+            else:
+                next_index = min(self.task_index, self.task_list.count() - 1)
+            if next_index is not None:
+                self.task_list.setCurrentIndex(next_index)
+                delay_sec = getattr(public_info, "auto_next_delay_sec", 2)
+                try:
+                    delay_ms = max(0, int(float(delay_sec) * 1000))
+                except Exception:
+                    delay_ms = 2000
+                ui.update_output_info(f"自动模式：{delay_ms / 1000:.0f} 秒后开始下一个任务")
+                QtCore.QTimer.singleShot(delay_ms, self.start)
         
         # 清理工作线程
         if self.task_worker:
@@ -563,6 +848,9 @@ class UiMainWindow(QMainWindow):
         """任务出错时调用"""
         # 重新启用所有控件
         self.set_ui_enabled(True)
+        if getattr(public_info, "play_error_sound", True):
+            error_sound_thread = threading.Thread(target=self.play_error_sound)
+            error_sound_thread.start()
         
         main.logger.error(f"运行出错，错误信息：{error_message}")
         self.update_output_info(f"运行出错，错误信息：{error_message}")
@@ -602,33 +890,63 @@ class UiMainWindow(QMainWindow):
             from log.log import export_logs
             export_logs(self)
 
-    def play_music(self):
-        """
-        播放提示音乐
-        :return:
-        """
-        # 检查是否设置了自定义音乐路径
+    def _resolve_music_path(self):
         if hasattr(public_info, 'music_path') and public_info.music_path:
-            # 检查文件是否存在
             if os.path.exists(public_info.music_path):
-                music_path = public_info.music_path
-            else:
-                # 文件不存在，使用默认音乐
-                music_path = path + "/assets/music.wav"
-                main.logger.error("自定义音乐文件不存在，使用默认音乐")
-        else:
-            # 使用默认音乐
-            music_path = path + "/assets/music.wav"
+                return public_info.music_path
+            main.logger.error("自定义音乐文件不存在，使用默认音乐")
+        return path + "/assets/music.wav"
+
+    def _play_sound_file(self, music_path):
         try:
-            # 首先尝试使用playsound播放
             playsound(music_path)
         except Exception as e:
-            # playsound播放失败时，使用winsound播放
             main.logger.info(f"playsound播放失败，使用winsound播放: {e}")
             try:
                 winsound.PlaySound(music_path, winsound.SND_FILENAME)
             except Exception as e2:
                 main.logger.info(f"winsound播放失败: {e2}")
+
+    def play_music(self):
+        """
+        播放提示音乐
+        :return:
+        """
+        if not getattr(public_info, "play_music", False):
+            return
+        music_path = self._resolve_music_path()
+        self._play_sound_file(music_path)
+
+    def play_error_sound(self):
+        if not getattr(public_info, "play_error_sound", True):
+            return
+        music_path = self._resolve_music_path()
+        self._play_sound_file(music_path)
+
+    def on_token_captured(self, token):
+        self.update_output_info("已获取token，已复制到剪贴板")
+        try:
+            QApplication.clipboard().setText(token)
+        except Exception:
+            pass
+        self.token_input.setText(token)
+        self._set_login_controls(True)
+        if self.token_worker:
+            self.token_worker.stop()
+            self.token_worker.deleteLater()
+            self.token_worker = None
+
+    def on_token_error(self, message):
+        self.update_output_info(f"获取token失败：{message}")
+        self._set_login_controls(True)
+        if self.token_worker:
+            self.token_worker.stop()
+            self.token_worker.deleteLater()
+            self.token_worker = None
+
+    def _set_login_controls(self, enabled):
+        self.token_input.setEnabled(enabled)
+        self.login.setEnabled(enabled)
 
     def get_token(self):
         exe_path = path + "\\get token\\词达人token获取.exe"
@@ -658,69 +976,74 @@ class UiMainWindow(QMainWindow):
             self.stop_task.setEnabled(True)
 
     def stop_current_task(self):
-        """停止当前任务"""
+        """??????"""
         if self.task_worker and self.task_worker.isRunning():
-            reply = QMessageBox.question(
-                self, 
-                "确认停止", 
-                "确定要停止当前任务吗？", 
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
-                QMessageBox.StandardButton.No
-            )
-            
+            if getattr(public_info, "auto_confirm", False):
+                reply = QMessageBox.StandardButton.Yes
+            else:
+                reply = QMessageBox.question(
+                    self,
+                    "????",
+                    "???????????",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No
+                )
+
             if reply == QMessageBox.StandardButton.Yes:
-                # 停止工作线程
+                # ??????
                 self.task_worker.stop()
                 self.task_worker.quit()
                 self.task_worker.wait()
-                
-                # 重新启用所有控件
+
+                # ????????
                 self.set_ui_enabled(True)
-                
-                self.update_output_info("任务已手动停止")
-                QMessageBox.information(self, "任务停止", "任务已成功停止")
-                
-                # 清理工作线程
+
+                self.update_output_info("???????")
+                QMessageBox.information(self, "????", "???????")
+
+                # ??????
                 self.task_worker.deleteLater()
                 self.task_worker = None
-                main.logger.info("任务已手动停止")
+                main.logger.info("???????")
         else:
             return
 
 
 if __name__ == '__main__':
     main = Log("main")
-    main.logger.info("初始化主页面")
-    # 路径
+    main.logger.info("??????")
+    # ??
     path = os.path.dirname(__file__)
-    # 初始化公共组件
-    main.logger.info("初始化公共组件")
+    # ???????
+    main.logger.info("???????")
     public_info = PublicInfo(path)
-    main.logger.info(f"当前版本号：{public_info.version}")
+    main.logger.info(f"??????{public_info.version}")
 
-    # 创建窗口对象
+    # ??????
     app = QApplication(sys.argv)
-    # 首次使用提示
+    # ??????
     if not public_info.read:
-        main.logger.info("显示首次使用提示页面")
+        main.logger.info("??????????")
         note = view.first_note.Ui_Form(public_info)
         note.show()
         app.exec()
 
-    # 判断更新
+    # ????
     if public_info.version < get_update() and public_info.know_version < get_update():
         update = view.update.Ui_Form(public_info)
         update.show()
         app.exec()
 
-    # 主界面
+    # ???
     try:
         ui = UiMainWindow()
         ui.show()
+        if getattr(public_info, "auto_open_token_tool", False):
+            ui.get_token()
         app.exec()
     except Exception as e:
         main.logger.error(e)
-        main.logger.error("程序异常")
+        main.logger.error("????")
         ui = view.error.Ui_Form()
         ui.show()
         app.exec()

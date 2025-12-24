@@ -63,7 +63,7 @@ class Ui_Form(QDialog):
         import subprocess
         import sys
 
-        logs_path = os.path.join(os.path.dirname(__file__), '..', 'logs')
+        logs_path = os.path.join(os.path.dirname(__file__), '..', 'log', 'logs')
         os.makedirs(logs_path, exist_ok=True)
 
         if sys.platform == 'win32':

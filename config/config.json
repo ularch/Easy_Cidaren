@@ -1,13 +1,20 @@
 {
   "min_time": 0,
   "max_time": 0,
-  "spend_min_time": 5,
-  "spend_max_time": 15,
+  "spend_min_time": 4,
+  "spend_max_time": 8,
   "br_choices": true,
   "accept_encoding": "gzip, deflate, br",
   "version": "1.4.1",
-  "know_version": "1.4.1",
-  "read": false,
-  "play_music": true,
-  "music_path": ""
+  "know_version": "1.5.4",
+  "read": true,
+  "auto_confirm": true,
+  "show_finish_dialog": false,
+  "play_music": false,
+  "music_path": "",
+  "auto_next_task": true,
+  "auto_next_order": "desc",
+  "auto_next_delay_sec": 2,
+  "auto_open_token_tool": true,
+  "play_error_sound": true
 }

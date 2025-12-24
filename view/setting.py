@@ -17,6 +17,13 @@ class Ui_Form(QWidget):
         self._spend_max_time = self.public_info.spend_max_time
         self._br_choices = self.public_info.br_choices
         self._play_music = self.public_info.play_music
+        self._auto_confirm = self.public_info.auto_confirm
+        self._show_finish_dialog = self.public_info.show_finish_dialog
+        self._auto_next_task = getattr(self.public_info, 'auto_next_task', True)
+        self._auto_next_order = getattr(self.public_info, 'auto_next_order', 'desc')
+        self._auto_next_delay_sec = getattr(self.public_info, 'auto_next_delay_sec', 2)
+        self._auto_open_token_tool = getattr(self.public_info, 'auto_open_token_tool', True)
+        self._play_error_sound = getattr(self.public_info, 'play_error_sound', True)
         self.setupUi(self)
 
     def setupUi(self, Form):
@@ -88,8 +95,8 @@ class Ui_Form(QWidget):
         self.scrollArea_2.setObjectName("scrollArea_2")
         self.scrollArea_2.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 361, 300))  # 增加高度以容纳所有内容
-        self.scrollAreaWidgetContents_2.setMinimumSize(QtCore.QSize(0, 300))  # 设置最小高度确保所有控件可见
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 361, 480))  # 增加高度以容纳所有内容
+        self.scrollAreaWidgetContents_2.setMinimumSize(QtCore.QSize(0, 480))  # 设置最小高度确保所有控件可见
         self.scrollAreaWidgetContents_2.setStyleSheet("background-color: palette(base);")
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.groupBox_2 = QtWidgets.QGroupBox(parent=self.scrollAreaWidgetContents_2)
@@ -118,7 +125,7 @@ class Ui_Form(QWidget):
         self.max_time_2.setObjectName("max_time_2")
         self.verticalLayout_2.addWidget(self.max_time_2)
         self.groupBox_3 = QtWidgets.QGroupBox(parent=self.scrollAreaWidgetContents_2)
-        self.groupBox_3.setGeometry(QtCore.QRect(10, 140, 331, 150))  # 增加高度以容纳新选项
+        self.groupBox_3.setGeometry(QtCore.QRect(10, 140, 331, 300))  # 增加高度以容纳新选项
         self.groupBox_3.setObjectName("groupBox_3")
         self.br_checkBox = QtWidgets.QCheckBox(parent=self.groupBox_3)
         self.br_checkBox.setGeometry(QtCore.QRect(10, 20, 311, 16))
@@ -135,22 +142,78 @@ class Ui_Form(QWidget):
         # 为播放音乐复选框添加鼠标悬停提示
         self.playMusicCheckBox.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
         self.playMusicCheckBox.setToolTip("控制任务完成时是否播放提示音乐")
+
+        # 添加自动确认开始任务复选框
+        self.autoConfirmCheckBox = QtWidgets.QCheckBox(parent=self.groupBox_3)
+        self.autoConfirmCheckBox.setGeometry(QtCore.QRect(10, 80, 311, 16))
+        self.autoConfirmCheckBox.setChecked(True)
+        self.autoConfirmCheckBox.setObjectName("autoConfirmCheckBox")
+        self.autoConfirmCheckBox.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        self.autoConfirmCheckBox.setToolTip("开始任务时跳过确认弹窗")
+
+        # 添加任务完成弹窗开关复选框
+        self.showFinishDialogCheckBox = QtWidgets.QCheckBox(parent=self.groupBox_3)
+        self.showFinishDialogCheckBox.setGeometry(QtCore.QRect(10, 110, 311, 16))
+        self.showFinishDialogCheckBox.setChecked(True)
+        self.showFinishDialogCheckBox.setObjectName("showFinishDialogCheckBox")
+        self.showFinishDialogCheckBox.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        self.showFinishDialogCheckBox.setToolTip("任务完成后是否显示弹窗")
         
         # 添加自定义音乐路径输入框和默认音乐选项
         self.musicPathLineEdit = QtWidgets.QLineEdit(parent=self.groupBox_3)
-        self.musicPathLineEdit.setGeometry(QtCore.QRect(10, 80, 220, 20))
+        self.musicPathLineEdit.setGeometry(QtCore.QRect(10, 140, 220, 20))
         self.musicPathLineEdit.setObjectName("musicPathLineEdit")
         self.musicPathLineEdit.setPlaceholderText("自定义提示音乐文件路径（可选）")
         
         self.selectMusicBtn = QtWidgets.QPushButton(parent=self.groupBox_3)
-        self.selectMusicBtn.setGeometry(QtCore.QRect(240, 80, 35, 20))
+        self.selectMusicBtn.setGeometry(QtCore.QRect(240, 140, 35, 20))
         self.selectMusicBtn.setObjectName("selectMusicBtn")
         self.selectMusicBtn.setText("...")
         
         self.defaultMusicBtn = QtWidgets.QPushButton(parent=self.groupBox_3)
-        self.defaultMusicBtn.setGeometry(QtCore.QRect(280, 80, 40, 20))
+        self.defaultMusicBtn.setGeometry(QtCore.QRect(280, 140, 40, 20))
         self.defaultMusicBtn.setObjectName("defaultMusicBtn")
         self.defaultMusicBtn.setText("默认")
+
+        # 自动连做开关
+        self.autoNextTaskCheckBox = QtWidgets.QCheckBox(parent=self.groupBox_3)
+        self.autoNextTaskCheckBox.setGeometry(QtCore.QRect(10, 170, 311, 16))
+        self.autoNextTaskCheckBox.setObjectName("autoNextTaskCheckBox")
+        self.autoNextTaskCheckBox.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        self.autoNextTaskCheckBox.setToolTip("单元完成后自动切换到下一个未完成任务")
+
+        # 自动顺序
+        self.autoOrderLabel = QtWidgets.QLabel(parent=self.groupBox_3)
+        self.autoOrderLabel.setGeometry(QtCore.QRect(10, 195, 100, 16))
+        self.autoOrderLabel.setObjectName("autoOrderLabel")
+        self.autoOrderComboBox = QtWidgets.QComboBox(parent=self.groupBox_3)
+        self.autoOrderComboBox.setGeometry(QtCore.QRect(120, 192, 100, 20))
+        self.autoOrderComboBox.setObjectName("autoOrderComboBox")
+        self.autoOrderComboBox.addItem("")
+        self.autoOrderComboBox.addItem("")
+
+        # 自动间隔
+        self.autoDelayLabel = QtWidgets.QLabel(parent=self.groupBox_3)
+        self.autoDelayLabel.setGeometry(QtCore.QRect(10, 220, 100, 16))
+        self.autoDelayLabel.setObjectName("autoDelayLabel")
+        self.autoDelaySpinBox = QtWidgets.QSpinBox(parent=self.groupBox_3)
+        self.autoDelaySpinBox.setGeometry(QtCore.QRect(120, 217, 80, 20))
+        self.autoDelaySpinBox.setObjectName("autoDelaySpinBox")
+        self.autoDelaySpinBox.setRange(0, 60)
+
+        # 启动时自动打开token工具
+        self.autoOpenTokenCheckBox = QtWidgets.QCheckBox(parent=self.groupBox_3)
+        self.autoOpenTokenCheckBox.setGeometry(QtCore.QRect(10, 245, 311, 16))
+        self.autoOpenTokenCheckBox.setObjectName("autoOpenTokenCheckBox")
+        self.autoOpenTokenCheckBox.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        self.autoOpenTokenCheckBox.setToolTip("启动软件时自动打开获取token的工具")
+
+        # 报错提示音
+        self.errorSoundCheckBox = QtWidgets.QCheckBox(parent=self.groupBox_3)
+        self.errorSoundCheckBox.setGeometry(QtCore.QRect(10, 270, 311, 16))
+        self.errorSoundCheckBox.setObjectName("errorSoundCheckBox")
+        self.errorSoundCheckBox.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        self.errorSoundCheckBox.setToolTip("运行出错时播放提示音")
         
         self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
         self.tabWidget.addTab(self.tab_2, "")
@@ -193,6 +256,13 @@ class Ui_Form(QWidget):
         self.max_time_2.setValue(self._spend_max_time)
         self.br_checkBox.setChecked(self._br_choices)
         self.playMusicCheckBox.setChecked(self._play_music)
+        self.autoConfirmCheckBox.setChecked(self._auto_confirm)
+        self.showFinishDialogCheckBox.setChecked(self._show_finish_dialog)
+        self.autoNextTaskCheckBox.setChecked(self._auto_next_task)
+        self.autoOrderComboBox.setCurrentIndex(0 if self._auto_next_order == 'desc' else 1)
+        self.autoDelaySpinBox.setValue(int(self._auto_next_delay_sec))
+        self.autoOpenTokenCheckBox.setChecked(self._auto_open_token_tool)
+        self.errorSoundCheckBox.setChecked(self._play_error_sound)
         # 设置音乐路径
         self._music_path = self.public_info.music_path if hasattr(self.public_info, 'music_path') else ""
         self.musicPathLineEdit.setText(self._music_path)
@@ -218,8 +288,18 @@ class Ui_Form(QWidget):
         self.groupBox_3.setTitle(_translate("Form", "系统设置（重启后生效）"))
         self.br_checkBox.setText(_translate("Form", "启用br压缩"))
         self.playMusicCheckBox.setText(_translate("Form", "任务完成时播放提示音乐"))
+        self.autoConfirmCheckBox.setText(_translate("Form", "自动确认开始任务"))
+        self.showFinishDialogCheckBox.setText(_translate("Form", "任务完成弹窗"))
         self.selectMusicBtn.setText(_translate("Form", "..."))
         self.defaultMusicBtn.setText(_translate("Form", "默认"))
+        self.autoNextTaskCheckBox.setText(_translate("Form", "自动切换到下一个任务"))
+        self.autoOrderLabel.setText(_translate("Form", "自动顺序："))
+        self.autoOrderComboBox.setItemText(0, _translate("Form", "降序"))
+        self.autoOrderComboBox.setItemText(1, _translate("Form", "升序"))
+        self.autoDelayLabel.setText(_translate("Form", "自动间隔："))
+        self.autoDelaySpinBox.setSuffix(_translate("Form", " 秒"))
+        self.autoOpenTokenCheckBox.setText(_translate("Form", "启动时自动打开Token工具"))
+        self.errorSoundCheckBox.setText(_translate("Form", "报错时播放提示音"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Form", "高级设置"))
         self.confirmBtn.setText(_translate("Form", "确认"))
         self.cancelBtn.setText(_translate("Form", "取消"))
@@ -275,13 +355,20 @@ class Ui_Form(QWidget):
             max_time_2 = self.max_time_2.value()
             br_choices = self.br_checkBox.isChecked()
             play_music = self.playMusicCheckBox.isChecked()
+            auto_confirm = self.autoConfirmCheckBox.isChecked()
+            show_finish_dialog = self.showFinishDialogCheckBox.isChecked()
             music_path = self.musicPathLineEdit.text().strip()
+            auto_next_task = self.autoNextTaskCheckBox.isChecked()
+            auto_next_order = 'desc' if self.autoOrderComboBox.currentIndex() == 0 else 'asc'
+            auto_next_delay_sec = self.autoDelaySpinBox.value()
+            auto_open_token_tool = self.autoOpenTokenCheckBox.isChecked()
+            play_error_sound = self.errorSoundCheckBox.isChecked()
 
             if br_choices:
                 accept_encoding = 'gzip, deflate, br'
             else:
                 accept_encoding = 'gzip, deflate'
-            self.public_info.input_info(min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music, music_path)
+            self.public_info.input_info(min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music, music_path, auto_confirm, show_finish_dialog, auto_next_task, auto_next_order, auto_next_delay_sec, auto_open_token_tool, play_error_sound)
             setting = Log("setting")
             setting.logger.info("修改首选项设置成功")
             return True
