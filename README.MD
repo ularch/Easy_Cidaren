@@ -113,7 +113,7 @@
 
 ### **侵权或有疑问请联系**
 
-+ 邮箱：ularch@660916.xyz
++ 邮箱：cdr@ularch.top
 + Telegram：[harold_lach_lei](https://t.me/Harold_Lach_Lei)
 
 ## 快速上手
