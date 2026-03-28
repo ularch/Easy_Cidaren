@@ -5,7 +5,7 @@
 <p>词达人自动刷题|自动过班级任务、自学任务|<a href="https://github.com/github123666/cidaren">github123666/cidaren</a>魔改项目</p>
 </div>
 <div align="center">
-    <img src="https://img.shields.io/badge/condition-activity-blue">
+    <img src="https://img.shields.io/badge/condition-Stable-blue">
     <img src="https://img.shields.io/github/v/release/ularch/Easy_Cidaren?color=green">
     <img src="https://img.shields.io/github/downloads/ularch/Easy_Cidaren/total">
 </div>
