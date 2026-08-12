@@ -3,11 +3,10 @@ import random
 import time
 from functools import wraps
 
-
 import api.request_header as requests
-from decryptencrypt.debase64 import debase64
+from decryptencrypt.debase64 import debase64, JV_TWO, JV_THREE
 from decryptencrypt.encrypt_md5 import encrypt_md5
-from log.log import Log
+from log.log import Log, get_file_logger
 from publicInfo.publicInfo import PublicInfo
 from util.basic_util import create_timestamp
 
@@ -16,10 +15,16 @@ api = Log('main_api')
 
 basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
+file_logger = get_file_logger('_main_api')
+
 
 # response is 200
 def handle_response(response):
-
+    """
+    检查response
+    :param response:
+    :return:
+    """
     response_json = response.json()
     code = response_json['code']
     # error_view.showUI()
@@ -33,8 +38,52 @@ def handle_response(response):
         api.logger.error("查找不到单词(第三方库转原型失败),请手动答题")
         raise Exception("查找不到单词,请手动答题")
     else:
-        api.logger.error(f"请求有问题{response.text}中止程序", stack_info=True)
+        api.logger.error(f"请求有问题{response.text}")
         raise Exception("请求有问题，中止程序")
+
+
+def check_jv_and_retry_post(request_func, url, **kwargs):
+    """
+    检查post请求的jv
+    :param request_func:
+    :param url:
+    :param kwargs:
+    :return:
+    """
+    for _ in range(5):
+        response = request_func(url, **kwargs)
+        try:
+            response_json = response.json()
+            jv = str(response_json.get('jv', ''))
+            if not jv or jv == '0' or jv in JV_TWO or jv in JV_THREE:
+                return response
+        except Exception:
+            return response
+        time.sleep(random.uniform(2, 3))
+    api.logger.error("连续5次请求jv均不在已知范围内")
+    raise Exception("jv解码失败")
+
+
+def check_jv_and_retry_get(request_func, url, **kwargs):
+    """
+    检查get请求的jv
+    :param request_func:
+    :param url:
+    :param kwargs:
+    :return:
+    """
+    for _ in range(5):
+        response = request_func(url, **kwargs)
+        try:
+            response_json = response.json()
+            jv = str(response_json.get('jv', ''))
+            if not jv or jv == '0' or jv in JV_TWO or jv in JV_THREE:
+                return response
+        except Exception:
+            return response
+        time.sleep(random.uniform(2, 3))
+    api.logger.error("连续5次请求jv均不在已知范围内")
+    raise Exception("jv解码失败")
 
 
 def is_close() -> bool:
@@ -64,9 +113,10 @@ def skip_exam(public_info):
               'version': '2.6.2.24031302'}
     sign = encrypt_md5("&".join([f'{key}={value}' for key, value in params.items()]) + 'ajfajfamsnfaflfasakljdlalkflak')
     params.update({'sign': sign})
-    rsp = requests.rqs2_session.post(basic_url + url, data=json.dumps(params))
+    rsp = check_jv_and_retry_post(requests.rqs2_session.post, basic_url + url, data=json.dumps(params))
     # check response is success
     handle_response(rsp)
+    # 检查jv
     # update exam
     if rsp.json()['msg'] == '任务已完成！' or rsp.json()['msg'] == '需要选词！':
         public_info.exam = 'complete'
@@ -75,7 +125,7 @@ def skip_exam(public_info):
         public_info.exam = debase64(rsp.json())
 
 
-# select all word
+# 勾选所有单词 bug
 def select_all_word(word_info, task_id: int, ) -> None:
     api.logger.info("勾选全部单词并提交")
     timestamp = create_timestamp()
@@ -87,7 +137,7 @@ def select_all_word(word_info, task_id: int, ) -> None:
     data = {"task_id": task_id, "word_map": word_info, "chose_err_item": 2,
             "timestamp": timestamp, "version": "2.6.1.231204", "sign": sign,
             "app_type": 1}
-    rsp = requests.rqs3_session.post(basic_url + url, data=json.dumps(data))
+    rsp = check_jv_and_retry_post(requests.rqs3_session.post, basic_url + url, data=json.dumps(data))
     # 检查请求是否成功
     handle_response(rsp)
 
@@ -138,11 +188,12 @@ def get_exam(public_info):
         params.update({'release_id': public_info.release_id})
     else:
         params.update({'course_id': public_info.course_id})
-    rsp = requests.class_task_request.get(url=basic_url + url, params=params)
-    # check response is success
+    rsp = check_jv_and_retry_get(requests.class_task_request.get, basic_url + url, params=params)
+    # {'task_id': 143960071, 'task_type': 1, 'topic_mode': 0, 'stem': {'content': 'trade', 'remark': None, 'ph_us_url': '/Resource/unitAudio_US/JJ_3_1_0/trade.mp3', 'ph_en_url': '/Resource/unitAudio_EN/JJ_3_1_0/trade.mp3', 'au_addr': None}, 'options': [{'content': 'verb 互相交换', 'remark': None, 'answer': None, 'answer_tag': 0, 'check_code': None, 'sub_options': None, 'ph_info': {'ph_en': 'treɪd', 'ph_en_url': '/Resource/unitAudio_EN/JJ_3_1_0/trade.mp3', 'ph_us': 'treɪd', 'ph_us_url': '/Resource/unitAudio_US/JJ_3_1_0/trade.mp3', 'group': '0'}}, {'content': 'noun 职业；手艺', 'remark': None, 'answer': None, 'answer_tag': 1, 'check_code': None, 'sub_options': None, 'ph_info': {'ph_en': 'treɪd', 'ph_en_url': '/Resource/unitAudio_EN/JJ_3_1_0/trade.mp3', 'ph_us': 'treɪd', 'ph_us_url': '/Resource/unitAudio_US/JJ_3_1_0/trade.mp3', 'group': '0'}}], 'sound_mark': 'treɪd', 'ph_en': 'treɪd', 'ph_us': 'treɪd', 'answer_num': 1, 'chance_num': 1, 'topic_done_num': 1, 'topic_total': 127, 'w_lens': [], 'w_len': 0, 'w_tip': '', 'tips': '', 'word_type': 1, 'enable_i': 2, 'enable_i_i': 2, 'enable_i_o': 2, 'topic_code': 'lFiAe5drW46DfnrEaJVol2hbXlrWqpianVhlZmGZlmKPvo+UkWOTZWdiYm9ubJuXamCVaGpnaGSUj2STZGhob2JybGuWnG5tjZRlZWuVcmxmYW9pZZSSZ2mebmZtcWRsZWiZaWdsZGaW', 'answer_state': 1, 'show_card_type': 1}
+    # 检查请求结果
     handle_response(rsp)
     #  decrypt response
-    public_info.exam = debase64(rsp.json())
+    public_info.exam = debase64(rsp.json()['data'], rsp.json()['jv'])
     api.logger.info("写入成功")
 
 
@@ -162,16 +213,17 @@ def next_exam(public_info):
               'timestamp': create_timestamp(),
               'topic_code': public_info.topic_code,
               'version': '2.6.2.24031302'}
-    sign = encrypt_md5("&".join([f'{key}={value}' for key, value in params.items()]) + 'ajfajfamsnfaflfasakljdlalkflak') # 加密
+    sign = encrypt_md5(
+        "&".join([f'{key}={value}' for key, value in params.items()]) + 'ajfajfamsnfaflfasakljdlalkflak')  # 加密
     params.update({'sign': sign})
-    data = requests.rqs2_session.post(basic_url + url, data=json.dumps(params))
+    data = check_jv_and_retry_post(requests.rqs2_session.post, basic_url + url, data=json.dumps(params))
     # 检查请求是否成功
     handle_response(data)
     if data.json()['msg'] == '任务已完成！' or data.json()['msg'] == '需要选词！':
         public_info.exam = 'complete'
     # decrypt response
     else:
-        public_info.exam = debase64(data.json())
+        public_info.exam = debase64(data.json()['data'], data.json()['jv'])
 
 
 def check_is_self_built(func):
@@ -194,11 +246,11 @@ def query_word(public_info, word):
     api.logger.info(f"查询单词{word}")
     # query word in the unit
     url = f'Course/StudyWordInfo?course_id={public_info.course_id}&list_id={public_info.now_unit}&word={word}&timestamp={create_timestamp()}&version=2.6.1.231204&app_type=1'
-    word = requests.rqs_session.get(basic_url + url)
+    word = check_jv_and_retry_get(requests.rqs_session.get, basic_url + url)
     # 检查请求是否成功
     handle_response(word)
     # decrypt  response
-    public_info.word_query_result = debase64(word.json())
+    public_info.word_query_result = debase64(word.json()['data'], word.json()['jv'])
     api.logger.info("查询单词成功")
 
 
@@ -214,12 +266,52 @@ def submit_result(public_info, option):
             "topic_code": topic_code,
             "timestamp": timestamp, "version": "2.6.1.231204", "sign": sign,
             "app_type": 1}
-    rsp = requests.rqs2_session.post(basic_url + url, data=json.dumps(data))
+    rsp = check_jv_and_retry_post(requests.rqs2_session.post, basic_url + url, data=json.dumps(data))
     # check request is success
     handle_response(rsp)
     api.logger.info("提取下一题的请求参数")
     # next exam topic_code
-    public_info.topic_code = debase64(rsp.json())['topic_code']
+    public_info.topic_code = debase64(rsp.json()['data'], rsp.json()['jv'])['topic_code']
+
+
+def get_task_score(public_info):
+    """
+    获取任务分数
+    """
+    try:
+        # 根据任务类型获取分数
+        if hasattr(public_info, 'release_id') and public_info.release_id:
+            # 班级任务
+            url = 'https://app.vocabgo.com/student/api/Student/ClassTask/Info'
+            params = {
+                'task_id': public_info.task_id,
+                'release_id': public_info.release_id,
+                'timestamp': int(time.time() * 1000),
+                'version': '2.6.1.240122',
+                'app_type': 1
+            }
+        else:
+            # 自学任务
+            url = 'https://app.vocabgo.com/student/api/Student/StudyTask/Info'
+            params = {
+                'task_id': public_info.task_id,
+                'course_id': public_info.course_id,
+                'timestamp': int(time.time() * 1000),
+                'version': '2.6.1.240122',
+                'app_type': 1
+            }
+
+        response = requests.class_task_request.get(url, params=params)
+        if response.status_code == 200 and response.json().get('code') == 1:
+            data = response.json().get('data', {})
+            # 尝试从不同字段获取分数
+            score = data.get('score') or data.get('task_score') or data.get('grade')
+            if score is not None:
+                return float(score)
+        return None
+    except Exception as e:
+        api.logger.error(f"获取任务分数失败: {e}")
+        return None
 
 
 if __name__ == '__main__':

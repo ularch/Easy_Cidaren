@@ -1,6 +1,7 @@
 import time
 
 from log.log import Log
+from decryptencrypt.debase64 import debase64
 
 basic_util = Log("basic_util")
 
@@ -67,14 +68,15 @@ def extract_book_word(public_info):
     public_info.word_list = [d['word'] for d in public_info.get_book_words_data]
 
 
-# look up the word in the unit
+# 在单元中查找单词
 def query_word_unit(public_info):
+    public_info.get_word_list_result = debase64(public_info.get_word_list_result['data'], public_info.get_word_list_result['jv'])
     all_unit = {}
     # 创建所有单元字典
     for unit in public_info.all_unit_name:
         all_unit.update({public_info.course_id + ':' + unit: []})
     # 单词分类
-    for word_info in public_info.get_word_list_result["data"]['word_list']:
+    for word_info in public_info.get_word_list_result['word_list']:
         all_unit[public_info.course_id + ":" + word_info['list_id']].append(word_info['word'])
     # 清除无效单元
     all_unit = {key: value for key, value in all_unit.items() if value}

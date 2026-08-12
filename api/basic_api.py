@@ -1,12 +1,14 @@
 import re
 
 import api.request_header as requests
-from log.log import Log
+from log.log import Log, get_file_logger
 from util.basic_util import create_timestamp
 
 # init log
 basic_api = Log("basic_api")
 basic_url = 'https://app.vocabgo.com/student/api/Student/'
+
+file_log = get_file_logger("_basic_api")
 
 
 def handle_response(response):
@@ -78,6 +80,7 @@ def get_unit_words(public_info):
     # 检查请求是否成功
     handle_response(word_data)
     word_data_json = word_data.json()
+    basic_api.logger.info(word_data_json)
     public_info.get_word_list_result = word_data_json
 
 

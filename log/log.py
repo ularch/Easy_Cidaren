@@ -59,6 +59,33 @@ def setup_logger():
     return logger_instance
 
 
+def get_file_logger(name):
+    """
+    创建一个只写入文件的日志记录器
+    :param name: 日志记录器名称
+    :return: 配置好的日志记录器实例
+    """
+    # 创建专用的文件日志记录器
+    file_logger = logging.getLogger(name)
+    file_logger.setLevel(logging.INFO)
+    
+    # 只有当日志记录器没有处理器时才添加FileHandler
+    if not file_logger.handlers:
+        formatter = logging.Formatter(
+            "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
+            datefmt="%Y-%m-%d %I:%M:%S"
+        )
+        
+        file_handler = logging.FileHandler(log_filename, encoding="utf-8")
+        file_handler.setFormatter(formatter)
+        file_logger.addHandler(file_handler)
+        
+        # 确保该日志记录器不会向上传播到根日志记录器，避免在控制台重复显示
+        file_logger.propagate = False
+    
+    return file_logger
+
+
 # 初始化日志
 setup_logger()
 

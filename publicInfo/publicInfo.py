@@ -16,8 +16,12 @@ class PublicInfo:
         with open(os.path.join(self.path, "config", "config.json"), 'r', encoding='utf-8') as f:
             # 用户配置文件
             user_config = json.load(f)
-            self._min_time = user_config['min_time']
-            self._max_time = user_config['max_time']
+            if user_config['min_time'] >= 2 and user_config['max_time'] >= 2:
+                self._min_time = user_config['min_time']
+                self._max_time = user_config['max_time']
+            else:
+                self._min_time = 2
+                self._max_time = 2
             self._spend_min_time = user_config['spend_min_time']
             self._spend_max_time = user_config['spend_max_time']
             self._br_choices = user_config['br_choices']
@@ -45,6 +49,7 @@ class PublicInfo:
         self.task_id = ''
         self.now_unit = ''
         self.course_id = ''
+        self._task_name = ''
         # class task
         self.class_task = []
         # 任务类型选择（默认1）
@@ -127,6 +132,10 @@ class PublicInfo:
     @property
     def read(self) -> bool:
         return self._read
+
+    @property
+    def task_name(self) -> str:
+        return self._task_name
 
     def read_seen(self):
         with open(os.path.join(self.path, "config", "config.json"), 'r', encoding="utf-8") as f:

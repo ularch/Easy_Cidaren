@@ -218,5 +218,6 @@ def answer(public_info, mode):
         option = 0
         query_answer.logger.error(public_info.exam)
         query_answer.logger.error(f"其他题型{mode},程序退出")
-        exit(-1)
+        # 此处抛出异常
+        raise Exception
     return option

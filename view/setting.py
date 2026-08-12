@@ -67,6 +67,7 @@ class Ui_Form(QWidget):
         self.verticalLayout.addWidget(self.label)
         self.min_time = QtWidgets.QSpinBox(parent=self.verticalLayoutWidget)
         self.min_time.setObjectName("min_time")
+        self.min_time.setMinimum(2)  # 设置最小值为2秒
         self.verticalLayout.addWidget(self.min_time)
         self.label_2 = QtWidgets.QLabel(parent=self.verticalLayoutWidget)
         self.label_2.setObjectName("label_2")
@@ -75,6 +76,7 @@ class Ui_Form(QWidget):
         self.verticalLayout.addWidget(self.label_2)
         self.max_time = QtWidgets.QSpinBox(parent=self.verticalLayoutWidget)
         self.max_time.setObjectName("max_time")
+        self.max_time.setMinimum(2)  # 设置最小值为2秒
         self.verticalLayout.addWidget(self.max_time)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents_1)
         self.tabWidget.addTab(self.tab_1, "")
