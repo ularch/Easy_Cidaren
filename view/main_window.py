@@ -13,7 +13,7 @@ import api.request_header as requests
 import view.setting, view.introduce, view.error
 from api.login import verify_token
 from api.main_api import get_class_task
-from util.basic_util import get_todo_task, get_choices_task
+from util.basic_util import get_all_task
 from publicInfo.publicInfo import PublicInfo
 from api.geuuid import get_uuid
 
@@ -29,12 +29,12 @@ class UiMainWindow(QMainWindow):
         self.task_worker_class = task_worker_class
         self.token = ''
         self.task_worker = None
-        self.task_index = 0
+        self._batch_mode = False
         self.setupUi(self)
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.setFixedSize(720, 280)
+        MainWindow.setFixedSize(720, 370)
         icon_path = os.path.join(self.root_path, 'assets', 'icon.ico')
         if os.path.exists(icon_path):
             MainWindow.setWindowIcon(QIcon(icon_path))
@@ -84,25 +84,50 @@ class UiMainWindow(QMainWindow):
         self.test_task.setObjectName("test_task")
         self.test_task.clicked.connect(self.get_task_list)
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.test_task)
-        self.task_list = QtWidgets.QComboBox(parent=self.centralwidget)
-        self.task_list.setGeometry(QtCore.QRect(20, 170, 291, 22))
+        self.task_list = QtWidgets.QTableWidget(parent=self.centralwidget)
+        self.task_list.setGeometry(QtCore.QRect(20, 170, 291, 80))
         self.task_list.setObjectName("task_list")
+        # 四列：单选框 | 任务名 | 进度 | 得分，每列左对齐
+        self.task_list.setColumnCount(4)
+        self.task_list.verticalHeader().setVisible(False)
+        self.task_list.horizontalHeader().setVisible(False)
+        self.task_list.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.task_list.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.task_list.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.task_list.setShowGrid(False)
+        self.task_list.setWordWrap(False)
+        self.task_list.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Fixed)
+        self.task_list.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.task_list.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeMode.Fixed)
+        self.task_list.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeMode.Fixed)
+        self.task_list.setColumnWidth(0, 30)
+        self.task_list.setColumnWidth(2, 55)
+        self.task_list.setColumnWidth(3, 75)
+        # 目标任务选择：互斥单选框，勾选时同步选中表格行
+        self.task_radio_group = QtWidgets.QButtonGroup(self)
+        self.task_radio_group.setExclusive(True)
+        self.task_list.itemClicked.connect(self._on_task_item_clicked)
         self.start_task = QtWidgets.QPushButton(parent=self.centralwidget)
-        self.start_task.setGeometry(QtCore.QRect(20, 200, 111, 24))
+        self.start_task.setGeometry(QtCore.QRect(20, 260, 85, 24))
         self.start_task.setObjectName("start_task")
         self.start_task.clicked.connect(self.start)
+        self.batch_start = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.batch_start.setGeometry(QtCore.QRect(115, 260, 85, 24))
+        self.batch_start.setObjectName("batch_start")
+        self.batch_start.setText("一键刷题")
+        self.batch_start.clicked.connect(self.start_batch)
         self.stop_task = QtWidgets.QPushButton(parent=self.centralwidget)
-        self.stop_task.setGeometry(QtCore.QRect(150, 200, 111, 24))
+        self.stop_task.setGeometry(QtCore.QRect(210, 260, 85, 24))
         self.stop_task.setObjectName("stop_task")
         self.stop_task.clicked.connect(self.stop_current_task)
         # 答题进度条
         self.progress_bar = QtWidgets.QProgressBar(parent=self.centralwidget)
-        self.progress_bar.setGeometry(QtCore.QRect(20, 230, 291, 20))
+        self.progress_bar.setGeometry(QtCore.QRect(20, 290, 291, 20))
         self.progress_bar.setObjectName("progress_bar")
         self.progress_bar.setValue(0)
         # 进度文字（已完成数/总数）
         self.progress_label = QtWidgets.QLabel(parent=self.centralwidget)
-        self.progress_label.setGeometry(QtCore.QRect(320, 230, 50, 20))
+        self.progress_label.setGeometry(QtCore.QRect(320, 290, 50, 20))
         self.progress_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.follow_output = QtWidgets.QRadioButton(parent=self.centralwidget)
         self.follow_output.setGeometry(QtCore.QRect(607, 19, 101, 16))
@@ -274,7 +299,7 @@ class UiMainWindow(QMainWindow):
                 self.get_task_list()
 
     def get_task_list(self):
-        self.task_list.clear()
+        self.task_list.setRowCount(0)
         if not self.user_info.text() == "未获取":
             if self.learn_task.isChecked():
                 self.public_info._task_choices = 1
@@ -292,27 +317,74 @@ class UiMainWindow(QMainWindow):
             while self.public_info.task_total_count > now_page * 10:
                 now_page += 1
                 get_class_task(self.public_info, now_page)
-            get_todo_task(self.public_info)
+            get_all_task(self.public_info)
             if not self.public_info.task_list == []:
                 task_names = [task['task_name'] for task in self.public_info.task_list]
                 self.main_logger.info(f'{task_names}')
-                for task in task_names:
-                    self.task_list.addItem(f"{task}")
+                for task in self.public_info.task_list:
+                    task_name = task['task_name']
+                    progress = task.get('progress', 0)
+                    score = task.get('score') or 0
+                    over_status = task.get('over_status', 2)
+                    row = self.task_list.rowCount()
+                    self.task_list.insertRow(row)
+                    # 左侧目标任务单选框（容器+布局使其在格内居中）
+                    radio = QtWidgets.QRadioButton(self.task_list)
+                    radio.clicked.connect(lambda checked, r=row: self._select_task_row(r))
+                    self.task_radio_group.addButton(radio)
+                    radio_container = QtWidgets.QWidget(self.task_list)
+                    radio_layout = QtWidgets.QHBoxLayout(radio_container)
+                    radio_layout.setContentsMargins(0, 0, 0, 0)
+                    radio_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+                    radio_layout.addWidget(radio)
+                    self.task_list.setCellWidget(row, 0, radio_container)
+                    score_text = str(score)
+                    if over_status == 1:
+                        score_text += " (未开始)"
+                    # 任务数据存入三个数据列单元格，点任意列都能取到任务
+                    for col, text in enumerate([task_name, f"{progress}%", score_text], start=1):
+                        cell = QtWidgets.QTableWidgetItem(text)
+                        cell.setData(QtCore.Qt.ItemDataRole.UserRole, task)
+                        # 已完成的任务显示绿色
+                        if progress >= 100:
+                            cell.setForeground(QtGui.QColor("green"))
+                        # 未开始的任务显示灰色
+                        elif over_status == 1:
+                            cell.setForeground(QtGui.QColor("gray"))
+                        self.task_list.setItem(row, col, cell)
                 self.update_output_info("获取成功！")
             else:
-                self.update_output_info("获取失败！没有待完成的任务！")
+                self.update_output_info("获取失败！没有任务！")
+
+    def _select_task_row(self, row):
+        """勾选单选框时同步选中表格行"""
+        item = self.task_list.item(row, 1)
+        if item:
+            self.task_list.setCurrentItem(item)
+
+    def _on_task_item_clicked(self, item):
+        """点击任务行时自动勾选该行单选框"""
+        try:
+            row = item.row()
+            widget = self.task_list.cellWidget(row, 0)
+            radio = widget.findChild(QtWidgets.QRadioButton) if widget else None
+            if radio and not radio.isChecked():
+                radio.setChecked(True)
+        except Exception as e:
+            self.main_logger.error(f"选择任务行失败: {e}")
 
     def start(self):
         try:
-            if not self.public_info.task_list == [] and not self.public_info.class_task == []:
+            current_item = self.task_list.currentItem()
+            if not self.public_info.task_list == [] and not self.public_info.class_task == [] and current_item:
                 if self.learn_task.isChecked():
                     self.main_logger.info("开始班级学习任务")
                 else:
                     self.main_logger.info("开始班级测试任务")
-                task_name = self.task_list.currentText()
+                task_info = current_item.data(QtCore.Qt.ItemDataRole.UserRole)
+                task_name = task_info['task_name']
                 self.public_info._task_name = task_name
-                self.task_index = self.task_list.currentIndex()
-                get_choices_task(self.public_info, task_name)
+                self.public_info.class_task = [task_info]
                 self.update_output_info(f"开始任务{task_name}")
                 reply = QMessageBox.question(self, f"开始任务{task_name}",
                                              f"确认开始任务{task_name}吗？\n任务开始后，主页面将无法操作，可点击“中止任务”按钮手动中止任务\n系统将在后台自动执行刷题\n运行期间请勿关闭程序窗口",
@@ -321,17 +393,56 @@ class UiMainWindow(QMainWindow):
                 if reply == QMessageBox.StandardButton.Yes:
                     task_info = self.public_info.class_task[0]
                     self.public_info.is_self_built = False
+                    self._batch_mode = False
                     self.set_ui_enabled(False)
-                    self.task_worker = self.task_worker_class(task_info)
+                    self.task_worker = self.task_worker_class([task_info], batch_mode=False)
                     self.task_worker.task_finished.connect(self.on_task_finished)
                     self.task_worker.task_error.connect(self.on_task_error)
                     self.task_worker.task_progress.connect(self.update_progress)
+                    self.task_worker.task_notice.connect(self.on_task_notice)
                     self.task_worker.start()
                     self.update_output_info("任务已在后台开始执行...")
             else:
                 self.update_output_info("没有可执行的任务")
         except Exception as e:
             self.main_logger.error(f"运行出错，错误信息：{e}")
+            self.update_output_info(f"运行出错，错误信息：{e}")
+
+    def start_batch(self):
+        """一键刷题：按顺序自动执行列表中所有未完成的任务"""
+        try:
+            if self.user_info.text() == "未获取":
+                self.update_output_info("请先登录后再使用一键刷题")
+                return
+            tasks = [t for t in self.public_info.task_list if t.get('progress', 0) < 100]
+            if not tasks:
+                self.update_output_info("没有可执行的任务（已完成的任务已跳过）")
+                return
+            skipped = len(self.public_info.task_list) - len(tasks)
+            reply = QMessageBox.question(
+                self,
+                "一键刷题",
+                f"将按顺序自动执行 {len(tasks)} 个未完成任务"
+                + (f"（已跳过 {skipped} 个已完成任务）" if skipped else "")
+                + "\n任务开始后，主页面将无法操作，可点击“中止任务”按钮手动中止任务\n运行期间请勿关闭程序窗口",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+            self.public_info.is_self_built = False
+            self._batch_mode = True
+            self.set_ui_enabled(False)
+            self.task_worker = self.task_worker_class(tasks, batch_mode=True)
+            self.task_worker.task_finished.connect(self.on_task_finished)
+            self.task_worker.task_error.connect(self.on_task_error)
+            self.task_worker.task_progress.connect(self.update_progress)
+            self.task_worker.task_notice.connect(self.on_task_notice)
+            self.task_worker.batch_finished.connect(self.on_batch_finished)
+            self.task_worker.start()
+            self.update_output_info(f"开始一键刷题：共 {len(tasks)} 个任务")
+        except Exception as e:
+            self.main_logger.error(f"一键刷题启动失败: {e}")
             self.update_output_info(f"运行出错，错误信息：{e}")
 
     def update_progress(self, progress_text):
@@ -357,19 +468,48 @@ class UiMainWindow(QMainWindow):
         :param message:
         :return:
         """
+        self.main_logger.info(f'{message}')
+        if self._batch_mode:
+            # 批量模式：不弹窗，输出信息并刷新任务列表，自动继续下一个任务
+            self.update_output_info(message)
+            self.progress_bar.setValue(0)
+            self.progress_label.setText("")
+            self.get_task_list()
+            return
         self.set_ui_enabled(True)
         self.progress_bar.setValue(self.progress_bar.maximum())
         music_thread = threading.Thread(target=self.play_music)
         music_thread.start()
         QtWidgets.QMessageBox.information(self, "任务完成！", message)
-        self.main_logger.info(f'{message}')
         task_name = self.public_info.class_task[0]['task_name']
         self.update_output_info(f"{task_name}运行完成")
         self.update_output_info(message)
-        self.task_list.removeItem(self.task_index)
+        # 自动刷新任务列表，显示最新进度和得分
+        self.get_task_list()
         if self.task_worker:
             self.task_worker.deleteLater()
             self.task_worker = None
+
+    def on_batch_finished(self, summary):
+        """一键刷题全部任务执行结束"""
+        self._batch_mode = False
+        self.set_ui_enabled(True)
+        self.progress_bar.setValue(0)
+        self.progress_label.setText("")
+        self.main_logger.info(summary)
+        self.update_output_info(summary)
+        self.get_task_list()
+        music_thread = threading.Thread(target=self.play_music)
+        music_thread.start()
+        QtWidgets.QMessageBox.information(self, "一键刷题完成", summary)
+        if self.task_worker:
+            self.task_worker.deleteLater()
+            self.task_worker = None
+
+    def on_task_notice(self, message):
+        """任务执行中的提示信息（重试/跳过等）"""
+        self.main_logger.info(message)
+        self.update_output_info(message)
 
     def on_task_error(self, error_message):
         """
@@ -377,6 +517,7 @@ class UiMainWindow(QMainWindow):
         :param error_message:
         :return:
         """
+        self._batch_mode = False
         self.set_ui_enabled(True)
         self.progress_bar.setValue(0)
         self.progress_label.setText("")
@@ -457,6 +598,7 @@ class UiMainWindow(QMainWindow):
                 QMessageBox.critical(self, "错误", f"fetch_token 目录不存在：{fetch_token_path}")
                 return
             dialog = BuiltinTokenDialog(parent=self, fetch_token_path=fetch_token_path)
+            dialog.captured.connect(self.on_builtin_token_captured)
             dialog.exec()
         except ImportError as e:
             QMessageBox.critical(self, "错误", f"无法导入 builtin_token 模块：{e}")
@@ -487,6 +629,7 @@ class UiMainWindow(QMainWindow):
         self.test_task.setEnabled(enabled)
         self.task_list.setEnabled(enabled)
         self.start_task.setEnabled(enabled)
+        self.batch_start.setEnabled(enabled)
         self.menu.setEnabled(enabled)
         self.menu_2.setEnabled(enabled)
         if not enabled:
@@ -505,6 +648,7 @@ class UiMainWindow(QMainWindow):
                 self.task_worker.stop()
                 self.task_worker.quit()
                 self.task_worker.wait()
+                self._batch_mode = False
                 self.set_ui_enabled(True)
                 self.progress_bar.setValue(0)
                 self.progress_label.setText("")

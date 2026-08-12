@@ -22,25 +22,58 @@ class TaskWorker(QThread):
     task_finished = pyqtSignal(str)
     task_error = pyqtSignal(str)
     task_progress = pyqtSignal(str)
+    task_notice = pyqtSignal(str)     # 重试/跳过等提示
+    batch_finished = pyqtSignal(str)  # 批量模式全部执行结束
 
-    def __init__(self, task_info):
+    def __init__(self, task_infos, batch_mode=False):
         super().__init__()
-        self.task_info = task_info
+        self.task_infos = task_infos
+        self.batch_mode = batch_mode
         self._is_running = True
         self.start_time = None
 
     def run(self):
-        try:
-            self.start_time = time.time()
-            self.complete_test(self.task_info)
-            if self._is_running:
-                elapsed_time = time.time() - self.start_time
-                self.task_finished.emit(f"任务已完成，用时 {elapsed_time:.2f} 秒")
-                task_score = get_task_score(public_info)
-        except Exception as e:
-            if self._is_running:
-                self.task_error.emit(str(e))
-                main.logger.error("任务执行过程中发生错误：", exc_info=True)
+        total = len(self.task_infos)
+        success_count = 0
+        failed_tasks = []
+        for index, task_info in enumerate(self.task_infos, start=1):
+            if not self._is_running:
+                break
+            task_name = task_info['task_name']
+            main.logger.info(f"开始执行任务[{index}/{total}]：{task_name}")
+            attempts = 0
+            while self._is_running:
+                attempts += 1
+                try:
+                    self.start_time = time.time()
+                    self.complete_test(task_info)
+                    if self._is_running:
+                        elapsed_time = time.time() - self.start_time
+                        message = f"[{index}/{total}] {task_name} 已完成，用时 {elapsed_time:.2f} 秒"
+                        self.task_finished.emit(message)
+                        get_task_score(public_info)
+                        success_count += 1
+                    break
+                except Exception as e:
+                    main.logger.error(f"任务 {task_name} 执行出错（第{attempts}次）: {e}", exc_info=True)
+                    if attempts >= 3:
+                        if self.batch_mode:
+                            failed_tasks.append(task_name)
+                            self.task_notice.emit(f"[{index}/{total}] 任务 {task_name} 连续失败3次，已跳过，继续下一个")
+                        else:
+                            self.task_error.emit(f"任务 {task_name} 连续失败3次：{e}")
+                            return
+                        break
+                    if not self._is_running:
+                        break
+                    self.task_notice.emit(f"[{index}/{total}] 任务 {task_name} 第{attempts}次出错：{e}，2秒后自动重试")
+                    time.sleep(2)
+
+        if self._is_running and self.batch_mode:
+            summary = f"一键刷题完成：成功 {success_count} 个，失败 {len(failed_tasks)} 个"
+            if failed_tasks:
+                summary += f"\n失败任务：{', '.join(failed_tasks)}"
+            self.batch_finished.emit(summary)
 
     def stop(self):
         self._is_running = False

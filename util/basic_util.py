@@ -15,40 +15,23 @@ def filler_not_complete_unit(public_info) -> None:
     public_info.not_complete_unit = not_complete_unit
 
 
-# delete expire task
-def get_todo_task(public_info):
+# get all task
+def get_all_task(public_info):
     """
-    从列表里删除过期的任务
+    获取全部任务（包括已完成），排除已过期
     :param public_info: 公共组件
     """
-    todo_task_list = []
+    all_task_list = []
     for tasks in public_info.class_task:
         for task in tasks['records']:
             # over_status 1 未开始 2 未过期 3 已过期
-            if task['over_status'] == 2:
-                # 进度小于100%
-                if task['progress'] < 100:
-                    # 1为班级学习任务，2为班级测试任务
-                    choice = public_info.task_type_choices
-                    if task['task_type'] == choice:
-                        todo_task_list.append(task)
-                        # 未过期的任务放在todo_task_list中
-    basic_util.logger.info(f'获取到:{todo_task_list}')
-    public_info.task_list = todo_task_list
-
-
-def get_choices_task(public_info, task_name):
-    """
-    筛选出最终选择的任务
-    :param public_info: 公共组件
-    :param task_name: 选择的任务名称
-    """
-    todo_task = []
-    for task in public_info.task_list:
-        if task['task_name'] == task_name:
-            todo_task.append(task)
-        # public_info.class_task就是筛选出来的任务
-        public_info.class_task = todo_task
+            if task['over_status'] != 3:
+                # 1为班级学习任务，2为班级测试任务
+                choice = public_info.task_type_choices
+                if task['task_type'] == choice:
+                    all_task_list.append(task)
+    basic_util.logger.info(f'获取到:{all_task_list}')
+    public_info.task_list = all_task_list
 
 
 # create timestamp

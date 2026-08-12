@@ -140,6 +140,18 @@ class Log:
     def __init__(self, logger_name: str):
         self.logger = logging.getLogger(logger_name)
 
+    def info(self, message, *args, **kwargs):
+        self.logger.info(message, *args, **kwargs)
+
+    def error(self, message, *args, **kwargs):
+        self.logger.error(message, *args, **kwargs)
+
+    def warning(self, message, *args, **kwargs):
+        self.logger.warning(message, *args, **kwargs)
+
+    def debug(self, message, *args, **kwargs):
+        self.logger.debug(message, *args, **kwargs)
+
     def open_logs_folder(self):
         """
         打开日志文件夹
