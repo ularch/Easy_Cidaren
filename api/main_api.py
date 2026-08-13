@@ -100,7 +100,7 @@ def skip_exam(public_info):
     跳过过不了的题目
     :return:
     """
-    api.logger.info("跳过题目")
+    api.logger.info("无法完成，跳过题目")
     url = f'{PublicInfo.task_type}/SkipAnswer'
     params = {'it_font_size': 42,
               'it_img_w': 804,
@@ -122,7 +122,7 @@ def skip_exam(public_info):
         public_info.exam = 'complete'
     # decrypt response
     else:
-        public_info.exam = debase64(rsp.json())
+        public_info.exam = debase64(rsp.json()['data'], rsp.json()['jv'])
 
 
 # 勾选所有单词 bug

@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/github/downloads/ularch/Easy_Cidaren/total">
 </div>
 
-## 从1.5.4版本开始大量采用vibe coding
+## 从1.5.4版本后开始大量采用vibe coding
 
 - 因为倒卖太多了，导致本脚本的滥用，外加官方封堵此类型脚本，本项目决定从1.5.0版本开始不再开源，但依旧免费发布
 - 从1.5.4版本后，本项目开始大量采用vibe coding，并且再次开源

@@ -41,6 +41,8 @@ class PublicInfo:
         self.exam = ''
         # all word
         self.word_list = []
+        # 中文释义 -> 英文短语映射(用于汉译英术语课程)
+        self.word_dict = {}
         # translate
         self.zh_en = ''
         # all unit info

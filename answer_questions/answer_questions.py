@@ -1,16 +1,57 @@
 import random
 import re
 import time
+import json
+from urllib.parse import unquote
 
 from api.main_api import query_word, submit_result, next_exam
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
+from decryptencrypt.debase64 import debase64
 from util.basic_util import delete_other_char
 from util.select_mean import select_mean, handle_query_word_mean, filler_option, select_match_word, word_examples, \
     is_word_exist
 from util.word_revert import word_revert
 
 query_answer = Log('answer_questions')
+
+
+def _match_phrase_by_word_zh(public_info, word_mean):
+    """
+    按中文释义匹配词表中的英文短语(术语课程)
+    :param public_info:
+    :param word_mean:
+    :return:
+    """
+    word_map = getattr(public_info, 'word_dict', None) or {}
+    if not word_map:
+        # 兼容词表未经过 handle_word_result 的场景
+        data = getattr(public_info, 'get_word_list_result', None)
+        try:
+            if isinstance(data, dict) and 'data' in data:
+                raw = data['data']
+                if isinstance(raw, dict):
+                    word_list = raw.get('word_list', [])
+                elif 'jv' in data:
+                    word_list = debase64(raw, data['jv'])['word_list']
+                else:
+                    word_list = []
+                for item in word_list:
+                    word_map[item['word_zh']] = item['word']
+        except Exception as e:
+            query_answer.logger.error(f"词表解析失败:{e}")
+    if not word_map:
+        return None
+    # 精确匹配
+    if word_mean in word_map:
+        return word_map[word_mean]
+    # 归一化匹配(去空白/括号/引号等)
+    pattern = r'[\s（）()“”"\'‘’《》]'
+    norm_mean = re.sub(pattern, '', word_mean)
+    for zh, en in word_map.items():
+        if re.sub(pattern, '', zh) == norm_mean:
+            return en
+    return None
 
 
 # submit
@@ -73,6 +114,11 @@ def select_word(public_info) -> int or str or None:
                     for usage_info in content['content']['usage_infos']:
                         if usage_info['sen_mean_cn'] == word_mean:
                             return delete_other_char(usage_info['sen_content'])
+    # 词表短语兜底: 术语课程按中文释义反查英文短语
+    phrase = _match_phrase_by_word_zh(public_info, word_mean)
+    if phrase:
+        query_answer.logger.info(f"词表匹配到短语:{phrase}")
+        return delete_other_char(unquote(phrase))
     query_answer.logger.info("查询失败,准备跳过")
     # exit(-1)
     return None
@@ -183,6 +229,33 @@ def complete_sentence(public_info):
     return word
 
 
+# mode 73: 多空首字母补全单词(提交JSON数组)
+def complete_spelling(public_info):
+    query_answer.logger.info("补全拼写")
+    content = public_info.exam['stem']['content']
+    remark = public_info.exam['stem']['remark']
+    tips = re.findall(r'\{(\w+)\}', content)
+    word_lens = public_info.exam.get('w_lens') or []
+    phrase = _match_phrase_by_word_zh(public_info, remark)
+    if not phrase:
+        query_answer.logger.error("补全拼写失败:词表未匹配到短语")
+        return None
+    words = unquote(phrase).split()
+    answers = []
+    for tip, wlen in zip(tips, word_lens):
+        matched = None
+        for w in words:
+            if w.lower().startswith(tip.lower()) and (not wlen or len(w) == int(wlen)):
+                matched = w
+                break
+        if matched is None:
+            query_answer.logger.error(f"补全拼写失败:未匹配到{tip}")
+            return None
+        answers.append(matched)
+    query_answer.logger.info(f"补全拼写结果:{answers}")
+    return json.dumps(answers)
+
+
 def answer(public_info, mode):
     '''
     15 看词选义（一星）
@@ -214,6 +287,9 @@ def answer(public_info, mode):
     elif mode == 51 or mode == 52 or mode == 53 or mode == 54:
         option = complete_sentence(public_info)
         query_answer.logger.info(f'补全单词结果{option}')
+    elif mode == 73:
+        option = complete_spelling(public_info)
+        query_answer.logger.info(f'补全拼写结果{option}')
     else:
         option = 0
         query_answer.logger.error(public_info.exam)

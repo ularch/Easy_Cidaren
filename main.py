@@ -142,6 +142,13 @@ class TaskWorker(QThread):
 
     def class_task_answer(self):
         token = PublicInfo.token
+        # 确保单元词表已加载(汉译英术语题依赖词表的 word_zh)
+        if not public_info.word_list:
+            try:
+                get_unit_words(public_info)
+                handle_word_result(public_info)
+            except Exception as e:
+                main.logger.error(f"加载词表失败: {e}", exc_info=True)
         get_exam(public_info)
         public_info.topic_code = public_info.exam['topic_code']
         self.emit_progress()

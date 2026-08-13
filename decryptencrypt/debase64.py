@@ -60,6 +60,7 @@ def debase64(data: dict or str, jv: str = 0):
     if type(data) is dict:
         data = data["data"]
 
+    jv = str(jv or '')
     file_logger.info(f"开始解码jv:{jv},{data}")
     try:
         bs64_str = base64.b64decode(data.encode("utf-8")).decode("utf-8")
