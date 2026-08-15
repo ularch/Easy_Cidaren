@@ -34,6 +34,11 @@ class PublicInfo:
 
         # 任务列表
         self.task_list = ""
+        # 答题对错计数(供进度条右侧统计显示)
+        self.right_count = 0
+        self.wrong_count = 0
+        # 跳过计数(无匹配答案跳过未提交的题)
+        self.skip_count = 0
         # query_answer
         self._topic_code = ''
         self.word_query_result = ''
@@ -43,6 +48,12 @@ class PublicInfo:
         self.word_list = []
         # 中文释义 -> 英文短语映射(用于汉译英术语课程)
         self.word_dict = {}
+        # 跨进程加载历史词表(全局词表池, mode 73 兜底跨单元前缀单词)
+        try:
+            with open(os.path.join(self.path, "config", "word_pool.json"), 'r', encoding='utf-8') as f:
+                self.word_dict = json.load(f)
+        except Exception:
+            pass
         # translate
         self.zh_en = ''
         # all unit info

@@ -1,0 +1,587 @@
+{
+  "防灾减灾": [
+    "disaster prevention and mitigation"
+  ],
+  "生态扶贫": [
+    "poverty alleviation efforts based on ecological conservation"
+  ],
+  "生态环境监管": [
+    "environmental regulation"
+  ],
+  "再生资源回收利用网络体系": [
+    "national network for the efficient recycling of renewable resources"
+  ],
+  "生态本底": [
+    "ecological base"
+  ],
+  "耕地红线": [
+    "arable land red line"
+  ],
+  "能耗双控": [
+    "dual control system on energy intensity and total consumption"
+  ],
+  "无废城市": [
+    "waste-free cities"
+  ],
+  "碳汇能力": [
+    "carbon sink capacity"
+  ],
+  "自然资源有偿使用制度": [
+    "system for (the) paid use of natural resource assets"
+  ],
+  "国家生态文明试验区": [
+    "national pilot zone for ecological conservation"
+  ],
+  "现代环境治理体系": [
+    "modern environmental governance system"
+  ],
+  "污染担责": [
+    "responsibility for pollution"
+  ],
+  "环境影响评价": [
+    "environmental impact assessment"
+  ],
+  "废弃物循环利用体系": [
+    "system for recycling waste and used materials"
+  ],
+  "资源节约集约利用": [
+    "economical and intensive use of resources"
+  ],
+  "“三北”防护林体系建设工程（“三北”工程）": [
+    "Three-North Shelterbelt Forest Program"
+  ],
+  "自然资源资产产权制度": [
+    "property right system for natural resource assets"
+  ],
+  "生态保护补偿": [
+    "ecological protection compensation"
+  ],
+  "_word_answers": {
+    "碳汇能力": [
+      "sink",
+      "capacity"
+    ],
+    "生态扶贫": [
+      "alleviation",
+      "poverty"
+    ],
+    "资源节约集约利用": [
+      "conservation",
+      "economical",
+      "intensive"
+    ],
+    "生态安全体系": [
+      "security"
+    ],
+    "生态环境监管": [
+      "supervision"
+    ],
+    "生态保护补偿": [
+      "compensation"
+    ],
+    "环境保护税": [
+      "environmental",
+      "tax"
+    ],
+    "防灾减灾": [
+      "mitigation",
+      "prevention"
+    ],
+    "污染担责": [
+      "accountability"
+    ],
+    "环境影响评价": [
+      "appraisal"
+    ],
+    "无废城市": [
+      "zero",
+      "waste"
+    ],
+    "国家生态文明试验区": [
+      "civilization",
+      "pilot",
+      "zone"
+    ],
+    "生态本底": [
+      "background"
+    ],
+    "自然资源有偿使用制度": [
+      "assets"
+    ],
+    "粮食安全": [
+      "security"
+    ],
+    "“三北”防护林体系建设工程（“三北”工程）": [
+      "Project",
+      "Shelterbelt"
+    ],
+    "生态红线": [
+      "ecological"
+    ],
+    "能耗双控": [
+      "amount",
+      "dual",
+      "intensity"
+    ],
+    "耕地红线": [
+      "arable"
+    ],
+    "再生资源回收利用网络体系": [
+      "efficient",
+      "recycling"
+    ],
+    "环境信用评价": [
+      "credit",
+      "evaluation"
+    ],
+    "现代环境治理体系": [
+      "governance"
+    ],
+    "废弃物循环利用体系": [
+      "recycling",
+      "materials"
+    ],
+    "自然资源资产产权制度": [
+      "property",
+      "assets"
+    ],
+    "碳足迹": [
+      "footprint"
+    ],
+    "地球生命共同体": [
+      "future",
+      "community"
+    ],
+    "净零排放": [
+      "emissions",
+      "net"
+    ],
+    "全球发展倡议": [
+      "Initiative"
+    ],
+    "适应气候变化": [
+      "adapt",
+      "adaptation"
+    ],
+    "可持续交通": [
+      "sustainable"
+    ],
+    "绿色“一带一路”": [
+      "Initiative",
+      "cooperation"
+    ],
+    "全球气候治理": [
+      "governance"
+    ],
+    "碳排放权交易": [
+      "trading"
+    ],
+    "人居环境": [
+      "living",
+      "environments"
+    ],
+    "固体废弃物和垃圾处置": [
+      "treatment",
+      "disposal"
+    ],
+    "消费品以旧换新": [
+      "ins",
+      "trade",
+      "consumer"
+    ],
+    "绿色储粮技术": [
+      "storage",
+      "grain"
+    ],
+    "低碳出行": [
+      "transportation"
+    ],
+    "绿色出行": [
+      "travel"
+    ],
+    "生活垃圾分类": [
+      "household",
+      "sorting"
+    ],
+    "绿色居住": [
+      "housing"
+    ],
+    "生活污水治理": [
+      "sewage",
+      "domestic"
+    ],
+    "新能源汽车": [
+      "vehicles"
+    ],
+    "生态产品": [
+      "ecological"
+    ],
+    "绿色产品": [
+      "products"
+    ],
+    "绿色消费": [
+      "consumption"
+    ],
+    "绿色交通体系": [
+      "transport",
+      "network"
+    ],
+    "绿色供应链": [
+      "supply",
+      "chains"
+    ],
+    "能源绿色低碳转型": [
+      "transformation",
+      "energy"
+    ],
+    "绿色制造": [
+      "conscious",
+      "manufacturing"
+    ],
+    "绿色生产方式": [
+      "manufacturing"
+    ],
+    "产业结构调整优化": [
+      "restructure",
+      "structural"
+    ],
+    "战略性新兴产业": [
+      "emerging",
+      "strategic"
+    ],
+    "清洁能源": [
+      "green"
+    ],
+    "新质生产力": [
+      "productive",
+      "forces"
+    ],
+    "绿色农业": [
+      "sustainable"
+    ],
+    "核技术利用": [
+      "utilization",
+      "nuclear"
+    ],
+    "可再生能源利用": [
+      "utilization",
+      "renewable"
+    ],
+    "智能产业": [
+      "intelligent"
+    ],
+    "清洁能源产业": [
+      "sector"
+    ],
+    "数字经济": [
+      "digital"
+    ],
+    "先进制造业集群": [
+      "advanced",
+      "clusters"
+    ],
+    "绿色金融": [
+      "finance"
+    ],
+    "传统制造业转型升级": [
+      "upgrading"
+    ],
+    "清洁生产产业": [
+      "production"
+    ],
+    "水污染防治": [
+      "prevention"
+    ],
+    "大气污染防治": [
+      "atmospheric",
+      "air",
+      "pollution"
+    ],
+    "放射性污染防治": [
+      "radioactive"
+    ],
+    "自然保护地体系": [
+      "area",
+      "reserves"
+    ],
+    "噪声污染防治": [
+      "pollution",
+      "noise"
+    ],
+    "生态保护修复": [
+      "restoration",
+      "conservation"
+    ],
+    "湿地保护": [
+      "wetland"
+    ],
+    "防洪安全": [
+      "control",
+      "flood"
+    ],
+    "生物安全管理": [
+      "management",
+      "biosecurity"
+    ],
+    "黑土地保护": [
+      "soil",
+      "conservation"
+    ],
+    "江河生态安全": [
+      "ecological",
+      "security"
+    ],
+    "水沙调控": [
+      "sediment"
+    ],
+    "种源安全": [
+      "germplasm"
+    ],
+    "土壤资源永续利用": [
+      "sustainable",
+      "utilization"
+    ],
+    "荒漠化防治": [
+      "desertification"
+    ],
+    "农业面源污染防治": [
+      "non-point",
+      "non",
+      "point",
+      "source"
+    ],
+    "造林育林": [
+      "afforestation",
+      "cultivation"
+    ],
+    "退耕还林还草": [
+      "cropland",
+      "transform",
+      "farmland"
+    ],
+    "生物多样性保护": [
+      "biodiversity"
+    ],
+    "海洋生态环境保护": [
+      "eco-environment"
+    ],
+    "绿色矿山建设": [
+      "mines",
+      "construction"
+    ],
+    "黑臭水体治理": [
+      "improve",
+      "water",
+      "bodies"
+    ],
+    "国土空间开发保护": [
+      "territorial",
+      "space"
+    ],
+    "山水林田湖草沙一体化保护和系统治理": [
+      "holistic",
+      "systematic",
+      "approach"
+    ],
+    "水源保护": [
+      "sources"
+    ],
+    "天更蓝、山更绿、水更清": [
+      "cleaner"
+    ],
+    "美丽中国": [
+      "Beautiful"
+    ],
+    "创新驱动发展": [
+      "innovation",
+      "driven"
+    ],
+    "可持续发展": [
+      "sustainable"
+    ],
+    "人与自然和谐共生": [
+      "harmony",
+      "humanity"
+    ],
+    "碳中和": [
+      "neutrality"
+    ],
+    "减污降碳": [
+      "emissions",
+      "carbon"
+    ],
+    "绿水青山就是金山银山": [
+      "Lucid",
+      "lush",
+      "mountains"
+    ],
+    "乡村振兴": [
+      "revitalization"
+    ],
+    "循环发展": [
+      "circular"
+    ],
+    "碳达峰": [
+      "peaking",
+      "carbon"
+    ],
+    "“双碳”目标": [
+      "dual",
+      "carbon"
+    ],
+    "生态优先": [
+      "protection",
+      "prioritize"
+    ],
+    "新发展理念": [
+      "development",
+      "philosophy"
+    ],
+    "低碳转型": [
+      "transition"
+    ],
+    "生态文明": [
+      "ecological",
+      "civilization"
+    ],
+    "绿色发展": [
+      "development"
+    ],
+    "绿色转型": [
+      "transformation"
+    ],
+    "低碳发展": [
+      "low",
+      "carbon"
+    ]
+  },
+  "适应气候变化": [
+    "climate change adaptation"
+  ],
+  "全球气候治理": [
+    "global climate governance"
+  ],
+  "地球生命共同体": [
+    "a community of/for all life on earth"
+  ],
+  "全球能源治理": [
+    "global energy governance"
+  ],
+  "碳排放权交易": [
+    "carbon emissions trading"
+  ],
+  "绿色“一带一路”": [
+    "green Belt and Road"
+  ],
+  "净零排放": [
+    "net zero emissions"
+  ],
+  "绿色储粮技术": [
+    "green grain storage technologies"
+  ],
+  "生活污水治理": [
+    "domestic sewage treatment"
+  ],
+  "消费品以旧换新": [
+    "trade-ins of old consumer goods"
+  ],
+  "绿色交通体系": [
+    "green transport network"
+  ],
+  "绿色供应链": [
+    "green supply chains"
+  ],
+  "低碳出行": [
+    "low-carbon means of transportation"
+  ],
+  "固体废弃物和垃圾处置": [
+    "solid waste and garbage disposal"
+  ],
+  "生活垃圾分类": [
+    "domestic waste sorting"
+  ],
+  "核技术利用": [
+    "nuclear technology application"
+  ],
+  "能源绿色低碳转型": [
+    "green and low-carbon energy transition"
+  ],
+  "新质生产力": [
+    "new quality productive forces"
+  ],
+  "先进制造业集群": [
+    "advanced manufacturing clusters"
+  ],
+  "绿色生产方式": [
+    "environmentally friendly modes of production"
+  ],
+  "可再生能源利用": [
+    "the utilization of recyclable energy"
+  ],
+  "节能环保产业": [
+    "energy-saving and environmental protection industries"
+  ],
+  "产业结构调整优化": [
+    "adjust and improve the industrial structure"
+  ],
+  "黑土地保护": [
+    "black soil land protection"
+  ],
+  "荒漠化防治": [
+    "prevention and control of desertification"
+  ],
+  "农业面源污染防治": [
+    "prevention and control of agricultural non-point source pollution"
+  ],
+  "国土空间开发保护": [
+    "development and protection of territorial space"
+  ],
+  "种源安全": [
+    "security of germplasm resources"
+  ],
+  "造林育林": [
+    "forest planting and forest cultivation"
+  ],
+  "水污染防治": [
+    "prevent and control water pollution"
+  ],
+  "生物安全管理": [
+    "biosafety and biosecurity management "
+  ],
+  "退耕还林还草": [
+    "turn farmland into forests and grasslands"
+  ],
+  "海洋生态环境保护": [
+    "marine ecological environment protection"
+  ],
+  "生态保护修复": [
+    "ecological conservation and restoration"
+  ],
+  "大气污染防治": [
+    "prevention and control of air/atmospheric pollution"
+  ],
+  "绿色矿山建设": [
+    "construction of green mines"
+  ],
+  "放射性污染防治": [
+    "prevention and control of radioactive pollution"
+  ],
+  "土壤资源永续利用": [
+    "sustainable use of soil resources"
+  ],
+  "人与自然和谐共生": [
+    "harmony between humanity and nature"
+  ],
+  "碳达峰": [
+    "carbon dioxide peaking"
+  ],
+  "生态优先": [
+    "prioritize ecological protection"
+  ],
+  "“双碳”目标": [
+    "carbon peaking and carbon neutrality goals"
+  ],
+  "减污降碳": [
+    "reduction of pollution and carbon emissions"
+  ]
+}

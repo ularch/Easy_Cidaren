@@ -1,6 +1,6 @@
 {
-  "min_time": 2,
-  "max_time": 2,
+  "min_time": 0,
+  "max_time": 0,
   "spend_min_time": 5,
   "spend_max_time": 15,
   "br_choices": true,

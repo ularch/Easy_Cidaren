@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication
 
 from answer_questions.answer_questions import *
 from api.basic_api import get_all_unit, get_unit_words, get_book_all_words
-from api.main_api import get_exam, select_all_word, skip_exam, get_task_score
+from api.main_api import get_exam, select_all_word, skip_exam, get_task_score, SecurityVerifyError
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
 from util.basic_util import extract_book_word, query_word_unit
@@ -31,6 +31,9 @@ class TaskWorker(QThread):
         self.batch_mode = batch_mode
         self._is_running = True
         self.start_time = None
+        self.current_task_name = ''
+        self.current_index = 0
+        self.current_total = 0
 
     def run(self):
         total = len(self.task_infos)
@@ -40,6 +43,9 @@ class TaskWorker(QThread):
             if not self._is_running:
                 break
             task_name = task_info['task_name']
+            self.current_task_name = task_name
+            self.current_index = index
+            self.current_total = total
             main.logger.info(f"开始执行任务[{index}/{total}]：{task_name}")
             attempts = 0
             while self._is_running:
@@ -53,6 +59,16 @@ class TaskWorker(QThread):
                         self.task_finished.emit(message)
                         get_task_score(public_info)
                         success_count += 1
+                    break
+                except SecurityVerifyError as e:
+                    # 服务端风控(11003): 重试无意义(2秒内不可能解除验证), 立即停止当前任务
+                    main.logger.error(f"任务 {task_name} 需安全验证: {e}")
+                    if self.batch_mode:
+                        failed_tasks.append(task_name)
+                        self.task_notice.emit(f"[{index}/{total}] 任务 {task_name} 需安全验证已跳过：{e}，请完成验证后重试")
+                    else:
+                        self.task_error.emit(f"任务 {task_name} 需安全验证：{e}")
+                        return
                     break
                 except Exception as e:
                     main.logger.error(f"任务 {task_name} 执行出错（第{attempts}次）: {e}", exc_info=True)
@@ -138,7 +154,7 @@ class TaskWorker(QThread):
             done = public_info.exam.get('topic_done_num', 0)
             total = public_info.exam.get('topic_total', 0)
             if total:
-                self.task_progress.emit(f"{done}/{total}")
+                self.task_progress.emit(f"{done}/{total}|{public_info.right_count}|{public_info.wrong_count}|{public_info.skip_count}|{self.current_index}/{self.current_total}|{self.current_task_name}")
 
     def class_task_answer(self):
         token = PublicInfo.token
@@ -150,6 +166,9 @@ class TaskWorker(QThread):
             except Exception as e:
                 main.logger.error(f"加载词表失败: {e}", exc_info=True)
         get_exam(public_info)
+        if public_info.exam == 'complete':
+            main.logger.info('该任务已完成，无法重复作答')
+            return
         public_info.topic_code = public_info.exam['topic_code']
         self.emit_progress()
         main.logger.info("开始答题")
@@ -166,6 +185,7 @@ class TaskWorker(QThread):
             option = answer(public_info, mode)
             if option is None:
                 public_info.topic_code = public_info.exam['topic_code']
+                public_info.skip_count += 1
                 skip_exam(public_info)
             else:
                 submit(public_info, option)
@@ -201,6 +221,9 @@ class TaskWorker(QThread):
             except Exception as e:
                 main.logger.info("任务已经开启")
         get_exam(public_info)
+        if public_info.exam == 'complete':
+            main.logger.info('该任务已完成，无法重复作答')
+            return
         public_info.topic_code = public_info.exam['topic_code']
         self.emit_progress()
         main.logger.info("开始答题")
@@ -217,6 +240,7 @@ class TaskWorker(QThread):
             option = answer(public_info, mode)
             if option is None:
                 public_info.topic_code = public_info.exam['topic_code']
+                public_info.skip_count += 1
                 skip_exam(public_info)
             else:
                 submit(public_info, option)

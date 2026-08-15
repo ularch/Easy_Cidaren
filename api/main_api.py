@@ -8,6 +8,7 @@ from decryptencrypt.debase64 import debase64, JV_TWO, JV_THREE
 from decryptencrypt.encrypt_md5 import encrypt_md5
 from log.log import Log, get_file_logger
 from publicInfo.publicInfo import PublicInfo
+from util.answer_lib import add_answer, add_word_answer
 from util.basic_util import create_timestamp
 
 # create logger
@@ -16,6 +17,10 @@ api = Log('main_api')
 basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
 file_logger = get_file_logger('_main_api')
+
+
+class SecurityVerifyError(Exception):
+    """服务端风控: 11003 需安全验证(要求用户在 App/微信端完成验证), 重试无意义, 应立即停止并提示"""
 
 
 # response is 200
@@ -28,6 +33,9 @@ def handle_response(response):
     response_json = response.json()
     code = response_json['code']
     # error_view.showUI()
+    if code == 11003:
+        api.logger.error(f"需安全验证: {response.text}")
+        raise SecurityVerifyError("服务端需安全验证，请打开词达人 App/微信完成安全验证后重试")
     if code == 1:
         # 获取成功
         api.logger.info(f"请求成功{response.text}")
@@ -192,6 +200,9 @@ def get_exam(public_info):
     # {'task_id': 143960071, 'task_type': 1, 'topic_mode': 0, 'stem': {'content': 'trade', 'remark': None, 'ph_us_url': '/Resource/unitAudio_US/JJ_3_1_0/trade.mp3', 'ph_en_url': '/Resource/unitAudio_EN/JJ_3_1_0/trade.mp3', 'au_addr': None}, 'options': [{'content': 'verb 互相交换', 'remark': None, 'answer': None, 'answer_tag': 0, 'check_code': None, 'sub_options': None, 'ph_info': {'ph_en': 'treɪd', 'ph_en_url': '/Resource/unitAudio_EN/JJ_3_1_0/trade.mp3', 'ph_us': 'treɪd', 'ph_us_url': '/Resource/unitAudio_US/JJ_3_1_0/trade.mp3', 'group': '0'}}, {'content': 'noun 职业；手艺', 'remark': None, 'answer': None, 'answer_tag': 1, 'check_code': None, 'sub_options': None, 'ph_info': {'ph_en': 'treɪd', 'ph_en_url': '/Resource/unitAudio_EN/JJ_3_1_0/trade.mp3', 'ph_us': 'treɪd', 'ph_us_url': '/Resource/unitAudio_US/JJ_3_1_0/trade.mp3', 'group': '0'}}], 'sound_mark': 'treɪd', 'ph_en': 'treɪd', 'ph_us': 'treɪd', 'answer_num': 1, 'chance_num': 1, 'topic_done_num': 1, 'topic_total': 127, 'w_lens': [], 'w_len': 0, 'w_tip': '', 'tips': '', 'word_type': 1, 'enable_i': 2, 'enable_i_i': 2, 'enable_i_o': 2, 'topic_code': 'lFiAe5drW46DfnrEaJVol2hbXlrWqpianVhlZmGZlmKPvo+UkWOTZWdiYm9ubJuXamCVaGpnaGSUj2STZGhob2JybGuWnG5tjZRlZWuVcmxmYW9pZZSSZ2mebmZtcWRsZWiZaWdsZGaW', 'answer_state': 1, 'show_card_type': 1}
     # 检查请求结果
     handle_response(rsp)
+    if rsp.json().get('msg') == '任务已完成！' or rsp.json().get('msg') == '需要选词！':
+        public_info.exam = 'complete'
+        return
     #  decrypt response
     public_info.exam = debase64(rsp.json()['data'], rsp.json()['jv'])
     api.logger.info("写入成功")
@@ -269,9 +280,41 @@ def submit_result(public_info, option):
     rsp = check_jv_and_retry_post(requests.rqs2_session.post, basic_url + url, data=json.dumps(data))
     # check request is success
     handle_response(rsp)
+    result = debase64(rsp.json()['data'], rsp.json()['jv'])
+    answer_result = result.get('answer_result')
+    api.logger.info(f"答题判分: answer_result={answer_result} answer_corrects={result.get('answer_corrects')}")
+    # 对错计数(进度条右侧统计)
+    if answer_result == 1:
+        public_info.right_count += 1
+    elif answer_result == 2:
+        public_info.wrong_count += 1
+    # 记录标准答案到本地答案库(word_zh -> answer_corrects, 仅短语类题型)
+    exam = public_info.exam
+    if isinstance(exam, dict):
+        mode = exam.get('topic_mode')
+        stem = exam.get('stem')
+        word_zh = stem.get('remark') if isinstance(stem, dict) else None
+        corrects = result.get('answer_corrects')
+        if mode == 32 and word_zh and corrects:
+            # mode 32: answer_corrects 是完整短语, 入短语库
+            add_answer(word_zh, corrects)
+        elif mode == 73 and word_zh and corrects:
+            # mode 73: answer_corrects 是空位单词(非完整短语), 入单词库防污染短语库
+            add_word_answer(word_zh, corrects)
+        elif mode == 42 and word_zh and corrects:
+            # mode 42: answer_corrects 是选项下标数组, 通过 options 取正确答案单词入库
+            options = exam.get('options') or []
+            words = []
+            for idx in corrects:
+                if isinstance(idx, int) and 0 <= idx < len(options):
+                    content = options[idx].get('content') if isinstance(options[idx], dict) else None
+                    if content:
+                        words.append(content)
+            if words:
+                add_word_answer(word_zh, words)
     api.logger.info("提取下一题的请求参数")
     # next exam topic_code
-    public_info.topic_code = debase64(rsp.json()['data'], rsp.json()['jv'])['topic_code']
+    public_info.topic_code = result['topic_code']
 
 
 def get_task_score(public_info):

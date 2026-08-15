@@ -1,6 +1,7 @@
 import re
 
 import api.request_header as requests
+from api.main_api import SecurityVerifyError
 from log.log import Log, get_file_logger
 from util.basic_util import create_timestamp
 
@@ -18,6 +19,9 @@ def handle_response(response):
     """
     if response.json()['code'] == 1:
         basic_api.logger.info(f"请求成功{response.text}")
+    elif response.json()['code'] == 11003:
+        basic_api.logger.error(f"需安全验证: {response.text}")
+        raise SecurityVerifyError("服务端需安全验证，请打开词达人 App/微信完成安全验证后重试")
     else:
         basic_api.logger.error(f"请求有问题{response.text}退出程序")
         raise Exception("请求有问题，中止程序")

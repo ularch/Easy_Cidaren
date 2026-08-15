@@ -34,7 +34,7 @@ class UiMainWindow(QMainWindow):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.setFixedSize(720, 370)
+        MainWindow.setFixedSize(720, 400)
         icon_path = os.path.join(self.root_path, 'assets', 'icon.ico')
         if os.path.exists(icon_path):
             MainWindow.setWindowIcon(QIcon(icon_path))
@@ -120,6 +120,12 @@ class UiMainWindow(QMainWindow):
         self.stop_task.setGeometry(QtCore.QRect(210, 260, 85, 24))
         self.stop_task.setObjectName("stop_task")
         self.stop_task.clicked.connect(self.stop_current_task)
+        # 当前任务名(一键刷题时显示正在执行的任务, 如 [2/6] 第五部分)
+        self.progress_task_label = QtWidgets.QLabel(parent=self.centralwidget)
+        self.progress_task_label.setGeometry(QtCore.QRect(20, 312, 432, 18))
+        self.progress_task_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.progress_task_label.setStyleSheet("color: #404040; font-weight: bold;")
+        self.progress_task_label.setText("")
         # 答题进度条
         self.progress_bar = QtWidgets.QProgressBar(parent=self.centralwidget)
         self.progress_bar.setGeometry(QtCore.QRect(20, 290, 291, 20))
@@ -129,6 +135,22 @@ class UiMainWindow(QMainWindow):
         self.progress_label = QtWidgets.QLabel(parent=self.centralwidget)
         self.progress_label.setGeometry(QtCore.QRect(320, 290, 50, 20))
         self.progress_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        # 答题对错统计(正确/错误)
+        self.progress_right_label = QtWidgets.QLabel(parent=self.centralwidget)
+        self.progress_right_label.setGeometry(QtCore.QRect(372, 290, 62, 20))
+        self.progress_right_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.progress_right_label.setStyleSheet("color: #2e9e44; font-weight: bold;")
+        self.progress_right_label.setText("")
+        self.progress_wrong_label = QtWidgets.QLabel(parent=self.centralwidget)
+        self.progress_wrong_label.setGeometry(QtCore.QRect(434, 290, 62, 20))
+        self.progress_wrong_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.progress_wrong_label.setStyleSheet("color: #d0342c; font-weight: bold;")
+        self.progress_wrong_label.setText("")
+        self.progress_skip_label = QtWidgets.QLabel(parent=self.centralwidget)
+        self.progress_skip_label.setGeometry(QtCore.QRect(496, 290, 62, 20))
+        self.progress_skip_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.progress_skip_label.setStyleSheet("color: #808080; font-weight: bold;")
+        self.progress_skip_label.setText("")
         self.follow_output = QtWidgets.QRadioButton(parent=self.centralwidget)
         self.follow_output.setGeometry(QtCore.QRect(607, 19, 101, 16))
         self.follow_output.setObjectName("follow_output")
@@ -253,7 +275,7 @@ class UiMainWindow(QMainWindow):
 
     def update_output_info(self, info):
         self.output = self.output + f"\n{info}"
-        self.output_info.setHtml(f"<pre>{self.output}</pre>")
+        self.output_info.setHtml(f"<pre style='white-space:pre-wrap;word-wrap:break-word;'>{self.output}</pre>")
         if self.follow_output.isChecked():
             scrollbar = self.output_info.verticalScrollBar()
             scrollbar.setValue(scrollbar.maximum())
@@ -312,12 +334,19 @@ class UiMainWindow(QMainWindow):
             self.public_info.class_task = []
             PublicInfo.task_type = 'ClassTask'
             PublicInfo.task_type_int = 2
-            now_page = 1
-            get_class_task(self.public_info, now_page)
-            while self.public_info.task_total_count > now_page * 10:
-                now_page += 1
+            try:
+                now_page = 1
                 get_class_task(self.public_info, now_page)
-            get_all_task(self.public_info)
+                while self.public_info.task_total_count > now_page * 10:
+                    now_page += 1
+                    get_class_task(self.public_info, now_page)
+                get_all_task(self.public_info)
+            except Exception as e:
+                # 网络请求失败(如服务端 11003 风控)时提示而非崩溃闪退
+                self.main_logger.error(f"获取任务列表失败: {e}")
+                self.update_output_info(f"获取任务列表失败: {e}")
+                QtWidgets.QMessageBox.warning(self, "获取任务列表失败", str(e))
+                return
             if not self.public_info.task_list == []:
                 task_names = [task['task_name'] for task in self.public_info.task_list]
                 self.main_logger.info(f'{task_names}')
@@ -338,6 +367,24 @@ class UiMainWindow(QMainWindow):
                     radio_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
                     radio_layout.addWidget(radio)
                     self.task_list.setCellWidget(row, 0, radio_container)
+                    # 测试任务页面：已完成任务不可重试，禁用勾选、灰色实心圆点并悬浮提示
+                    task_disabled = self.test_task.isChecked() and progress >= 100
+                    if task_disabled:
+                        self.task_radio_group.removeButton(radio)
+                        radio.hide()
+                        dot = QtWidgets.QLabel(radio_container)
+                        dot.setFixedSize(20, 20)
+                        dot_pixmap = QtGui.QPixmap(20, 20)
+                        dot_pixmap.fill(QtCore.Qt.GlobalColor.transparent)
+                        painter = QtGui.QPainter(dot_pixmap)
+                        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+                        painter.setPen(QtCore.Qt.PenStyle.NoPen)
+                        painter.setBrush(QtGui.QColor("#999999"))
+                        painter.drawEllipse(1, 1, 17, 17)
+                        painter.end()
+                        dot.setPixmap(dot_pixmap)
+                        radio_layout.addWidget(dot)
+                        radio_container.setToolTip("已完成的测试任务不可重试")
                     score_text = str(score)
                     if over_status == 1:
                         score_text += " (未开始)"
@@ -351,6 +398,8 @@ class UiMainWindow(QMainWindow):
                         # 未开始的任务显示灰色
                         elif over_status == 1:
                             cell.setForeground(QtGui.QColor("gray"))
+                        if task_disabled:
+                            cell.setToolTip("已完成的测试任务不可重试")
                         self.task_list.setItem(row, col, cell)
                 self.update_output_info("获取成功！")
             else:
@@ -365,6 +414,9 @@ class UiMainWindow(QMainWindow):
     def _on_task_item_clicked(self, item):
         """点击任务行时自动勾选该行单选框"""
         try:
+            task = item.data(QtCore.Qt.ItemDataRole.UserRole)
+            if self.test_task.isChecked() and task and task.get('progress', 0) >= 100:
+                return
             row = item.row()
             widget = self.task_list.cellWidget(row, 0)
             radio = widget.findChild(QtWidgets.QRadioButton) if widget else None
@@ -382,6 +434,10 @@ class UiMainWindow(QMainWindow):
                 else:
                     self.main_logger.info("开始班级测试任务")
                 task_info = current_item.data(QtCore.Qt.ItemDataRole.UserRole)
+                if self.test_task.isChecked() and task_info.get('progress', 0) >= 100:
+                    self.update_output_info("已完成的测试任务不可重试")
+                    QMessageBox.warning(self, "提示", "已完成的测试任务不可重试")
+                    return
                 task_name = task_info['task_name']
                 self.public_info._task_name = task_name
                 self.public_info.class_task = [task_info]
@@ -448,17 +504,26 @@ class UiMainWindow(QMainWindow):
     def update_progress(self, progress_text):
         """
         更新进度
-        :param progress_text:
+        :param progress_text: 格式 "done/total|right|wrong|skip|index/total|task_name"
         :return:
         """
-        parts = progress_text.split('/')
-        if len(parts) == 2:
+        # 先按 | 切分(避免 index/total 段中的 / 破坏 done/total 解析)
+        segments = progress_text.split('|')
+        dt = segments[0].split('/')
+        if len(dt) == 2:
             try:
-                done = int(parts[0])
-                total = int(parts[1])
+                done = int(dt[0])
+                total = int(dt[1])
                 self.progress_bar.setMaximum(total)
                 self.progress_bar.setValue(done)
-                self.progress_label.setText(progress_text)
+                self.progress_label.setText(f"{done}/{total}")
+                if len(segments) > 2:
+                    self.progress_right_label.setText(f"正确 {segments[1]}")
+                    self.progress_wrong_label.setText(f"错误 {segments[2]}")
+                    if len(segments) > 3:
+                        self.progress_skip_label.setText(f"跳过 {segments[3]}")
+                        if len(segments) > 5:
+                            self.progress_task_label.setText(f"[{segments[4]}] {segments[5]}")
             except ValueError:
                 pass
 
@@ -474,6 +539,10 @@ class UiMainWindow(QMainWindow):
             self.update_output_info(message)
             self.progress_bar.setValue(0)
             self.progress_label.setText("")
+            self.progress_task_label.setText("")
+            self.progress_right_label.setText("")
+            self.progress_wrong_label.setText("")
+            self.progress_skip_label.setText("")
             self.get_task_list()
             return
         self.set_ui_enabled(True)
@@ -496,6 +565,9 @@ class UiMainWindow(QMainWindow):
         self.set_ui_enabled(True)
         self.progress_bar.setValue(0)
         self.progress_label.setText("")
+        self.progress_right_label.setText("")
+        self.progress_wrong_label.setText("")
+        self.progress_skip_label.setText("")
         self.main_logger.info(summary)
         self.update_output_info(summary)
         self.get_task_list()
@@ -521,6 +593,9 @@ class UiMainWindow(QMainWindow):
         self.set_ui_enabled(True)
         self.progress_bar.setValue(0)
         self.progress_label.setText("")
+        self.progress_right_label.setText("")
+        self.progress_wrong_label.setText("")
+        self.progress_skip_label.setText("")
         self.main_logger.error(f"运行出错，错误信息：{error_message}")
         self.update_output_info(f"运行出错，错误信息：{error_message}")
         error = view.error.Ui_Form()
@@ -652,6 +727,9 @@ class UiMainWindow(QMainWindow):
                 self.set_ui_enabled(True)
                 self.progress_bar.setValue(0)
                 self.progress_label.setText("")
+                self.progress_right_label.setText("")
+                self.progress_wrong_label.setText("")
+                self.progress_skip_label.setText("")
                 self.update_output_info("任务已手动停止")
                 QMessageBox.information(self, "任务停止", "任务已安全停止")
                 self.task_worker.deleteLater()
