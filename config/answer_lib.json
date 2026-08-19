@@ -135,7 +135,8 @@
       "evaluation"
     ],
     "现代环境治理体系": [
-      "governance"
+      "governance",
+      "environmental"
     ],
     "废弃物循环利用体系": [
       "recycling",
@@ -174,7 +175,9 @@
       "governance"
     ],
     "碳排放权交易": [
-      "trading"
+      "trading",
+      "carbon",
+      "emissions"
     ],
     "人居环境": [
       "living",
@@ -187,7 +190,9 @@
     "消费品以旧换新": [
       "ins",
       "trade",
-      "consumer"
+      "consumer",
+      "trade-ins",
+      "goods"
     ],
     "绿色储粮技术": [
       "storage",
@@ -201,7 +206,9 @@
     ],
     "生活垃圾分类": [
       "household",
-      "sorting"
+      "sorting",
+      "domestic",
+      "waste"
     ],
     "绿色居住": [
       "housing"
@@ -211,7 +218,8 @@
       "domestic"
     ],
     "新能源汽车": [
-      "vehicles"
+      "vehicles",
+      "energy"
     ],
     "生态产品": [
       "ecological"
@@ -254,7 +262,9 @@
     ],
     "新质生产力": [
       "productive",
-      "forces"
+      "forces",
+      "new",
+      "quality"
     ],
     "绿色农业": [
       "sustainable"
@@ -284,7 +294,9 @@
       "finance"
     ],
     "传统制造业转型升级": [
-      "upgrading"
+      "upgrading",
+      "manufacturing",
+      "transformation"
     ],
     "清洁生产产业": [
       "production"
@@ -313,7 +325,8 @@
       "conservation"
     ],
     "湿地保护": [
-      "wetland"
+      "wetland",
+      "conservation"
     ],
     "防洪安全": [
       "control",
@@ -342,7 +355,8 @@
       "utilization"
     ],
     "荒漠化防治": [
-      "desertification"
+      "desertification",
+      "control"
     ],
     "农业面源污染防治": [
       "non-point",
@@ -360,14 +374,16 @@
       "farmland"
     ],
     "生物多样性保护": [
-      "biodiversity"
+      "biodiversity",
+      "conservation"
     ],
     "海洋生态环境保护": [
       "eco-environment"
     ],
     "绿色矿山建设": [
       "mines",
-      "construction"
+      "construction",
+      "green"
     ],
     "黑臭水体治理": [
       "improve",
@@ -408,7 +424,8 @@
     ],
     "减污降碳": [
       "emissions",
-      "carbon"
+      "carbon",
+      "reduction"
     ],
     "绿水青山就是金山银山": [
       "Lucid",
@@ -453,6 +470,962 @@
     "低碳发展": [
       "low",
       "carbon"
+    ],
+    "水乡": [
+      "towns"
+    ],
+    "都江堰水利工程": [
+      "Irrigation System",
+      "Water",
+      "Conservancy"
+    ],
+    "珠穆朗玛峰": [
+      "Mount"
+    ],
+    "秦岭": [
+      "Mountains"
+    ],
+    "长江": [
+      "Yangtze"
+    ],
+    "泰山": [
+      "Mount"
+    ],
+    "黄河流域": [
+      "basin"
+    ],
+    "大兴安岭": [
+      "Range"
+    ],
+    "少林寺": [
+      "Temple"
+    ],
+    "长城": [
+      "Wall"
+    ],
+    "三峡大坝": [
+      "Gorges",
+      "Dam"
+    ],
+    "“三北”防护林体系建设工程": [
+      "Shelterbelt"
+    ],
+    "秦始皇兵马俑": [
+      "Warriors",
+      "Horses"
+    ],
+    "黄土高原": [
+      "Loess",
+      "Plateau"
+    ],
+    "京杭大运河": [
+      "Grand Canal",
+      "Grand",
+      "Canal"
+    ],
+    "黄河": [
+      "Yellow"
+    ],
+    "塔里木盆地": [
+      "Basin"
+    ],
+    "唐三彩": [
+      "tri-colored",
+      "glazed",
+      "pottery"
+    ],
+    "青藏高原": [
+      "Plateau"
+    ],
+    "喜马拉雅山脉": [
+      "Himalayas"
+    ],
+    "汉字": [
+      "characters"
+    ],
+    "四合院": [
+      "siheyuan"
+    ],
+    "简体字": [
+      "simplified"
+    ],
+    "十二生肖": [
+      "zodiac",
+      "signs"
+    ],
+    "故宫": [
+      "Forbidden City",
+      "Forbidden"
+    ],
+    "文言文": [
+      "literary",
+      "classical"
+    ],
+    "杂交水稻": [
+      "hybrid",
+      "rice"
+    ],
+    "成都大熊猫繁育研究基地": [
+      "Giant",
+      "Breeding"
+    ],
+    "二十四节气": [
+      "solar terms",
+      "solar",
+      "terms"
+    ],
+    "国家体育场（鸟巢）": [
+      "Stadium"
+    ],
+    "苏州园林": [
+      "Classical",
+      "Gardens"
+    ],
+    "圆明园": [
+      "Garden",
+      "Old",
+      "Summer",
+      "Palace"
+    ],
+    "中国结": [
+      "knot"
+    ],
+    "繁体字": [
+      "traditional"
+    ],
+    "敦煌莫高窟": [
+      "Grottoes"
+    ],
+    "中国天眼": [
+      "Sky",
+      "Eye"
+    ],
+    "东方明珠广播电视塔": [
+      "Oriental"
+    ],
+    "颐和园": [
+      "Summer",
+      "Palace"
+    ],
+    "四大发明": [
+      "Inventions",
+      "Great"
+    ],
+    "布达拉宫": [
+      "Palace"
+    ],
+    "《黄帝内经》": [
+      "Inner Canon",
+      "Inner",
+      "Canon"
+    ],
+    "重阳节": [
+      "Double Ninth",
+      "Double",
+      "Ninth"
+    ],
+    "祭祖": [
+      "sacrifices",
+      "ancestors"
+    ],
+    "《本草纲目》": [
+      "Compendium",
+      "Materia",
+      "Medica"
+    ],
+    "猜灯谜": [
+      "lantern",
+      "riddles"
+    ],
+    "端午节": [
+      "Dragon",
+      "Boat"
+    ],
+    "清明节": [
+      "Tomb-sweeping"
+    ],
+    "红包": [
+      "packets"
+    ],
+    "除夕": [
+      "Eve"
+    ],
+    "农历": [
+      "lunar",
+      "calendar"
+    ],
+    "元宵节": [
+      "Lantern"
+    ],
+    "中秋节": [
+      "Autumn"
+    ],
+    "春运": [
+      "rush"
+    ],
+    "中医": [
+      "traditional",
+      "Chinese",
+      "medicine"
+    ],
+    "草药": [
+      "herbal"
+    ],
+    "戏班": [
+      "troupe"
+    ],
+    "针灸": [
+      "acupuncture"
+    ],
+    "春联": [
+      "couplets",
+      "spring"
+    ],
+    "春节": [
+      "Spring",
+      "Festival"
+    ],
+    "木偶戏": [
+      "puppet",
+      "show"
+    ],
+    "楷书": [
+      "regular",
+      "script"
+    ],
+    "非物质文化遗产": [
+      "intangible"
+    ],
+    "相声": [
+      "comic",
+      "crosstalk"
+    ],
+    "昆曲": [
+      "Opera"
+    ],
+    "中国书法": [
+      "calligraphy"
+    ],
+    "国画": [
+      "traditional"
+    ],
+    "粤剧": [
+      "Opera"
+    ],
+    "中国陶瓷": [
+      "ceramics"
+    ],
+    "唱、念、做、打": [
+      "martial arts",
+      "reciting",
+      "martial",
+      "arts"
+    ],
+    "皮影戏": [
+      "shadow",
+      "puppetry"
+    ],
+    "山水画": [
+      "landscape"
+    ],
+    "字帖": [
+      "calligraphy"
+    ],
+    "京剧": [
+      "Opera",
+      "Peking"
+    ],
+    "中国武术": [
+      "martial",
+      "arts"
+    ],
+    "中国象棋": [
+      "chess"
+    ],
+    "草书": [
+      "cursive"
+    ],
+    "中国剪纸": [
+      "paper-cutting"
+    ],
+    "中国杂技": [
+      "acrobatics"
+    ],
+    "宣纸": [
+      "rice",
+      "Xuan",
+      "paper"
+    ],
+    "《西游记》": [
+      "Journey"
+    ],
+    "唐诗": [
+      "poems"
+    ],
+    "四大书院": [
+      "Academies",
+      "Great"
+    ],
+    "《诗经》": [
+      "Songs",
+      "Book"
+    ],
+    "《史记》": [
+      "Grand Historian",
+      "Records"
+    ],
+    "《易经》": [
+      "Changes",
+      "Book"
+    ],
+    "《梁山伯与祝英台》": [
+      "Butterfly",
+      "Lovers"
+    ],
+    "宋词": [
+      "Ci poems",
+      "Dynasty"
+    ],
+    "《牛郎织女》": [
+      "Cowherd",
+      "Weaver",
+      "Girl"
+    ],
+    "《论语》": [
+      "Confucius",
+      "Analects"
+    ],
+    "《孙子兵法》": [
+      "Art"
+    ],
+    "《白蛇传》": [
+      "Legend"
+    ],
+    "《红楼梦》": [
+      "Mansions",
+      "Red"
+    ],
+    "《三国演义》": [
+      "Romance"
+    ],
+    "《牡丹亭》": [
+      "Pavilion"
+    ],
+    "四大名著": [
+      "Classical",
+      "Novels"
+    ],
+    "《水浒传》": [
+      "Outlaws",
+      "Water",
+      "Margin"
+    ],
+    "文房四宝": [
+      "Treasures"
+    ],
+    "孔子": [
+      "Confucius"
+    ],
+    "和而不同": [
+      "uniformity",
+      "harmony"
+    ],
+    "天人合一": [
+      "Oneness",
+      "Heaven",
+      "and",
+      "Man"
+    ],
+    "孝敬长辈": [
+      "filial",
+      "piety"
+    ],
+    "五行学说": [
+      "elements"
+    ],
+    "甲骨文": [
+      "oracle",
+      "inscriptions"
+    ],
+    "八仙": [
+      "Immortals"
+    ],
+    "先秦哲学": [
+      "Philosophy"
+    ],
+    "修身": [
+      "cultivation"
+    ],
+    "诸子百家": [
+      "Schools",
+      "Hundred"
+    ],
+    "道家文化": [
+      "Taoist"
+    ],
+    "四书五经": [
+      "Classics",
+      "Five"
+    ],
+    "孟子": [
+      "Mencius"
+    ],
+    "儒家文化": [
+      "Confucian"
+    ],
+    "三十六计": [
+      "Strategies"
+    ],
+    "采茶": [
+      "leaves"
+    ],
+    "木结构建筑": [
+      "framed",
+      "structures"
+    ],
+    "移动支付": [
+      "mobile",
+      "payment"
+    ],
+    "养蚕": [
+      "silkworms"
+    ],
+    "茶具": [
+      "set"
+    ],
+    "淮扬菜": [
+      "cuisine"
+    ],
+    "太极拳": [
+      "Tai Chi",
+      "Tai",
+      "Chi"
+    ],
+    "雕梁画栋": [
+      "pillars",
+      "carved"
+    ],
+    "独生子女": [
+      "single"
+    ],
+    "吃喜酒": [
+      "banquet",
+      "wedding"
+    ],
+    "双喜字": [
+      "Happiness"
+    ],
+    "良辰吉日": [
+      "auspicious"
+    ],
+    "地方小吃": [
+      "snacks",
+      "local"
+    ],
+    "旗袍": [
+      "cheongsam"
+    ],
+    "公筷": [
+      "serving",
+      "chopsticks"
+    ],
+    "乌龙茶": [
+      "oolong"
+    ],
+    "倒贴“福”字": [
+      "characters"
+    ],
+    "中国白酒": [
+      "liquor"
+    ],
+    "火锅": [
+      "hot",
+      "pot"
+    ],
+    "利益共同体": [
+      "community",
+      "shared",
+      "interests"
+    ],
+    "全球伙伴关系": [
+      "partnership",
+      "global"
+    ],
+    "中华文明": [
+      "civilization"
+    ],
+    "战略伙伴关系": [
+      "strategic"
+    ],
+    "中非合作论坛": [
+      "Forum",
+      "Cooperation"
+    ],
+    "全球治理": [
+      "governance"
+    ],
+    "文明交流互鉴": [
+      "exchanges",
+      "civilizations"
+    ],
+    "南南合作": [
+      "cooperation"
+    ],
+    "习近平外交思想": [
+      "Diplomacy"
+    ],
+    "新型国际关系": [
+      "relations",
+      "new",
+      "model"
+    ],
+    "人类命运共同体": [
+      "shared future",
+      "global",
+      "community"
+    ],
+    "和平发展道路": [
+      "path",
+      "peaceful"
+    ],
+    "郑和下西洋": [
+      "voyages",
+      "Western",
+      "Oceans"
+    ],
+    "古代丝绸之路": [
+      "ancient"
+    ],
+    "中国特色大国外交": [
+      "major-country",
+      "diplomacy"
+    ],
+    "“一带一路”倡议": [
+      "Belt and Road",
+      "Initiative"
+    ],
+    "独立自主的和平外交政策": [
+      "independent",
+      "foreign",
+      "policy"
+    ],
+    "和平共处五项原则": [
+      "Coexistence",
+      "Principles"
+    ],
+    "绿色发展体系": [
+      "system",
+      "green",
+      "development"
+    ],
+    "绿色发展、循环发展、低碳发展": [
+      "circular",
+      "low-carbon"
+    ],
+    "绿水青山就是金山银山。": [
+      "Lucid waters",
+      "invaluable",
+      "assets"
+    ],
+    "生态文明理念": [
+      "philosophy"
+    ],
+    "美丽中国先行区": [
+      "pilot zones",
+      "Initiative"
+    ],
+    "尊重自然、顺应自然、保护自然": [
+      "accommodate"
+    ],
+    "“双碳”目标；碳达峰、碳中和目标": [
+      "peaking",
+      "neutrality"
+    ],
+    "生态安全": [
+      "ecological",
+      "security"
+    ],
+    "全球环境治理": [
+      "governance",
+      "environmental"
+    ],
+    "“七一勋章”": [
+      "Medal"
+    ],
+    "中国游": [
+      "Travel"
+    ],
+    "中国高铁": [
+      "high-speed",
+      "railway"
+    ],
+    "北斗卫星导航系统": [
+      "Navigation",
+      "Satellite"
+    ],
+    "义务教育": [
+      "compulsory"
+    ],
+    "统一的多民族国家": [
+      "unified",
+      "multi",
+      "ethnic"
+    ],
+    "改革创新精神": [
+      "innovation"
+    ],
+    "工匠精神": [
+      "craftsmanship"
+    ],
+    "健康中国行动": [
+      "Healthy",
+      "initiative"
+    ],
+    "企业家精神": [
+      "entrepreneurship"
+    ],
+    "五四精神": [
+      "spirit"
+    ],
+    "智慧城市": [
+      "smart"
+    ],
+    "中国载人航天工程": [
+      "manned",
+      "space"
+    ],
+    "钉钉子精神": [
+      "hammer away",
+      "perseverance"
+    ],
+    "少数民族": [
+      "ethnic",
+      "minorities"
+    ],
+    "女排精神": [
+      "volleyball"
+    ],
+    "弹性退休制度": [
+      "flexible",
+      "retirement"
+    ],
+    "丝绸之路经济带": [
+      "Silk Road",
+      "Economic",
+      "Belt"
+    ],
+    "未来产业": [
+      "industries",
+      "future",
+      "oriented"
+    ],
+    "农业现代化": [
+      "modernization",
+      "agricultural"
+    ],
+    "银发经济": [
+      "silver",
+      "economy"
+    ],
+    "新三样": [
+      "trio",
+      "new"
+    ],
+    "超长期特别国债": [
+      "treasury",
+      "bonds"
+    ],
+    "“人工智能+”行动": [
+      "initiative"
+    ],
+    "新一轮农村改革": [
+      "rural",
+      "reform"
+    ],
+    "海洋强国": [
+      "maritime"
+    ],
+    "节能环保产业": [
+      "saving"
+    ],
+    "蓝色伙伴关系": [
+      "partnerships"
+    ],
+    "习近平经济思想": [
+      "Economy",
+      "Thought"
+    ],
+    "东北地区全面振兴": [
+      "comprehensive",
+      "revitalization"
+    ],
+    "粤港澳大湾区": [
+      "Greater Bay",
+      "Greater",
+      "Bay"
+    ],
+    "现代化经济体系": [
+      "system"
+    ],
+    "京津冀协同发展": [
+      "coordinated",
+      "Region"
+    ],
+    "乡村振兴战略": [
+      "revitalization",
+      "rural"
+    ],
+    "四个现代化": [
+      "Modernizations"
+    ],
+    "共同富裕": [
+      "shared",
+      "prosperity"
+    ],
+    "长江经济带": [
+      "Belt",
+      "Economic"
+    ],
+    "经济体制改革": [
+      "economic",
+      "reform"
+    ],
+    "创新驱动发展战略": [
+      "driven",
+      "innovation"
+    ],
+    "国家大数据战略": [
+      "strategy"
+    ],
+    "长江三角洲": [
+      "Delta"
+    ],
+    "珠江三角洲": [
+      "Delta"
+    ],
+    "全面建成小康社会": [
+      "moderately",
+      "in",
+      "all",
+      "respects"
+    ],
+    "城乡融合发展": [
+      "integrated",
+      "urban",
+      "rural"
+    ],
+    "高质量发展": [
+      "high-quality"
+    ],
+    "社会主义市场经济": [
+      "socialist",
+      "market",
+      "economy"
+    ],
+    "创新型国家": [
+      "innovative"
+    ],
+    "世界反法西斯战争": [
+      "Anti-Fascist"
+    ],
+    "“四个意识”": [
+      "Consciousnesses"
+    ],
+    "祖国内地": [
+      "mainland"
+    ],
+    "中国人民解放军": [
+      "Liberation"
+    ],
+    "中国人民抗日战争": [
+      "Resistance"
+    ],
+    "国防和军队现代化": [
+      "modernization",
+      "armed",
+      "forces"
+    ],
+    "国家安全意识": [
+      "awareness",
+      "national",
+      "security"
+    ],
+    "一个中国原则": [
+      "principle"
+    ],
+    "“九二共识”": [
+      "Consensus"
+    ],
+    "总体国家安全观": [
+      "approach"
+    ],
+    "“两个维护”": [
+      "Upholds"
+    ],
+    "台湾海峡；两岸": [
+      "Straits"
+    ],
+    "全心全意为人民服务": [
+      "serve",
+      "wholeheartedly"
+    ],
+    "和平统一": [
+      "reunification",
+      "peaceful"
+    ],
+    "抗美援朝战争": [
+      "Resist"
+    ],
+    "特别行政区": [
+      "administrative",
+      "region"
+    ],
+    "解放战争": [
+      "Liberation"
+    ],
+    "爱国统一战线": [
+      "patriotic",
+      "United",
+      "Front"
+    ],
+    "中国人民志愿军": [
+      "Volunteers"
+    ],
+    "集中力量办大事": [
+      "pool"
+    ],
+    "群众路线": [
+      "mass"
+    ],
+    "全国人民代表大会": [
+      "Congress"
+    ],
+    "全面依法治国": [
+      "advance",
+      "governance"
+    ],
+    "马克思主义执政党": [
+      "governing"
+    ],
+    "司法公正": [
+      "judicial",
+      "justice"
+    ],
+    "社会稳定": [
+      "stability"
+    ],
+    "伟大斗争、伟大工程、伟大事业、伟大梦想": [
+      "cause",
+      "struggle"
+    ],
+    "实事求是": [
+      "facts",
+      "truth"
+    ],
+    "反腐败": [
+      "corruption"
+    ],
+    "社会主义法制": [
+      "legal"
+    ],
+    "不忘初心，牢记使命": [
+      "founding mission",
+      "aspiration"
+    ],
+    "国务院": [
+      "Council"
+    ],
+    "社会公平正义": [
+      "justice",
+      "fairness"
+    ],
+    "法律援助": [
+      "legal"
+    ],
+    "人民当家作主": [
+      "masters",
+      "status"
+    ],
+    "党的全面领导": [
+      "overall",
+      "leadership"
+    ],
+    "法治国家、法治政府、法治社会": [
+      "law-based"
+    ],
+    "《中华人民共和国宪法》": [
+      "Constitution"
+    ],
+    "“四个全面”战略布局": [
+      "Four-pronged",
+      "Comprehensive"
+    ],
+    "以人民为中心的发展思想": [
+      "people-centered",
+      "philosophy"
+    ],
+    "改革开放": [
+      "reform",
+      "opening",
+      "up"
+    ],
+    "习近平新时代中国特色社会主义思想": [
+      "New Era",
+      "Characteristics"
+    ],
+    "“五位一体”总体布局": [
+      "Five-sphere",
+      "Integrated"
+    ],
+    "二十届三中全会": [
+      "plenary session",
+      "session"
+    ],
+    "中国特色社会主义": [
+      "characteristics",
+      "socialism"
+    ],
+    "中国共产党": [
+      "Communist",
+      "Party"
+    ],
+    "“两个一百年”奋斗目标": [
+      "Centenary"
+    ],
+    "中国特色社会主义道路": [
+      "path"
+    ],
+    "三大攻坚战": [
+      "tough",
+      "battles"
+    ],
+    "中国特色社会主义根本制度、基本制度、重要制度": [
+      "fundamental",
+      "basic"
+    ],
+    "中国特色社会主义伟大事业": [
+      "cause"
+    ],
+    "中国方案": [
+      "Approach"
+    ],
+    "社会主义现代化": [
+      "socialist",
+      "modernization"
+    ],
+    "“四个自信”": [
+      "Four-sphere",
+      "Confidence"
+    ],
+    "党的建设新的伟大工程": [
+      "building",
+      "Party"
+    ],
+    "顶层设计": [
+      "top-level"
+    ],
+    "中国梦": [
+      "Dream"
     ]
   },
   "适应气候变化": [
@@ -570,7 +1543,8 @@
     "sustainable use of soil resources"
   ],
   "人与自然和谐共生": [
-    "harmony between humanity and nature"
+    "harmony between humanity and nature",
+    "harmony between humanity/man and nature"
   ],
   "碳达峰": [
     "carbon dioxide peaking"
@@ -583,5 +1557,455 @@
   ],
   "减污降碳": [
     "reduction of pollution and carbon emissions"
+  ],
+  "大兴安岭": [
+    "the Greater Khingan Range"
+  ],
+  "唐三彩": [
+    "Tang tri-colored glazed pottery"
+  ],
+  "秦始皇兵马俑": [
+    "the Terracotta Army"
+  ],
+  "三峡大坝": [
+    "the Three Gorges Dam"
+  ],
+  "“三北”防护林体系建设工程": [
+    "Three-North Shelterbelt Forest Program (TSFP)"
+  ],
+  "都江堰水利工程": [
+    "Dujiangyan Water Conservancy Project"
+  ],
+  "简体字": [
+    "simplified Chinese characters"
+  ],
+  "东方明珠广播电视塔": [
+    "the Oriental Pearl Radio and Television Tower"
+  ],
+  "国家体育场（鸟巢）": [
+    "the National Stadium"
+  ],
+  "故宫": [
+    "the Forbidden City"
+  ],
+  "二十四节气": [
+    "twenty-four solar terms"
+  ],
+  "颐和园": [
+    "the Summer Palace"
+  ],
+  "圆明园": [
+    "the Yuanmingyuan Garden"
+  ],
+  "十二生肖": [
+    "twelve zodiac signs"
+  ],
+  "成都大熊猫繁育研究基地": [
+    "Chengdu Giant Panda Breeding Research Base"
+  ],
+  "苏州园林": [
+    "Classical Gardens in Suzhou"
+  ],
+  "中医": [
+    "traditional Chinese medicine"
+  ],
+  "《本草纲目》": [
+    "The Compendium of Materia Medica"
+  ],
+  "春运": [
+    "the Spring Festival travel rush"
+  ],
+  "春晚": [
+    "the Spring Festival Gala"
+  ],
+  "除夕": [
+    "Chinese New Year's Eve"
+  ],
+  "猜灯谜": [
+    "guess lantern riddles"
+  ],
+  "端午节": [
+    "Dragon Boat Festival"
+  ],
+  "祭祖": [
+    "offer sacrifices to ancestors"
+  ],
+  "《黄帝内经》": [
+    "The Yellow Emperor’s Inner Canon"
+  ],
+  "唱、念、做、打": [
+    "singing, reciting, acting, and martial arts"
+  ],
+  "非物质文化遗产": [
+    "intangible cultural heritage"
+  ],
+  "中国功夫": [
+    "Chinese Kung Fu"
+  ],
+  "中国武术": [
+    "Chinese martial arts"
+  ],
+  "《牛郎织女》": [
+    "The Cowherd and the Weaver Girl"
+  ],
+  "《梁山伯与祝英台》": [
+    "The Butterfly Lovers"
+  ],
+  "《史记》": [
+    "Records of the Grand Historian"
+  ],
+  "《西游记》": [
+    "The Journey to the West"
+  ],
+  "《易经》": [
+    "The Book of Changes"
+  ],
+  "《诗经》": [
+    "The Book of Songs"
+  ],
+  "宣纸": [
+    "Xuan paper"
+  ],
+  "《三国演义》": [
+    "The Romance of the Three Kingdoms"
+  ],
+  "《论语》": [
+    "The Analects of Confucius"
+  ],
+  "文房四宝": [
+    "Four Treasures of the Study"
+  ],
+  "《牡丹亭》": [
+    "The Peony Pavilion"
+  ],
+  "《白蛇传》": [
+    "Legend of the White Snake"
+  ],
+  "四大名著": [
+    "Four Great Classical Novels"
+  ],
+  "《水浒传》": [
+    "The Water Margin"
+  ],
+  "《孟姜女》": [
+    "Meng Jiangnv"
+  ],
+  "《红楼梦》": [
+    "A Dream of Red Mansions"
+  ],
+  "《孙子兵法》": [
+    "The Art of War"
+  ],
+  "甲骨文": [
+    "oracle bone inscriptions"
+  ],
+  "道家文化": [
+    "Taoist culture"
+  ],
+  "春秋时期": [
+    "the Spring and Autumn period"
+  ],
+  "孝敬长辈": [
+    "filial piety to the elders"
+  ],
+  "五行学说": [
+    "the theory of five elements"
+  ],
+  "天人合一": [
+    "Oneness of Heaven and Man"
+  ],
+  "诸子百家": [
+    "Hundred Schools of Thought"
+  ],
+  "四书五经": [
+    "The Four Books and Five Classics"
+  ],
+  "庄子": [
+    "Chuang Tzu"
+  ],
+  "和而不同": [
+    "harmony but not uniformity"
+  ],
+  "儒家文化": [
+    "Confucian culture"
+  ],
+  "老子": [
+    "Lao Tzu"
+  ],
+  "秦始皇": [
+    "Qin Shi Huang"
+  ],
+  "阴和阳": [
+    "Yin and Yang"
+  ],
+  "舞狮舞龙": [
+    "the Lion Dance and the Dragon Dance"
+  ],
+  "雕梁画栋": [
+    "carved beams and painted pillars"
+  ],
+  "倒贴“福”字": [
+    "upside-down fu characters"
+  ],
+  "太极拳": [
+    "Tai Chi Chuan"
+  ],
+  "吃喜酒": [
+    "attend the wedding banquet"
+  ],
+  "双喜字": [
+    "the Double Happiness symbol"
+  ],
+  "和平共处五项原则": [
+    "the Five Principles of Peaceful Coexistence"
+  ],
+  "人类命运共同体": [
+    "a global community of shared future"
+  ],
+  "中国特色大国外交": [
+    "major-country diplomacy with Chinese characteristics"
+  ],
+  "郑和下西洋": [
+    "Zheng He’s voyages to the \"Western Oceans\""
+  ],
+  "文明交流互鉴": [
+    "exchanges and mutual learning among civilizations"
+  ],
+  "古代丝绸之路": [
+    "ancient Silk Road"
+  ],
+  "新型国际关系": [
+    "a new model/type of international relations"
+  ],
+  "“一带一路”倡议": [
+    "Belt and Road Initiative"
+  ],
+  "和平发展道路": [
+    "the path of peaceful development"
+  ],
+  "中非合作论坛": [
+    "the Forum on China-Africa Cooperation (FOCAC)"
+  ],
+  "独立自主的和平外交政策": [
+    "independent foreign policy of peace"
+  ],
+  "利益共同体": [
+    "a community of shared interests"
+  ],
+  "全球发展倡议": [
+    "Global Development Initiative (GDI)"
+  ],
+  "“双碳”目标；碳达峰、碳中和目标": [
+    "carbon peaking and carbon neutrality goals"
+  ],
+  "生态红线": [
+    "ecological red lines"
+  ],
+  "绿水青山就是金山银山。": [
+    "Lucid waters and lush mountains are invaluable assets."
+  ],
+  "生态文明理念": [
+    "philosophy of ecological civilization"
+  ],
+  "全球环境治理": [
+    "global environmental governance"
+  ],
+  "尊重自然、顺应自然、保护自然": [
+    "to respect Nature, follow Nature’s laws and protect Nature"
+  ],
+  "绿色发展体系": [
+    "green development system"
+  ],
+  "美丽中国先行区": [
+    "pilot zones for the Beautiful China Initiative"
+  ],
+  "绿色发展、循环发展、低碳发展": [
+    "green, circular, and low-carbon development"
+  ],
+  "丝路精神": [
+    "the Silk Road spirit"
+  ],
+  "改革创新精神": [
+    "the spirit of reform and innovation"
+  ],
+  "工匠精神": [
+    "the spirit of craftsmanship"
+  ],
+  "中国高铁": [
+    "China Railway High-speed"
+  ],
+  "钉钉子精神": [
+    "the perseverance to hammer away until a task is done"
+  ],
+  "健康中国行动": [
+    "Healthy China initiative"
+  ],
+  "女排精神": [
+    "the spirit of the Chinese national women’s volleyball team"
+  ],
+  "统一的多民族国家": [
+    "a unified multi-ethnic country"
+  ],
+  "中国载人航天工程": [
+    "China's manned space program"
+  ],
+  "北斗卫星导航系统": [
+    "the BeiDou Navigation Satellite System"
+  ],
+  "未来产业": [
+    "future-oriented industries"
+  ],
+  "超长期特别国债": [
+    "ultra-long special treasury bonds"
+  ],
+  "新一轮农村改革": [
+    "a new round of rural reform"
+  ],
+  "丝绸之路经济带": [
+    "the Silk Road Economic Belt"
+  ],
+  "战略性新兴产业": [
+    "strategic emerging industries"
+  ],
+  "海洋强国": [
+    "a strong maritime nation/country"
+  ],
+  "传统制造业转型升级": [
+    "transformation and upgrading of traditional manufacturing industries"
+  ],
+  "城乡融合发展": [
+    "integrated urban-rural development"
+  ],
+  "社会主义市场经济": [
+    "socialist market economy"
+  ],
+  "粤港澳大湾区": [
+    "the Guangdong-Hong Kong-Macao Greater Bay Area"
+  ],
+  "国家大数据战略": [
+    "national big data strategy"
+  ],
+  "创新驱动发展战略": [
+    "innovation-driven development strategy"
+  ],
+  "长江经济带": [
+    "the Yangtze River Economic Belt"
+  ],
+  "乡村振兴战略": [
+    "rural revitalization strategy"
+  ],
+  "东北地区全面振兴": [
+    "comprehensive revitalization of the northeast"
+  ],
+  "全面建成小康社会": [
+    "the building of a moderately prosperous society in all respects"
+  ],
+  "京津冀协同发展": [
+    "coordinated development of the Beijing-Tianjin-Hebei Region"
+  ],
+  "全心全意为人民服务": [
+    "to serve the people wholeheartedly"
+  ],
+  "特别行政区": [
+    "special administrative region"
+  ],
+  "总体国家安全观": [
+    "holistic approach to national security"
+  ],
+  "爱国统一战线": [
+    "patriotic United Front"
+  ],
+  "中国人民解放军": [
+    "People’s Liberation Army"
+  ],
+  "中国人民抗日战争": [
+    "Chinese People’s War of Resistance Against Japanese Aggression"
+  ],
+  "国防和军队现代化": [
+    "modernization of our national defense and armed forces"
+  ],
+  "“一国两制”": [
+    "one country, two systems"
+  ],
+  "国家安全意识": [
+    "awareness of national security"
+  ],
+  "世界反法西斯战争": [
+    "the World Anti-Fascist War"
+  ],
+  "抗美援朝战争": [
+    "the War to Resist U.S. Aggression and Aid Korea"
+  ],
+  "解放战争": [
+    "the War of Liberation"
+  ],
+  "实事求是": [
+    "to seek truth from facts"
+  ],
+  "党的全面领导": [
+    "overall Party leadership"
+  ],
+  "人民当家作主": [
+    "people’s position as masters of the country"
+  ],
+  "批评和自我批评": [
+    "criticism and self-criticism"
+  ],
+  "不忘初心，牢记使命": [
+    "to remain/stay true to our original aspiration and founding mission"
+  ],
+  "集中力量办大事": [
+    "to pool all our resources to complete major missions"
+  ],
+  "全面依法治国": [
+    "to advance law-based governance in all respects"
+  ],
+  "社会公平正义": [
+    "social fairness and justice"
+  ],
+  "伟大斗争、伟大工程、伟大事业、伟大梦想": [
+    "the great struggle, the great project, the great cause and the great dream"
+  ],
+  "社会主义法制": [
+    "socialist legal system"
+  ],
+  "法治国家、法治政府、法治社会": [
+    "a law-based country, government and society"
+  ],
+  "“五位一体”总体布局": [
+    "the Five-sphere Integrated Plan"
+  ],
+  "中国特色社会主义": [
+    "socialism with Chinese characteristics"
+  ],
+  "二十届三中全会": [
+    "the third plenary session of the 20th Central Committee"
+  ],
+  "中国特色社会主义道路": [
+    "the path of socialism with Chinese characteristics"
+  ],
+  "“四个自信”": [
+    "the Four-sphere Confidence"
+  ],
+  "中国特色社会主义根本制度、基本制度、重要制度": [
+    "the fundamental, basic and important systems of Chinese socialism"
+  ],
+  "习近平新时代中国特色社会主义思想": [
+    "Xi Jinping Thought on Socialism with Chinese Characteristics for a New Era"
+  ],
+  "“四个全面”战略布局": [
+    "the Four-pronged Comprehensive Strategy"
+  ],
+  "中国特色社会主义伟大事业": [
+    "the great cause of Chinese socialism"
+  ],
+  "改革开放": [
+    "reform and opening up"
+  ],
+  "党的建设新的伟大工程": [
+    "the great new project of Party building"
+  ],
+  "以人民为中心的发展思想": [
+    "the people-centered philosophy of development"
   ]
 }

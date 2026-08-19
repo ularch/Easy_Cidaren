@@ -20,9 +20,10 @@ def handle_word_result(public_info) -> None:
     if not isinstance(getattr(public_info, 'word_dict', None), dict):
         public_info.word_dict = {}
     public_info.word_dict.update(word_dict)
-    # 持久化(跨进程累积: 单任务/不同刷题顺序下全局池完整)
-    try:
-        with open(os.path.join(public_info.path, "config", "word_pool.json"), 'w', encoding='utf-8') as f:
-            json.dump(public_info.word_dict, f, ensure_ascii=False)
-    except Exception:
-        pass
+    # 持久化(跨进程累积: 单任务/不同刷题顺序下全局池完整); 词表池自学习关闭时不写入
+    if getattr(public_info, '_self_learn_pool', True):
+        try:
+            with open(os.path.join(public_info.path, "config", "word_pool.json"), 'w', encoding='utf-8') as f:
+                json.dump(public_info.word_dict, f, ensure_ascii=False)
+        except Exception:
+            pass

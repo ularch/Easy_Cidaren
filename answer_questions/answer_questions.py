@@ -19,17 +19,24 @@ query_answer = Log('answer_questions')
 
 def _template_slots(content: str):
     """mode 32 模板空位解析: 返回 (空位token列表, 总词位数)。
-    '_'=1 词位(接受连字符词整体, 如 low-carbon), '_-_'=2 词位(需拆分词 waste,free, 实证 165203)"""
+    '_'=1 词位(接受连字符词整体, 如 low-carbon), '_-_'=2 词位(需拆分词 waste,free, 实证 165203)。
+    用正则匹配空位 token(兼容标点粘连如 '_,'/'(_,)'), split() 只识别独立 token"""
     slots = []
     total = 0
-    for tok in content.split():
+    for m in re.finditer(r'_-_|_', content or ''):
+        tok = m.group(0)
         if tok == '_':
             slots.append('_')
             total += 1
-        elif tok == '_-_':
+        else:
             slots.append('_-_')
             total += 2
     return slots, total
+
+
+def _norm_word(w: str) -> str:
+    """去词首尾标点(保留内部连字符/撇号): 'struggle,' -> 'struggle'"""
+    return w.strip(' \t,;:.()[]"\'，。、；：')
 
 
 def _build_phrase_answer(public_info, phrase: str) -> str:
@@ -42,17 +49,41 @@ def _build_phrase_answer(public_info, phrase: str) -> str:
         return delete_other_char(phrase)
     opt_lower = [o.lower() for o in options if isinstance(o, str)]
     opt_set = set(opt_lower)
-    # 候选词: 短语原词序保留重复词(造林育林 forest×2), options 过滤固定词;
+    # 选项段聚合: 短语词序从左到右——优先多词选项段(最长优先, 'all our'/'the country'/'a New Era' 整段占一空位),
+    # 再 1 词匹配(原词优先, 其次去标点 'struggle,'->'struggle'); 未命中视为固定词跳过;
     # 连字符词不在 options 但其拆分词都在 options(waste/free)时保留整体, 由模板对齐决定拆分
+    tokens = phrase.split()
     cand = []
-    for w in phrase.split():
-        wl = w.lower()
-        if wl in opt_set:
+    i = 0
+    while i < len(tokens):
+        w = tokens[i]
+        matched = False
+        for k in range(3, 1, -1):
+            if i + k <= len(tokens):
+                seg = ' '.join(tokens[i:i + k])
+                if seg.lower() in opt_set:
+                    cand.append(seg)
+                    i += k
+                    matched = True
+                    break
+        if matched:
+            continue
+        nw = _norm_word(w)
+        if w.lower() in opt_set:
             cand.append(w)
-        elif '-' in w:
+            i += 1
+            continue
+        if nw.lower() in opt_set:
+            cand.append(nw)
+            i += 1
+            continue
+        if '-' in w:
             parts = [p.lower() for p in w.split('-') if p]
             if parts and all(p in opt_set for p in parts):
                 cand.append(w)
+                i += 1
+                continue
+        i += 1
     if not cand:
         return delete_other_char(phrase)
     # 模板对齐: '_' 空位取 1 词(连字符词整体), '_-_' 空位取连字符词拆 2 词
@@ -346,13 +377,13 @@ def _candidate_words(public_info, remark):
     pool = []
     lib_answers = lookup(remark)
     if lib_answers:
-        pool += [w for w in re.split(r'[\s\-()]+', lib_answers[0]) if w]
+        pool += [w for w in re.split(r'[\s\-(),]+', lib_answers[0]) if w]
     word_answers = lookup_word(remark)
     if word_answers:
         pool += list(word_answers)
     phrase = _match_phrase_by_word_zh(public_info, remark)
     if phrase:
-        pool += [w for w in re.split(r'[\s\-()]+', unquote(phrase)) if w]
+        pool += [w for w in re.split(r'[\s\-(),]+', unquote(phrase)) if w]
     return list(dict.fromkeys(pool)) or None
 
 
@@ -365,7 +396,7 @@ def _global_word_pool(public_info):
         return None
     pool = []
     for en in word_map.values():
-        pool += [w for w in re.split(r'[\s\-()/]+', unquote(en)) if w]
+        pool += [w for w in re.split(r'[\s\-(),/]+', unquote(en)) if w]
     return list(dict.fromkeys(pool)) or None
 
 
@@ -396,7 +427,7 @@ def complete_spelling(public_info):
     lib_answers = lookup(remark)
     if lib_answers:
         # 按 空白/连字符/括号/斜杠 拆分(air/atmospheric -> air, atmospheric)
-        words = [w for w in re.split(r'[\s\-()/]+', lib_answers[0]) if w]
+        words = [w for w in re.split(r'[\s\-(),/]+', lib_answers[0]) if w]
         answers = _match_tips_words(tips, word_lens, words, exclude=fixed)
         if answers:
             query_answer.logger.info(f"答案库命中,补全拼写结果:{answers}")

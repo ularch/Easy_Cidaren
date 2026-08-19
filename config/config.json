@@ -9,5 +9,7 @@
   "know_version": "1.5.4",
   "read": false,
   "play_music": true,
-  "music_path": ""
+  "music_path": "",
+  "self_learn_lib": true,
+  "self_learn_pool": true
 }

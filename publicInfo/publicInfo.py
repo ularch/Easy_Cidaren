@@ -31,6 +31,9 @@ class PublicInfo:
             self._read = user_config['read']
             self._play_music = user_config.get('play_music', True)  # 默认为True
             self._music_path = user_config.get('music_path', "")  # 默认为空，使用默认音乐
+            # 自学习开关(独立控制两个记忆库的写入; 关闭只停写入, 读取不受影响)
+            self._self_learn_lib = user_config.get('self_learn_lib', True)  # 答案库 self_learn: 判分答案写入 answer_lib
+            self._self_learn_pool = user_config.get('self_learn_pool', True)  # 词表池 self_learn: word_pool.json 持久化
 
         # 任务列表
         self.task_list = ""

@@ -295,23 +295,24 @@ def submit_result(public_info, option):
         stem = exam.get('stem')
         word_zh = stem.get('remark') if isinstance(stem, dict) else None
         corrects = result.get('answer_corrects')
-        if mode == 32 and word_zh and corrects:
-            # mode 32: answer_corrects 是完整短语, 入短语库
-            add_answer(word_zh, corrects)
-        elif mode == 73 and word_zh and corrects:
-            # mode 73: answer_corrects 是空位单词(非完整短语), 入单词库防污染短语库
-            add_word_answer(word_zh, corrects)
-        elif mode == 42 and word_zh and corrects:
-            # mode 42: answer_corrects 是选项下标数组, 通过 options 取正确答案单词入库
-            options = exam.get('options') or []
-            words = []
-            for idx in corrects:
-                if isinstance(idx, int) and 0 <= idx < len(options):
-                    content = options[idx].get('content') if isinstance(options[idx], dict) else None
-                    if content:
-                        words.append(content)
-            if words:
-                add_word_answer(word_zh, words)
+        if getattr(public_info, '_self_learn_lib', True):
+            if mode == 32 and word_zh and corrects:
+                # mode 32: answer_corrects 是完整短语, 入短语库
+                add_answer(word_zh, corrects)
+            elif mode == 73 and word_zh and corrects:
+                # mode 73: answer_corrects 是空位单词(非完整短语), 入单词库防污染短语库
+                add_word_answer(word_zh, corrects)
+            elif mode == 42 and word_zh and corrects:
+                # mode 42: answer_corrects 是选项下标数组, 通过 options 取正确答案单词入库
+                options = exam.get('options') or []
+                words = []
+                for idx in corrects:
+                    if isinstance(idx, int) and 0 <= idx < len(options):
+                        content = options[idx].get('content') if isinstance(options[idx], dict) else None
+                        if content:
+                            words.append(content)
+                if words:
+                    add_word_answer(word_zh, words)
     api.logger.info("提取下一题的请求参数")
     # next exam topic_code
     public_info.topic_code = result['topic_code']

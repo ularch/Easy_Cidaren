@@ -1,6 +1,7 @@
 import os
 import subprocess
 import threading
+import time
 
 import winsound
 from playsound import playsound
@@ -274,6 +275,11 @@ class UiMainWindow(QMainWindow):
         self.action_about.setText(_translate("MainWindow", "关于"))
 
     def update_output_info(self, info):
+        """
+        刷新前端输出信息
+        :param info:
+        :return:
+        """
         self.output = self.output + f"\n{info}"
         self.output_info.setHtml(f"<pre style='white-space:pre-wrap;word-wrap:break-word;'>{self.output}</pre>")
         if self.follow_output.isChecked():
@@ -281,6 +287,10 @@ class UiMainWindow(QMainWindow):
             scrollbar.setValue(scrollbar.maximum())
 
     def token_login(self):
+        """
+        登录
+        :return:
+        """
         self.warn_info.setText("")
         input_text = self.token_input.text()
         if '\n' in input_text:
@@ -321,6 +331,10 @@ class UiMainWindow(QMainWindow):
                 self.get_task_list()
 
     def get_task_list(self):
+        """
+        获取任务列表
+        :return:
+        """
         self.task_list.setRowCount(0)
         if not self.user_info.text() == "未获取":
             if self.learn_task.isChecked():
@@ -406,13 +420,21 @@ class UiMainWindow(QMainWindow):
                 self.update_output_info("获取失败！没有任务！")
 
     def _select_task_row(self, row):
-        """勾选单选框时同步选中表格行"""
+        """
+        勾选单选框时同步选中表格行
+        :param row:
+        :return:
+        """
         item = self.task_list.item(row, 1)
         if item:
             self.task_list.setCurrentItem(item)
 
     def _on_task_item_clicked(self, item):
-        """点击任务行时自动勾选该行单选框"""
+        """
+        点击任务行时自动勾选该行单选框
+        :param item:
+        :return:
+        """
         try:
             task = item.data(QtCore.Qt.ItemDataRole.UserRole)
             if self.test_task.isChecked() and task and task.get('progress', 0) >= 100:
@@ -450,6 +472,10 @@ class UiMainWindow(QMainWindow):
                     task_info = self.public_info.class_task[0]
                     self.public_info.is_self_built = False
                     self._batch_mode = False
+                    # 开启新任务周期: 清空上一轮对错/跳过计数
+                    self.public_info.right_count = 0
+                    self.public_info.wrong_count = 0
+                    self.public_info.skip_count = 0
                     self.set_ui_enabled(False)
                     self.task_worker = self.task_worker_class([task_info], batch_mode=False)
                     self.task_worker.task_finished.connect(self.on_task_finished)
@@ -488,6 +514,10 @@ class UiMainWindow(QMainWindow):
                 return
             self.public_info.is_self_built = False
             self._batch_mode = True
+            # 开启新一轮一键刷题: 清空上一轮对错/跳过计数
+            self.public_info.right_count = 0
+            self.public_info.wrong_count = 0
+            self.public_info.skip_count = 0
             self.set_ui_enabled(False)
             self.task_worker = self.task_worker_class(tasks, batch_mode=True)
             self.task_worker.task_finished.connect(self.on_task_finished)
@@ -554,13 +584,18 @@ class UiMainWindow(QMainWindow):
         self.update_output_info(f"{task_name}运行完成")
         self.update_output_info(message)
         # 自动刷新任务列表，显示最新进度和得分
+        time.sleep(1)
         self.get_task_list()
         if self.task_worker:
             self.task_worker.deleteLater()
             self.task_worker = None
 
     def on_batch_finished(self, summary):
-        """一键刷题全部任务执行结束"""
+        """
+        一键刷题全部任务执行结束
+        :param summary:
+        :return:
+        """
         self._batch_mode = False
         self.set_ui_enabled(True)
         self.progress_bar.setValue(0)
@@ -570,16 +605,22 @@ class UiMainWindow(QMainWindow):
         self.progress_skip_label.setText("")
         self.main_logger.info(summary)
         self.update_output_info(summary)
-        self.get_task_list()
         music_thread = threading.Thread(target=self.play_music)
         music_thread.start()
         QtWidgets.QMessageBox.information(self, "一键刷题完成", summary)
+        # 等服务端进度落库后再刷新
+        time.sleep(1)
+        self.get_task_list()
         if self.task_worker:
             self.task_worker.deleteLater()
             self.task_worker = None
 
     def on_task_notice(self, message):
-        """任务执行中的提示信息（重试/跳过等）"""
+        """
+        任务执行中的提示信息
+        :param message:
+        :return:
+        """
         self.main_logger.info(message)
         self.update_output_info(message)
 
@@ -605,11 +646,21 @@ class UiMainWindow(QMainWindow):
             self.task_worker = None
 
     def open_settings(self, m):
+        """
+        打开设置
+        :param m:
+        :return:
+        """
         if m.text() == "首选项...":
             self.settings = view.setting.Ui_Form(self.public_info)
             self.settings.show()
 
     def open_helper(self, m):
+        """
+        打开帮助
+        :param m:
+        :return:
+        """
         if m.text() == "使用教程":
             self.use_introduction = view.introduce.Ui_Form()
             self.use_introduction.show()
@@ -641,6 +692,10 @@ class UiMainWindow(QMainWindow):
             export_logs(self)
 
     def play_music(self):
+        """
+        播放音乐
+        :return:
+        """
         if hasattr(self.public_info, 'music_path') and self.public_info.music_path:
             if os.path.exists(self.public_info.music_path):
                 music_path = self.public_info.music_path
@@ -659,6 +714,10 @@ class UiMainWindow(QMainWindow):
                 self.main_logger.info(f"winsound播放失败: {e2}")
 
     def get_token(self):
+        """
+        打开获取 token 界面
+        :return:
+        """
         exe_path = self.root_path + "\\get token\\词达人token获取.exe"
         try:
             subprocess.Popen([exe_path], shell=True)
@@ -666,6 +725,10 @@ class UiMainWindow(QMainWindow):
             self.main_logger.info("词达人token获取.exe打开失败")
 
     def open_builtin_token_dialog(self):
+        """
+        打开内置 token 获取功能
+        :return:
+        """
         try:
             from view.builtin_token import BuiltinTokenDialog
             fetch_token_path = os.path.join(self.root_path, "get token", "fetch_token")
@@ -683,6 +746,11 @@ class UiMainWindow(QMainWindow):
             self.main_logger.error(f"打开内置 token 获取功能失败: {e}", exc_info=True)
 
     def on_builtin_token_captured(self, token):
+        """
+        内置 token 获取功能捕获 token
+        :param token:
+        :return:
+        """
         if token:
             self.token_input.setText(token)
             self.update_output_info("Token 已自动填充到输入框")
@@ -711,6 +779,10 @@ class UiMainWindow(QMainWindow):
             self.stop_task.setEnabled(True)
 
     def stop_current_task(self):
+        """
+        停止当前任务
+        :return:
+        """
         if self.task_worker and self.task_worker.isRunning():
             reply = QMessageBox.question(
                 self,
