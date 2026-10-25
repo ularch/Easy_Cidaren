@@ -1,0 +1,8 @@
+# CODEOWNERS — 指定代码所有者
+#
+# 配合分支保护里的 "Require review from Code Owners" 使用。
+# 在补上本文件之前，该规则因缺少 CODEOWNERS 而一直处于空转状态。
+# 现在起，所有 PR 都必须由 @ularch 批准才能合并，
+# 即使将来给其他协作者授予 write 权限也无法绕过。
+
+* @ularch
