@@ -8,7 +8,7 @@ update = Log("update")
 
 def get_update() -> str:
     try:
-        response = requests.get("https://api.github.com/repos/ularch/Cidaren_Automatic_Answer/releases/latest")
+        response = requests.get("https://api.github.com/repos/ularch/Easy_Cidaren/releases/latest")
         if response.status_code == 200:
             data = json.loads(response.text)
             return data["tag_name"]
