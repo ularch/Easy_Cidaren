@@ -3,14 +3,14 @@ import sys
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QWidget, QApplication
+from PyQt6.QtWidgets import QDialog, QApplication
 
 import api.update as update
 
 
-class Ui_Form(QWidget):
-    def __init__(self, public_info):
-        super(Ui_Form, self).__init__()
+class Ui_Form(QDialog):
+    def __init__(self, public_info, parent=None):
+        super(Ui_Form, self).__init__(parent)
         self.public_info = public_info
         self._now_version = public_info.version  # 初始化当前版本
         self._new_version = update.get_update()  # 获取最新版本
@@ -27,6 +27,7 @@ class Ui_Form(QWidget):
         if os.path.exists(icon_path):
             Form.setWindowIcon(QIcon(icon_path))
 
+        self.setModal(True)
         self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
         self.label = QtWidgets.QLabel(parent=Form)
         self.label.setGeometry(QtCore.QRect(10, 10, 381, 16))
@@ -80,14 +81,15 @@ class Ui_Form(QWidget):
                                             "</body></html>"))
 
     def cancel(self):
-        self.close()
+        self.reject()
 
     def go_update(self):
-        QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch/Cidaren_Automatic_Answer/releases/latest'))
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/ularch/Easy_Cidaren/releases/latest'))
+        self.accept()
 
     def ignore(self):
         self.public_info.ignore_version(self._new_version)
-        self.close()
+        self.accept()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

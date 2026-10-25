@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Logs
+log/logs/*
+!log/logs/.gitkeep
+*.log
+
+# Token & Local Runtime files
+get token/fetch_token/token.txt
+get token/fetch_token/capture.log
+
+# Build output
+/dist/
+/build/
+
+# macOS
+.DS_Store

@@ -171,13 +171,43 @@ class ProxyManager:
                 proxy_logger.logger.info(f"已将 mitmproxy 证书导入 CurrentUser\\{store}")
             except subprocess.CalledProcessError:
                 proxy_logger.logger.warning(f"导入证书到 {store} 失败，可手动执行：certutil -addstore -f -user {store} \"{cert_path}\"")
-            except Exception as e:
-                proxy_logger.logger.error(f"导入证书时出错: {e}")
+    def _ensure_mac_mitm_cert(self):
+        """检测并导入 mitmproxy 证书到 macOS 用户钥匙串"""
+        cert_path = Path.home() / ".mitmproxy" / "mitmproxy-ca-cert.pem"
+        if not cert_path.exists():
+            cert_path = Path.home() / ".mitmproxy" / "mitmproxy-ca-cert.cer"
+        if not cert_path.exists():
+            proxy_logger.logger.warning("未找到 mitmproxy 证书")
+            return
+
+        keychain_path = str(Path.home() / "Library" / "Keychains" / "login.keychain-db")
+        try:
+            # 检查是否已配置 SSL 信任
+            trust_check = subprocess.run(
+                ["security", "dump-trust-settings"],
+                capture_output=True,
+                text=True
+            )
+            if "mitmproxy" in trust_check.stdout and "SSL" in trust_check.stdout:
+                proxy_logger.logger.info("macOS 中已正确信任 mitmproxy SSL 证书")
+                return
+
+            subprocess.run(
+                ["security", "add-trusted-cert", "-r", "trustRoot", "-p", "ssl", "-k", keychain_path, str(cert_path)],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=10
+            )
+            proxy_logger.logger.info("已将 mitmproxy 证书导入 macOS 用户钥匙串并信任 SSL")
+        except Exception as e:
+            proxy_logger.logger.warning(f"配置 macOS 证书信任失败: {e}")
 
     def enable_proxy(self, host="127.0.0.1", port=8888):
         proxy_logger.logger.info("启用系统代理...")
 
         if self.os == "Darwin":
+            self._ensure_mac_mitm_cert()
             services = self._get_network_services()
 
             # 保存当前代理设置

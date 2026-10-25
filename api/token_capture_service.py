@@ -32,6 +32,31 @@ class TokenCaptureService:
         self._is_running = False
         self._cleanup_lock = threading.Lock()
         self._cleaned_up = False
+
+    def _find_mitmdump_cmd(self):
+        """寻找可用的 mitmdump 命令或使用 python 模块兜底"""
+        # 1. 尝试与当前 python 同级的可执行文件（虚拟环境常用）
+        candidate = os.path.join(os.path.dirname(sys.executable), "mitmdump" + (".exe" if sys.platform == "win32" else ""))
+        if os.path.exists(candidate) and os.access(candidate, os.X_OK):
+            return [candidate]
+
+        # 2. 尝试系统 PATH
+        which_path = shutil.which("mitmdump")
+        if which_path:
+            return [which_path]
+
+        # 3. 尝试当前项目的 .venv 目录
+        project_root = os.path.abspath(os.path.join(self.fetch_token_path, "..", ".."))
+        local_venv_bin = os.path.join(project_root, ".venv", "Scripts" if sys.platform == "win32" else "bin", "mitmdump" + (".exe" if sys.platform == "win32" else ""))
+        if os.path.exists(local_venv_bin) and os.access(local_venv_bin, os.X_OK):
+            return [local_venv_bin]
+
+        # 4. 终极兜底：当前 python 环境执行 mitmproxy 模块入口
+        try:
+            import mitmproxy
+            return [sys.executable, "-c", "import sys; from mitmproxy.tools.main import mitmdump; sys.exit(mitmdump())"]
+        except ImportError:
+            return None
     
     def start_capture(self, status_callback=None, token_callback=None, error_callback=None):
         """
@@ -58,8 +83,9 @@ class TokenCaptureService:
             
             self.proxy_manager = ProxyManager()
             
-            # 检查 mitmdump 是否可用
-            if not shutil.which("mitmdump"):
+            # 检查 mitmdump 是否可用（支持 venv 绝对路径、系统 PATH 及 Python 模块兜底）
+            mitmdump_cmd = self._find_mitmdump_cmd()
+            if not mitmdump_cmd:
                 raise RuntimeError("mitmdump 未找到，请先安装 mitmproxy: pip install mitmproxy")
             
             # 检查 8888 端口是否被占用
@@ -95,14 +121,14 @@ class TokenCaptureService:
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             
             addon_path = os.path.join(self.fetch_token_path, "addon.py")
+            cmd = mitmdump_cmd + [
+                "-s", addon_path,
+                "--listen-port", "8888",
+                "--quiet",
+                "--set", "console_eventlog_verbosity=error"
+            ]
             self.mitm_process = subprocess.Popen(
-                [
-                    "mitmdump",
-                    "-s", addon_path,
-                    "--listen-port", "8888",
-                    "--quiet",
-                    "--set", "console_eventlog_verbosity=error"
-                ],
+                cmd,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 startupinfo=startupinfo
@@ -191,7 +217,7 @@ class TokenCaptureService:
         
         service_logger.info(f"mitmproxy 证书已生成: {cert_path}")
         
-        # 导入证书到系统证书库（仅 Windows 支持免管理员导入）
+        # 导入证书到系统证书库
         if sys.platform == "win32" and self.proxy_manager:
             try:
                 if status_callback:
@@ -200,8 +226,16 @@ class TokenCaptureService:
                 service_logger.info("mitmproxy 证书导入完成")
             except Exception as e:
                 service_logger.error(f"导入 mitmproxy 证书失败: {e}")
-        elif sys.platform != "win32":
-            service_logger.info("非 Windows 系统，请手动信任 mitmproxy 证书")
+        elif sys.platform == "darwin" and self.proxy_manager and hasattr(self.proxy_manager, "_ensure_mac_mitm_cert"):
+            try:
+                if status_callback:
+                    status_callback("正在配置 macOS mitmproxy 证书...")
+                self.proxy_manager._ensure_mac_mitm_cert()
+                service_logger.info("macOS mitmproxy 证书配置完成")
+            except Exception as e:
+                service_logger.error(f"配置 mitmproxy 证书失败: {e}")
+        elif sys.platform not in ("win32", "darwin"):
+            service_logger.info("非 Windows/macOS 系统，请手动信任 mitmproxy 证书")
     
     def cleanup(self, status_callback=None):
         """清理资源（线程安全，可重复调用，只执行一次）"""

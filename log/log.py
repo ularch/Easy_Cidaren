@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import datetime
 import glob
 import shutil
@@ -106,8 +107,13 @@ def export_logs(main_window):
         file_handler.close()
         logger_instance.removeHandler(file_handler)
         
-        # 弹出文件保存对话框，将默认路径设置为C盘根目录
-        default_save_path = os.path.join("C:\\", os.path.basename(file_path))
+        # 弹出文件保存对话框，根据平台设置默认路径
+        if sys.platform == 'win32':
+            default_save_path = os.path.join("C:\\", os.path.basename(file_path))
+        else:
+            downloads_dir = os.path.expanduser("~/Downloads")
+            save_dir = downloads_dir if os.path.exists(downloads_dir) else os.path.expanduser("~")
+            default_save_path = os.path.join(save_dir, os.path.basename(file_path))
         file_name, _ = QFileDialog.getSaveFileName(
             main_window, 
             "导出日志文件", 

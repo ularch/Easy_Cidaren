@@ -3,6 +3,11 @@ import random
 import sys
 import time
 
+# 确保当前虚拟环境的 bin 目录在 PATH 中，方便子进程寻找 mitmdump 等工具
+_venv_bin = os.path.dirname(sys.executable)
+if _venv_bin and _venv_bin not in os.environ.get("PATH", "").split(os.pathsep):
+    os.environ["PATH"] = _venv_bin + os.pathsep + os.environ.get("PATH", "")
+
 from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 
@@ -262,13 +267,11 @@ if __name__ == '__main__':
         import view.first_note
 
         note = view.first_note.Ui_Form(public_info)
-        note.show()
-        app.exec()
+        note.exec()
 
     try:
         ui = UiMainWindow(public_info, path, main, TaskWorker)
         ui.show()
-
 
         class UpdateCheckThread(QThread):
             version_ready = pyqtSignal(str)
@@ -276,16 +279,18 @@ if __name__ == '__main__':
             def run(self):
                 self.version_ready.emit(get_update())
 
-
         update_thread = UpdateCheckThread()
-
+        update_dialog = None
 
         def on_version_checked(latest_version):
-            if public_info.version < latest_version and public_info.know_version < latest_version:
-                import view.update
-                update = view.update.Ui_Form(public_info)
-                update.exec()
-
+            global update_dialog
+            try:
+                if public_info.version < latest_version and public_info.know_version < latest_version:
+                    import view.update
+                    update_dialog = view.update.Ui_Form(public_info, parent=ui)
+                    update_dialog.exec()
+            except Exception as e:
+                main.logger.error(f"检查更新提示异常: {e}")
 
         update_thread.version_ready.connect(on_version_checked)
         update_thread.start()

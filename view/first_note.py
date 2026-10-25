@@ -3,12 +3,12 @@ import sys
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QWidget, QApplication
+from PyQt6.QtWidgets import QDialog, QApplication
 
 
-class Ui_Form(QWidget):
-    def __init__(self, public_info):
-        super(Ui_Form, self).__init__()
+class Ui_Form(QDialog):
+    def __init__(self, public_info, parent=None):
+        super(Ui_Form, self).__init__(parent)
         self.public_info = public_info
         self.setupUi(self)
 
@@ -21,6 +21,7 @@ class Ui_Form(QWidget):
         icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.ico')
         if os.path.exists(icon_path):
             Form.setWindowIcon(QIcon(icon_path))
+        self.setModal(True)
         self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
         self.confirmBtn = QtWidgets.QPushButton(parent=Form)
         self.confirmBtn.setGeometry(QtCore.QRect(310, 170, 75, 24))
@@ -54,11 +55,11 @@ class Ui_Form(QWidget):
                                             "</body></html>"))
 
     def cancel(self):
-        self.close()
+        self.reject()
 
     def ignore(self):
         self.public_info.read_seen()
-        self.close()
+        self.accept()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

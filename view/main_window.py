@@ -1,9 +1,13 @@
 import os
+import sys
 import subprocess
 import threading
 import time
 
-import winsound
+try:
+    import winsound
+except ImportError:
+    winsound = None
 from playsound import playsound
 
 from PyQt6.QtGui import QAction, QIcon
@@ -54,6 +58,10 @@ class UiMainWindow(QMainWindow):
         self.login.setGeometry(QtCore.QRect(330, 40, 61, 24))
         self.login.setObjectName("login")
         self.login.clicked.connect(self.token_login)
+        self.btn_get_token = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.btn_get_token.setGeometry(QtCore.QRect(395, 40, 60, 24))
+        self.btn_get_token.setObjectName("btn_get_token")
+        self.btn_get_token.clicked.connect(self.open_builtin_token_dialog)
         self.warn_info = QtWidgets.QLabel(parent=self.centralwidget)
         self.warn_info.setGeometry(QtCore.QRect(20, 60, 441, 16))
         self.warn_info.setStyleSheet("")
@@ -238,6 +246,12 @@ class UiMainWindow(QMainWindow):
         self.menu_2.addMenu(self.menu_get_token)
         self.menu_get_token.addAction(self.action_builtin)
         self.menu_get_token.addAction(self.action_third_party)
+        self.action_builtin.triggered.connect(self.open_builtin_token_dialog)
+        self.action_third_party.triggered.connect(self.get_token)
+        # 注意：不要把 menu_get_token / menu_2 的 triggered 再连到 open_helper 处理「内置」「第三方」。
+        # macOS 原生菜单栏下子项不向父菜单冒泡，而 Windows 下会冒泡——两种行为叠加会让同一次点击
+        # 打开多个 Token 对话框（每个都会起 mitmdump、抢 8888 端口、改系统代理）。
+        # 这两个菜单项只由上面两条 action 的直接连接负责，跨平台行为一致。
         self.action_open_logs.setText("导出日志文件")
         self.menu_2.addAction(self.action_open_logs)
         self.menu_2.triggered[QAction].connect((self.open_helper))
@@ -253,6 +267,7 @@ class UiMainWindow(QMainWindow):
         self.output_info.setHtml(_translate("MainWindow", f"<pre>{UiMainWindow.output}</pre>"))
         self.label.setText(_translate("MainWindow", "用户token："))
         self.login.setText(_translate("MainWindow", "登录"))
+        self.btn_get_token.setText(_translate("MainWindow", "获取Token"))
         self.label_3.setText(_translate("MainWindow", "输出信息："))
         self.label_4.setText(_translate("MainWindow", "用户信息："))
         self.user_info.setText(_translate("MainWindow", "未获取"))
@@ -683,10 +698,8 @@ class UiMainWindow(QMainWindow):
                 info_text = f"EasyCidaren\n版本: {self.public_info.version}\n作者: ularch\n开源地址: https://github.com/ularch/Easy_Cidaren\n唯一设备ID: {uid}"
                 clipboard.setText(info_text)
                 QMessageBox.information(self, "复制成功", "已将相关信息复制到剪贴板")
-        elif m.text() == "第三方":
-            self.get_token()
-        elif m.text() == "内置":
-            self.open_builtin_token_dialog()
+        # 「内置」「第三方」不在此处理：它们只由 action_builtin / action_third_party 的
+        # 直接 triggered 连接负责（见 setupUi），此处若再处理会在菜单信号冒泡时重复弹窗
         elif m.text() == "导出日志文件":
             from log.log import export_logs
             export_logs(self)
@@ -707,18 +720,31 @@ class UiMainWindow(QMainWindow):
         try:
             playsound(music_path)
         except Exception as e:
-            self.main_logger.info(f"playsound播放失败，使用winsound播放: {e}")
-            try:
-                winsound.PlaySound(music_path, winsound.SND_FILENAME)
-            except Exception as e2:
-                self.main_logger.info(f"winsound播放失败: {e2}")
+            self.main_logger.info(f"playsound播放失败: {e}")
+            if winsound:
+                try:
+                    winsound.PlaySound(music_path, winsound.SND_FILENAME)
+                except Exception as e2:
+                    self.main_logger.info(f"winsound播放失败: {e2}")
+            elif sys.platform == 'darwin':
+                try:
+                    subprocess.Popen(['afplay', music_path])
+                except Exception as e2:
+                    self.main_logger.info(f"afplay播放失败: {e2}")
 
     def get_token(self):
         """
         打开获取 token 界面
         :return:
         """
-        exe_path = self.root_path + "\\get token\\词达人token获取.exe"
+        if sys.platform != 'win32':
+            QMessageBox.information(
+                self,
+                "提示",
+                "第三方 exe 工具仅支持 Windows。\nmacOS 用户请点击「获取 token」->「内置」进行抓包，或直接粘贴 Token。"
+            )
+            return
+        exe_path = os.path.join(self.root_path, "get token", "词达人token获取.exe")
         try:
             subprocess.Popen([exe_path], shell=True)
         except:
@@ -729,15 +755,16 @@ class UiMainWindow(QMainWindow):
         打开内置 token 获取功能
         :return:
         """
+        self.main_logger.info("点击打开内置 Token 获取窗口")
         try:
             from view.builtin_token import BuiltinTokenDialog
             fetch_token_path = os.path.join(self.root_path, "get token", "fetch_token")
             if not os.path.exists(fetch_token_path):
                 QMessageBox.critical(self, "错误", f"fetch_token 目录不存在：{fetch_token_path}")
                 return
-            dialog = BuiltinTokenDialog(parent=self, fetch_token_path=fetch_token_path)
-            dialog.captured.connect(self.on_builtin_token_captured)
-            dialog.exec()
+            self.builtin_dialog = BuiltinTokenDialog(parent=self, fetch_token_path=fetch_token_path)
+            self.builtin_dialog.captured.connect(self.on_builtin_token_captured)
+            self.builtin_dialog.exec()
         except ImportError as e:
             QMessageBox.critical(self, "错误", f"无法导入 builtin_token 模块：{e}")
             self.main_logger.error(f"导入 builtin_token 模块失败: {e}")
