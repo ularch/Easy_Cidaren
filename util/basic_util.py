@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 from log.log import Log
 from decryptencrypt.debase64 import debase64
@@ -49,6 +50,28 @@ def resolve_word_ci(words, word):
     for w in words:
         if isinstance(w, str) and w.lower() == target:
             return w
+    return None
+
+
+def format_task_time(ms: int) -> str:
+    """毫秒时间戳 -> 本地时间 'MM-DD HH:MM'"""
+    try:
+        return datetime.fromtimestamp(ms / 1000).strftime('%m-%d %H:%M')
+    except Exception:
+        return ''
+
+
+def check_task_window(task_info: dict):
+    """本地预检任务是否可执行。None=可执行，否则返回原因文案。
+    只依赖绝对时间戳 start_time 与服务端下发的 over_status，不推测 over_time 的语义。"""
+    try:
+        start_ms = int(task_info.get('start_time') or 0)
+    except (TypeError, ValueError):
+        start_ms = 0          # 时间戳异常时不拦截，交给服务端判定
+    if start_ms and create_timestamp() < start_ms:
+        return f"尚未开放（{format_task_time(start_ms)} 开始）"
+    if task_info.get('over_status') == 3:
+        return "已过期"
     return None
 
 

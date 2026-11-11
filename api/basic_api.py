@@ -1,7 +1,7 @@
 import re
 
 import api.request_header as requests
-from api.main_api import SecurityVerifyError
+from api.main_api import SecurityVerifyError, TaskNotEffectiveError
 from log.log import Log, get_file_logger
 from util.basic_util import create_timestamp
 
@@ -22,6 +22,9 @@ def handle_response(response):
     elif response.json()['code'] == 11003:
         basic_api.logger.error(f"需安全验证: {response.text}")
         raise SecurityVerifyError("服务端需安全验证，请打开词达人 App/微信完成安全验证后重试")
+    elif response.json()['code'] == 20005:
+        basic_api.logger.error(f"任务未生效: {response.text}")
+        raise TaskNotEffectiveError(response.json().get('msg') or '任务未生效')
     else:
         basic_api.logger.error(f"请求有问题{response.text}退出程序")
         raise Exception("请求有问题，中止程序")

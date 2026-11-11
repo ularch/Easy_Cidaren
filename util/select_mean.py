@@ -1,9 +1,10 @@
 import random
 import re
 
-from api.main_api import query_word
+from api.main_api import query_word, WordCardDataError
 from log.log import Log
-from util.word_revert import word_revert
+from util.mean_match import choose_option
+from util.word_form import match_in_list
 
 # log module
 select_module = Log("select_mean")
@@ -55,13 +56,11 @@ def select_mean(public_info) -> int:
     :return: 选择的匹配的选项
     """
     options = filler_option(public_info)
-    # 匹配选项
-    for index, option in enumerate(options, 0):
-        for mean in public_info.word_means:
-            # 选项顺序混乱，重排序
-            if sorted(option.replace(" ", '')) == sorted(mean.replace(" ", '')) or mean in option:
-                select_module.logger.info(f"匹配第{index + 1}个选项选项[{option}]")
-                return index
+    chosen = choose_option(public_info.word_query_result or {}, public_info.exam or {}, options)
+    if chosen is not None:
+        index = options.index(chosen)
+        select_module.logger.info(f"匹配第{index + 1}个选项选项[{chosen}]")
+        return index
     # 匹配失败 随机提交一个
     select_module.logger.warning("匹配失败，随机提交")
     return random.randint(0, len(options) - 1)
@@ -72,7 +71,11 @@ def select_match_word(public_info, word_mean) -> int:
     options = filler_option(public_info)
     for word in options:
         # query word mean
-        query_word(public_info, word)
+        try:
+            query_word(public_info, word)
+        except WordCardDataError:
+            select_module.logger.warning(f"查词被服务端拒绝，跳过候选[{word}]")
+            continue
         handle_query_word_mean(public_info)
         # is match word mean
         for mean in public_info.word_means:
@@ -89,16 +92,13 @@ def is_word_exist(public_info, option) -> bool:
     :param option: word
     :return: None
     """
-    if option in public_info.word_list:
-        # word is exist word_list
-        query_word(public_info, option)
+    hit = match_in_list(option, public_info.word_list)
+    if hit:
+        if hit.lower() != (option or '').lower():
+            select_module.logger.info(f"词形还原 {option} -> {hit}")
+        query_word(public_info, hit)
         return True
-    else:
-        select_module.logger.info('转原型')
-        revert_option = word_revert(option)
-        if revert_option in public_info.word_list:
-            query_word(public_info, revert_option)
-            return True
+    select_module.logger.info(f"{option} 不在词表且无法还原，跳过")
     return False
 
 
