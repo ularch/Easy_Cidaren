@@ -10,6 +10,7 @@ from log.log import Log, get_file_logger
 from publicInfo.publicInfo import PublicInfo
 from util.answer_lib import add_answer, add_word_answer
 from util.basic_util import create_timestamp, resolve_word_ci
+from util.word_cache import lookup as lookup_cached_word, save as save_cached_word
 
 # create logger
 api = Log('main_api')
@@ -17,6 +18,10 @@ api = Log('main_api')
 basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
 file_logger = get_file_logger('_main_api')
+
+# 单词信息缓存: 优先使用内存, 本地缓存可跨重启复用
+_word_info_cache = {}
+_WORD_CACHE_LIMIT = 2000
 
 
 class SecurityVerifyError(Exception):
@@ -279,8 +284,27 @@ def check_is_self_built(func):
 
 
 # 查询单词
+def _remember_word(key, result):
+    """内存缓存同样按 FIFO 淘汰, 新单词不会因满额而永久失去缓存机会。"""
+    if _WORD_CACHE_LIMIT <= 0:
+        return
+    _word_info_cache[key] = result
+    while len(_word_info_cache) > _WORD_CACHE_LIMIT:
+        del _word_info_cache[next(iter(_word_info_cache))]
+
+
 @check_is_self_built
 def query_word(public_info, word):
+    cache_key = (public_info.course_id, public_info.now_unit, str(word).lower())
+    cached = _word_info_cache.get(cache_key)
+    if cached is None:
+        cached = lookup_cached_word(cache_key)
+        if cached is not None:
+            _remember_word(cache_key, cached)
+    if cached is not None:
+        public_info.word_query_result = cached
+        api.logger.info(f"查询单词{word}(缓存命中)")
+        return
     time.sleep(random.randint(0, 2))
     api.logger.info(f"查询单词{word}")
     # query word in the unit
@@ -290,6 +314,8 @@ def query_word(public_info, word):
     handle_response(word)
     # decrypt  response
     public_info.word_query_result = debase64(word.json()['data'], word.json()['jv'])
+    _remember_word(cache_key, public_info.word_query_result)
+    save_cached_word(cache_key, public_info.word_query_result, limit=_WORD_CACHE_LIMIT)
     api.logger.info("查询单词成功")
 
 
