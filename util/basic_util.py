@@ -39,6 +39,19 @@ def create_timestamp() -> int:
     return int(time.time() * 1000)
 
 
+def resolve_word_ci(words, word):
+    """按忽略大小写查找词表, 返回词表中的原始写法, 未命中返回 None"""
+    if not isinstance(word, str):
+        return None
+    if word in words:
+        return word
+    target = word.lower()
+    for w in words:
+        if isinstance(w, str) and w.lower() == target:
+            return w
+    return None
+
+
 def delete_other_char(result: str) -> str:
     delete_list = ['}', '{', ' ...', ' …']
     for delete_str in delete_list:

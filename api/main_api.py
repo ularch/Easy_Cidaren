@@ -9,7 +9,7 @@ from decryptencrypt.encrypt_md5 import encrypt_md5
 from log.log import Log, get_file_logger
 from publicInfo.publicInfo import PublicInfo
 from util.answer_lib import add_answer, add_word_answer
-from util.basic_util import create_timestamp
+from util.basic_util import create_timestamp, resolve_word_ci
 
 # create logger
 api = Log('main_api')
@@ -21,6 +21,10 @@ file_logger = get_file_logger('_main_api')
 
 class SecurityVerifyError(Exception):
     """服务端风控: 11003 需安全验证(要求用户在 App/微信端完成验证), 重试无意义, 应立即停止并提示"""
+
+
+class TaskWordMappingError(Exception):
+    """自建任务单词无法映射到词表及对应单元。"""
 
 
 # response is 200
@@ -241,9 +245,17 @@ def check_is_self_built(func):
     @wraps(func)
     def is_self_built(public_info, word):
         if public_info.is_self_built:
+            resolved = resolve_word_ci(public_info.word_list, word)
+            if resolved is None:
+                api.logger.error(f"自建任务词表中找不到单词：{word}")
+                raise TaskWordMappingError(f"自建任务词表中找不到单词：{word}")
+            word = resolved
             # 从单词列表获取索引
             word_index = public_info.word_list.index(word)
             # 获取单元单词
+            if word_index >= len(public_info.get_book_words_data):
+                api.logger.error(f"单词索引越界：{word}({word_index})")
+                raise TaskWordMappingError(f"单词索引越界：{word}")
             public_info.now_unit = public_info.get_book_words_data[word_index]["list_id"]
         return func(public_info, word)
 
