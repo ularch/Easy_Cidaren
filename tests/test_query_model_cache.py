@@ -1,5 +1,6 @@
 from contextlib import ExitStack
 from pathlib import Path
+import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -71,21 +72,25 @@ class QueryCacheTests(unittest.TestCase):
 class ModelCacheTests(unittest.TestCase):
     def test_model_is_loaded_once_for_multiple_words(self):
         model = Mock(return_value=[SimpleNamespace(lemma_='run')])
-        with patch.object(word_revert, '_nlp', None), \
-                patch.object(word_revert, '_model_broken', False), \
-                patch('spacy.load', return_value=model) as load:
+        fake_spacy = SimpleNamespace(load=Mock(return_value=model))
+        # 用 sys.modules 顶替 spacy: patch('spacy.load') 会真去 import spacy,
+        # 而进程里已加载的 requests/brotli DLL 会让 torch 初始化失败(实测 WinError 1114)
+        with patch.dict(sys.modules, {'spacy': fake_spacy}), \
+                patch.object(word_revert, '_nlp', None), \
+                patch.object(word_revert, '_model_broken', False):
             self.assertEqual(word_revert.word_revert('running'), 'run')
             self.assertEqual(word_revert.word_revert('runs'), 'run')
-            load.assert_called_once()
+            fake_spacy.load.assert_called_once()
 
     def test_model_load_failure_uses_upstream_stop_policy(self):
-        with patch.object(word_revert, '_nlp', None), \
+        fake_spacy = SimpleNamespace(load=Mock(side_effect=RuntimeError('load failed')))
+        with patch.dict(sys.modules, {'spacy': fake_spacy}), \
+                patch.object(word_revert, '_nlp', None), \
                 patch.object(word_revert, '_model_broken', False), \
-                patch('spacy.load', side_effect=RuntimeError('load failed')) as load, \
                 patch.object(word_revert, 'use_api_get_prototype', return_value='run') as fallback:
             self.assertEqual(word_revert.word_revert('running'), 'run')
             self.assertEqual(word_revert.word_revert('runs'), 'runs')
-            load.assert_called_once()
+            fake_spacy.load.assert_called_once()
             fallback.assert_called_once_with('running')
 
 
