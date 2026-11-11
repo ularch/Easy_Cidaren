@@ -4,7 +4,7 @@ import time
 import json
 from urllib.parse import unquote
 
-from api.main_api import query_word, submit_result, next_exam
+from api.main_api import query_word, submit_result, next_exam, WordCardDataError, TaskWordMappingError
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
 from decryptencrypt.debase64 import debase64
@@ -14,6 +14,7 @@ from util.wrong_memory import lookup as lookup_wrong
 from util.text_norm import norm_key, norm_text
 from util.select_mean import select_mean, handle_query_word_mean, filler_option, select_match_word, word_examples, \
     is_word_exist
+from util.word_form import match_in_list
 from util.word_revert import word_revert
 
 query_answer = Log('answer_questions')
@@ -286,6 +287,40 @@ def select_word(public_info) -> int or str or None:
     return None
 
 
+def _resolve_word(public_info, raw_word: str):
+    """把题干里的词形还原成「本单元词表里真实存在的词」，还原不出返回 None（调用方跳过该题）。
+
+    顺序：词表命中 -> 规则还原(去 s/es/ed/ing、y->ies、e->ing、双写辅音) -> 模型兜底(带整句上下文)。
+    不校验词表就直接查词会触发服务端 code 120「卡片数据错误」，随后整个任务被中止。
+    """
+    word_list = public_info.word_list or []
+    if not word_list:
+        # 词表未加载（自建任务等），维持旧行为直接交给模型
+        try:
+            return word_revert(raw_word)
+        except Exception:
+            return raw_word
+    hit = match_in_list(raw_word, word_list)
+    if hit:
+        if hit.lower() != raw_word.lower():
+            query_answer.logger.info(f"词形还原 {raw_word} -> {hit}")
+        return hit
+    exam = public_info.exam if isinstance(public_info.exam, dict) else {}
+    sentence = (exam.get('stem') or {}).get('content') or ''
+    try:
+        lemma = word_revert(raw_word, sentence)
+    except Exception as e:
+        # 模型不可用不该拖垮任务：直接跳过该题
+        query_answer.logger.warning(f"模型转原型异常（{e}），跳过该题")
+        return None
+    hit = match_in_list(lemma, word_list) if isinstance(lemma, str) else None
+    if hit:
+        query_answer.logger.info(f"模型还原 {raw_word} -> {hit}")
+        return hit
+    query_answer.logger.warning(f"词表内找不到 {raw_word}（模型结果 {lemma}），跳过该题")
+    return None
+
+
 _CHOICE_MODES = (11, 15, 16, 17, 18, 21, 22, 42)
 
 
@@ -323,11 +358,11 @@ def _memory_choice_index(public_info, mode):
     return None
 
 
-def word_form_mean(public_info: PublicInfo) -> int:
+def word_form_mean(public_info: PublicInfo):
     """
     英译汉
     :param public_info:
-    :return:
+    :return: 选项下标；无法作答时返回 None，由调用方 skip_exam 跳过该题
     """
     query_answer.logger.info("英译汉")
     memory_index = _memory_choice_index(public_info, public_info.exam.get('topic_mode'))
@@ -340,18 +375,17 @@ def word_form_mean(public_info: PublicInfo) -> int:
     word = re.findall("{(.*?)}", exam)
     query_answer.logger.info(f"提取到{word}")
     word = word[0] if word else exam
-    # 判断单词是否在单词列表中
-    if word not in public_info.word_list:
-        if word.endswith("ed") and word[:-2] in public_info.word_list:
-            word = word[:-2]
-        elif word.endswith("ing") and word[:-3] in public_info.word_list:
-            word = word[:-3]
-        else:
-            query_answer.logger.info(f"将{word}转原型")
-            # 单词转原型
-            word = word_revert(word)
+    word = word.strip().strip('*').strip('.,;:!?')
+    word = _resolve_word(public_info, word)
+    if not word:
+        return None
     # 请求单词释义
-    query_word(public_info, word)
+    try:
+        query_word(public_info, word)
+    except (WordCardDataError, TaskWordMappingError) as e:
+        # 词形仍不在本单元词卡内 / 自建任务词表映射失败：只跳过当前这道题，不拖垮整个任务
+        query_answer.logger.warning(f"查词失败（{e}），跳过该题")
+        return None
     # 提取释义
     handle_query_word_mean(public_info)
     query_answer.logger.info('选择意思')

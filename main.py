@@ -13,10 +13,10 @@ from PyQt6.QtWidgets import QApplication
 
 from answer_questions.answer_questions import *
 from api.basic_api import get_all_unit, get_unit_words, get_book_all_words
-from api.main_api import get_exam, select_all_word, skip_exam, get_task_score, SecurityVerifyError
+from api.main_api import get_exam, select_all_word, skip_exam, get_task_score, SecurityVerifyError, TaskNotEffectiveError
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
-from util.basic_util import extract_book_word, query_word_unit
+from util.basic_util import extract_book_word, query_word_unit, check_task_window
 from util.handle_word_list import handle_word_result
 from api.update import get_update
 from decryptencrypt.debase64 import debase64
@@ -44,6 +44,7 @@ class TaskWorker(QThread):
         total = len(self.task_infos)
         success_count = 0
         failed_tasks = []
+        skipped_tasks = []
         for index, task_info in enumerate(self.task_infos, start=1):
             if not self._is_running:
                 break
@@ -52,6 +53,15 @@ class TaskWorker(QThread):
             self.current_index = index
             self.current_total = total
             main.logger.info(f"开始执行任务[{index}/{total}]：{task_name}")
+            not_ready = check_task_window(task_info)
+            if not_ready:
+                main.logger.warning(f"任务 {task_name} {not_ready}，跳过执行")
+                skipped_tasks.append(f"{task_name} {not_ready}")
+                if self.batch_mode:
+                    self.task_notice.emit(f"[{index}/{total}] 任务 {task_name} {not_ready}，已跳过")
+                    continue
+                self.task_error.emit(f"任务 {task_name} {not_ready}")
+                return
             attempts = 0
             while self._is_running:
                 attempts += 1
@@ -75,6 +85,14 @@ class TaskWorker(QThread):
                         self.task_error.emit(f"任务 {task_name} 需安全验证：{e}")
                         return
                     break
+                except TaskNotEffectiveError as e:
+                    main.logger.error(f"任务 {task_name} 未生效: {e}")
+                    skipped_tasks.append(f"{task_name} {e}")
+                    if self.batch_mode:
+                        self.task_notice.emit(f"[{index}/{total}] 任务 {task_name} 未生效，已跳过：{e}")
+                    else:
+                        self.task_error.emit(f"任务 {task_name} 未生效：{e}")
+                    break
                 except Exception as e:
                     main.logger.error(f"任务 {task_name} 执行出错（第{attempts}次）: {e}", exc_info=True)
                     if attempts >= 3:
@@ -91,9 +109,12 @@ class TaskWorker(QThread):
                     time.sleep(2)
 
         if self._is_running and self.batch_mode:
-            summary = f"一键刷题完成：成功 {success_count} 个，失败 {len(failed_tasks)} 个"
+            summary = (f"一键刷题完成：成功 {success_count} 个，"
+                       f"失败 {len(failed_tasks)} 个，未执行 {len(skipped_tasks)} 个")
             if failed_tasks:
-                summary += f"\n失败任务：{', '.join(failed_tasks)}"
+                summary += "\n失败：" + "、".join(failed_tasks)
+            if skipped_tasks:
+                summary += "\n未执行：" + "、".join(skipped_tasks)
             self.batch_finished.emit(summary)
 
     def stop(self):
@@ -223,8 +244,10 @@ class TaskWorker(QThread):
         if (progress < 2 and exist_little_task != 1) or exist_little_task == 2:
             try:
                 select_all_word({f"{public_info.course_id}:{unit}": public_info.word_list}, public_info.task_id)
+            except (TaskNotEffectiveError, SecurityVerifyError):
+                raise
             except Exception as e:
-                main.logger.info("任务已经开启")
+                main.logger.warning(f"提交选词失败（任务可能已开启，继续获取题目）: {e}")
         get_exam(public_info)
         if public_info.exam == 'complete':
             main.logger.info('该任务已完成，无法重复作答')

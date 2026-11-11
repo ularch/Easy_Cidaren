@@ -28,6 +28,14 @@ class TaskWordMappingError(Exception):
     """自建任务单词无法映射到词表及对应单元。"""
 
 
+class TaskNotEffectiveError(Exception):
+    """服务端 20005 任务未生效"""
+
+
+class WordCardDataError(Exception):
+    """服务端 120 卡片数据错误"""
+
+
 # response is 200
 def handle_response(response):
     """
@@ -41,6 +49,14 @@ def handle_response(response):
     if code == 11003:
         api.logger.error(f"需安全验证: {response.text}")
         raise SecurityVerifyError("服务端需安全验证，请打开词达人 App/微信完成安全验证后重试")
+    # 20005: 任务未生效
+    if code == 20005:
+        api.logger.error(f"任务未生效: {response.text}")
+        raise TaskNotEffectiveError(response_json.get('msg') or '任务未生效')
+    # 120: 请求的词形不在本单元词卡内
+    if code == 120:
+        api.logger.error(f"卡片数据错误: {response.text}")
+        raise WordCardDataError(response_json.get('msg') or '卡片数据错误')
     if code == 1:
         # 获取成功
         api.logger.info(f"请求成功{response.text}")

@@ -2,10 +2,11 @@ import difflib
 import random
 import re
 
-from api.main_api import query_word
+from api.main_api import query_word, WordCardDataError, TaskWordMappingError
 from log.log import Log
 from util.text_norm import norm_key, norm_text
-from util.word_revert import word_revert
+from util.mean_match import choose_option
+from util.word_form import match_in_list
 
 # log module
 select_module = Log("select_mean")
@@ -80,14 +81,12 @@ def select_mean(public_info) -> int:
     :return: 选择的匹配的选项
     """
     options = filler_option(public_info)
-    # 匹配选项
-    for index, option in enumerate(options, 0):
-        for mean in public_info.word_means:
-            # 选项顺序混乱，重排序
-            if sorted(option.replace(" ", '')) == sorted(mean.replace(" ", '')) or mean in option:
-                select_module.logger.info(f"匹配第{index + 1}个选项选项[{option}]")
-                _log_context_scores(public_info, options, index)
-                return index
+    chosen = choose_option(public_info.word_query_result or {}, public_info.exam or {}, options)
+    if chosen is not None:
+        index = options.index(chosen)
+        select_module.logger.info(f"匹配第{index + 1}个选项选项[{chosen}]")
+        _log_context_scores(public_info, options, index)
+        return index
     # 匹配失败 随机提交一个
     select_module.logger.warning("匹配失败，随机提交")
     guess = random.randint(0, len(options) - 1)
@@ -102,7 +101,11 @@ def select_match_word(public_info, word_mean) -> int:
     shadow = []
     for word in options:
         # query word mean
-        query_word(public_info, word)
+        try:
+            query_word(public_info, word)
+        except (WordCardDataError, TaskWordMappingError) as e:
+            select_module.logger.warning(f"查词失败，跳过候选[{word}]: {e}")
+            continue
         handle_query_word_mean(public_info)
         best = max((difflib.SequenceMatcher(None, norm_text(mean), target).ratio()
                     for mean in public_info.word_means), default=0)
@@ -124,16 +127,18 @@ def is_word_exist(public_info, option) -> bool:
     :param option: word
     :return: None
     """
-    if option in public_info.word_list:
-        # word is exist word_list
-        query_word(public_info, option)
+    hit = match_in_list(option, public_info.word_list)
+    if hit:
+        if hit.lower() != (option or '').lower():
+            select_module.logger.info(f"词形还原 {option} -> {hit}")
+        try:
+            query_word(public_info, hit)
+        except (WordCardDataError, TaskWordMappingError) as e:
+            # 查词失败只放弃这个候选词，不拖垮整场任务
+            select_module.logger.warning(f"查词失败，跳过候选[{hit}]: {e}")
+            return False
         return True
-    else:
-        select_module.logger.info('转原型')
-        revert_option = word_revert(option)
-        if revert_option in public_info.word_list:
-            query_word(public_info, revert_option)
-            return True
+    select_module.logger.info(f"{option} 不在词表且无法还原，跳过")
     return False
 
 
