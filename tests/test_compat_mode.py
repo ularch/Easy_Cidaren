@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 from answer_questions import answer_questions as answers
 import main
+from api.main_api import TaskWordMappingError
 from publicInfo.publicInfo import PublicInfo
 
 
@@ -27,7 +28,7 @@ class CompatibilityTests(unittest.TestCase):
 
 
     def test_parse_failure_guesses_when_enabled(self):
-        with patch.object(main, 'answer', side_effect=LookupError('missing')), \
+        with patch.object(main, 'answer', side_effect=TaskWordMappingError('missing')), \
                 patch.object(main, 'guess_answer', return_value=0):
             self.assertEqual(self.worker._answer_question(SimpleNamespace(compat_mode=True), 17), 0)
 

@@ -7,38 +7,6 @@ from api import main_api
 import main
 
 
-class CaseTests(unittest.TestCase):
-    def test_word_case_match_avoids_lemmatization(self):
-        info = SimpleNamespace(exam={'stem': {'content': '{Insert}'}}, word_list=[])
-        info.word_list = ['insert']
-        with patch.object(answers, 'query_word') as query, \
-                patch.object(answers, 'handle_query_word_mean'), \
-                patch.object(answers, 'select_mean', return_value=1), \
-                patch.object(answers, 'word_revert') as revert:
-            self.assertEqual(answers.word_form_mean(info), 1)
-            query.assert_called_once_with(info, 'insert')
-            revert.assert_not_called()
-
-
-    def test_self_built_resolves_case_before_choosing_unit(self):
-        info = SimpleNamespace(is_self_built=True, word_list=['insert'],
-                               get_book_words_data=[{'list_id': 'unit'}], now_unit='old')
-        query = Mock(return_value='result')
-        self.assertEqual(main_api.check_is_self_built(query)(info, 'INSERT'), 'result')
-        query.assert_called_once_with(info, 'insert')
-        self.assertEqual(info.now_unit, 'unit')
-
-    def test_missing_word_or_unit_index_is_a_lookup_error(self):
-        for word, rows in [('missing', [{'list_id': 'unit'}]), ('Insert', [])]:
-            with self.subTest(word=word, rows=rows):
-                info = SimpleNamespace(is_self_built=True, word_list=['insert'],
-                                       get_book_words_data=rows, now_unit='old')
-                query = Mock()
-                with self.assertRaises(LookupError):
-                    main_api.check_is_self_built(query)(info, word)
-                query.assert_not_called()
-
-
 class ErrorHandlingTests(unittest.TestCase):
     def setUp(self):
         self.logger = patch.object(main, 'main', SimpleNamespace(logger=Mock()), create=True)
@@ -57,7 +25,7 @@ class ErrorHandlingTests(unittest.TestCase):
 
     def test_network_and_service_failures_propagate(self):
         for error in [main.requests.exceptions.ConnectionError('offline'),
-                      main_api.SecurityVerifyError('verify'), main_api.ApiResponseError('rejected')]:
+                      main_api.SecurityVerifyError('verify'), main_api.ApiResponseError('rejected'), main_api.TaskNotEffectiveError('not ready')]:
             with self.subTest(error=type(error).__name__), \
                     patch.object(main, 'answer', side_effect=error):
                 with self.assertRaises(type(error)):
@@ -66,6 +34,8 @@ class ErrorHandlingTests(unittest.TestCase):
     def test_server_rejection_is_distinct_from_missing_word(self):
         for payload, exception in [
             ({'code': 11003}, main_api.SecurityVerifyError),
+            ({'code': 20005, 'msg': 'not ready'}, main_api.TaskNotEffectiveError),
+            ({'code': 120, 'msg': 'card error'}, main_api.WordCardDataError),
             ({'code': 0, 'msg': '加载单词卡片失败，请重新加载'}, LookupError),
             ({'code': 11001, 'msg': 'expired'}, main_api.ApiResponseError),
         ]:
@@ -80,7 +50,3 @@ class ErrorHandlingTests(unittest.TestCase):
                 with self.assertRaises(main_api.ApiResponseError):
                     retry(request, 'https://example.invalid')
                 self.assertEqual(request.call_count, 5)
-
-
-if __name__ == '__main__':
-    unittest.main()

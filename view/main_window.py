@@ -18,7 +18,7 @@ import api.request_header as requests
 import view.setting, view.introduce, view.error
 from api.login import verify_token
 from api.main_api import get_class_task
-from util.basic_util import get_all_task
+from util.basic_util import get_all_task, check_task_window, format_task_time
 from publicInfo.publicInfo import PublicInfo
 from api.geuuid import get_uuid
 
@@ -36,6 +36,9 @@ class UiMainWindow(QMainWindow):
         self.task_worker = None
         self._batch_mode = False
         self.setupUi(self)
+        self._task_state_timer = QtCore.QTimer(self)
+        self._task_state_timer.setInterval(30000)
+        self._task_state_timer.timeout.connect(self._refresh_task_rows)
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -380,59 +383,115 @@ class UiMainWindow(QMainWindow):
                 task_names = [task['task_name'] for task in self.public_info.task_list]
                 self.main_logger.info(f'{task_names}')
                 for task in self.public_info.task_list:
-                    task_name = task['task_name']
-                    progress = task.get('progress', 0)
-                    score = task.get('score') or 0
-                    over_status = task.get('over_status', 2)
                     row = self.task_list.rowCount()
                     self.task_list.insertRow(row)
-                    # 左侧目标任务单选框（容器+布局使其在格内居中）
-                    radio = QtWidgets.QRadioButton(self.task_list)
-                    radio.clicked.connect(lambda checked, r=row: self._select_task_row(r))
-                    self.task_radio_group.addButton(radio)
-                    radio_container = QtWidgets.QWidget(self.task_list)
-                    radio_layout = QtWidgets.QHBoxLayout(radio_container)
-                    radio_layout.setContentsMargins(0, 0, 0, 0)
-                    radio_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-                    radio_layout.addWidget(radio)
-                    self.task_list.setCellWidget(row, 0, radio_container)
-                    # 测试任务页面：已完成任务不可重试，禁用勾选、灰色实心圆点并悬浮提示
-                    task_disabled = self.test_task.isChecked() and progress >= 100
-                    if task_disabled:
-                        self.task_radio_group.removeButton(radio)
-                        radio.hide()
-                        dot = QtWidgets.QLabel(radio_container)
-                        dot.setFixedSize(20, 20)
-                        dot_pixmap = QtGui.QPixmap(20, 20)
-                        dot_pixmap.fill(QtCore.Qt.GlobalColor.transparent)
-                        painter = QtGui.QPainter(dot_pixmap)
-                        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-                        painter.setPen(QtCore.Qt.PenStyle.NoPen)
-                        painter.setBrush(QtGui.QColor("#999999"))
-                        painter.drawEllipse(1, 1, 17, 17)
-                        painter.end()
-                        dot.setPixmap(dot_pixmap)
-                        radio_layout.addWidget(dot)
-                        radio_container.setToolTip("已完成的测试任务不可重试")
-                    score_text = str(score)
-                    if over_status == 1:
-                        score_text += " (未开始)"
-                    # 任务数据存入三个数据列单元格，点任意列都能取到任务
-                    for col, text in enumerate([task_name, f"{progress}%", score_text], start=1):
-                        cell = QtWidgets.QTableWidgetItem(text)
-                        cell.setData(QtCore.Qt.ItemDataRole.UserRole, task)
-                        # 已完成的任务显示绿色
-                        if progress >= 100:
-                            cell.setForeground(QtGui.QColor("green"))
-                        # 未开始的任务显示灰色
-                        elif over_status == 1:
-                            cell.setForeground(QtGui.QColor("gray"))
-                        if task_disabled:
-                            cell.setToolTip("已完成的测试任务不可重试")
-                        self.task_list.setItem(row, col, cell)
+                    self._build_task_row(row, task)
+                    self._apply_task_row_state(row, task)
                 self.update_output_info("获取成功！")
+                # 启动定时刷新: 未开始的任务到点后自动点亮(不重新请求接口)
+                if not self._task_state_timer.isActive():
+                    self._task_state_timer.start()
             else:
                 self.update_output_info("获取失败！没有任务！")
+
+    def _build_task_row(self, row, task):
+        """建立任务行的控件骨架: 单选框 + 禁用态灰点(默认隐藏), 可用性由 _apply_task_row_state 决定"""
+        radio_container = QtWidgets.QWidget(self.task_list)
+        radio_layout = QtWidgets.QHBoxLayout(radio_container)
+        radio_layout.setContentsMargins(0, 0, 0, 0)
+        radio_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+
+        radio = QtWidgets.QRadioButton(radio_container)
+        radio.clicked.connect(lambda checked, r=row: self._select_task_row(r))
+        radio_layout.addWidget(radio)
+        self.task_radio_group.addButton(radio)
+
+        dot = QtWidgets.QLabel(radio_container)
+        dot.setFixedSize(20, 20)
+        dot_pixmap = QtGui.QPixmap(20, 20)
+        dot_pixmap.fill(QtCore.Qt.GlobalColor.transparent)
+        painter = QtGui.QPainter(dot_pixmap)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        painter.setPen(QtCore.Qt.PenStyle.NoPen)
+        painter.setBrush(QtGui.QColor("#999999"))
+        painter.drawEllipse(1, 1, 17, 17)
+        painter.end()
+        dot.setPixmap(dot_pixmap)
+        dot.hide()
+        radio_layout.addWidget(dot)
+
+        self.task_list.setCellWidget(row, 0, radio_container)
+
+    def _apply_task_row_state(self, row, task):
+        """
+        按当前时间重算本行可用性: 未开放/已过期/已完成 -> 移除单选框、显示灰点、整行置灰
+        可重复调用(定时刷新时复用)
+        """
+        progress = task.get('progress', 0) or 0
+        done = self.test_task.isChecked() and progress >= 100
+        reason = '已完成的测试任务不可重试' if done else check_task_window(task)
+        disabled = bool(reason)
+
+        radio_container = self.task_list.cellWidget(row, 0)
+        if radio_container is not None:
+            radio = radio_container.findChild(QtWidgets.QRadioButton)
+            dots = radio_container.findChildren(QtWidgets.QLabel)
+            dot = dots[0] if dots else None
+            if disabled:
+                if radio is not None:
+                    self.task_radio_group.removeButton(radio)   # 移出按钮组后无法再被选中
+                    radio.setChecked(False)
+                    radio.hide()
+                if dot is not None:
+                    dot.show()
+                radio_container.setToolTip(reason)
+            else:
+                if dot is not None:
+                    dot.hide()
+                if radio is not None:
+                    radio.show()
+                    if radio.group() is None:
+                        self.task_radio_group.addButton(radio)
+                radio_container.setToolTip('')
+
+        score = task.get('score') or 0
+        score_text = str(score)
+        if task.get('over_status') == 1:
+            try:
+                start_ms = int(task.get('start_time') or 0)
+            except (TypeError, ValueError):
+                start_ms = 0
+            score_text += f" ({format_task_time(start_ms)} 开放)" if start_ms else " (未开始)"
+
+        # 任务数据存入三个数据列单元格，点任意列都能取到任务
+        for col, text in enumerate([task['task_name'], f"{progress}%", score_text], start=1):
+            cell = self.task_list.item(row, col)
+            if cell is None:
+                cell = QtWidgets.QTableWidgetItem()
+                self.task_list.setItem(row, col, cell)
+            cell.setText(text)
+            cell.setData(QtCore.Qt.ItemDataRole.UserRole, task)
+            # 已完成的任务显示绿色
+            if progress >= 100:
+                cell.setForeground(QtGui.QColor("green"))
+            # 不可执行(未开放/已过期)的任务置灰
+            elif disabled:
+                cell.setForeground(QtGui.QColor("#808080"))
+            else:
+                cell.setData(QtCore.Qt.ItemDataRole.ForegroundRole, None)   # 恢复默认颜色
+            cell.setToolTip(reason or '')
+
+    def _refresh_task_rows(self):
+        """定时重算每行可用性: 未开始的任务到点后自动点亮"""
+        if self.task_worker is not None and self.task_worker.isRunning():
+            return
+        for row in range(self.task_list.rowCount()):
+            item = self.task_list.item(row, 1)
+            if item is None:
+                continue
+            task = item.data(QtCore.Qt.ItemDataRole.UserRole)
+            if isinstance(task, dict):
+                self._apply_task_row_state(row, task)
 
     def _select_task_row(self, row):
         """
@@ -453,6 +512,10 @@ class UiMainWindow(QMainWindow):
         try:
             task = item.data(QtCore.Qt.ItemDataRole.UserRole)
             if self.test_task.isChecked() and task and task.get('progress', 0) >= 100:
+                return
+            reason = check_task_window(task) if isinstance(task, dict) else None
+            if reason:
+                self.update_output_info(f"{task.get('task_name')} {reason}，暂不可选")
                 return
             row = item.row()
             widget = self.task_list.cellWidget(row, 0)
@@ -476,6 +539,12 @@ class UiMainWindow(QMainWindow):
                     QMessageBox.warning(self, "提示", "已完成的测试任务不可重试")
                     return
                 task_name = task_info['task_name']
+                # 未开放/已过期的任务不允许开始(界面已置灰, 这里再兜一层)
+                reason = check_task_window(task_info)
+                if reason:
+                    self.update_output_info(f"{task_name} {reason}，无法开始")
+                    QMessageBox.warning(self, "任务不可开始", f"{task_name}\n{reason}")
+                    return
                 self.public_info._task_name = task_name
                 self.public_info.class_task = [task_info]
                 self.update_output_info(f"开始任务{task_name}")
@@ -511,16 +580,32 @@ class UiMainWindow(QMainWindow):
             if self.user_info.text() == "未获取":
                 self.update_output_info("请先登录后再使用一键刷题")
                 return
-            tasks = [t for t in self.public_info.task_list if t.get('progress', 0) < 100]
+            runnable, pending = [], []
+            for t in self.public_info.task_list:
+                if t.get('progress', 0) >= 100:
+                    continue
+                reason = check_task_window(t)
+                if reason:
+                    pending.append((t.get('task_name'), reason))
+                else:
+                    runnable.append(t)
+            tasks = runnable
             if not tasks:
-                self.update_output_info("没有可执行的任务（已完成的任务已跳过）")
+                self.update_output_info(f"没有可执行的任务（{len(pending)} 个尚未开放或已过期）")
                 return
-            skipped = len(self.public_info.task_list) - len(tasks)
+            skipped = len(self.public_info.task_list) - len(tasks) - len(pending)
+            pending_text = ""
+            if pending:
+                pending_text = f"\n其中 {len(pending)} 个尚未开放或已过期，将跳过：\n" + "\n".join(
+                    f"  · {name} {reason}" for name, reason in pending[:4])
+                if len(pending) > 4:
+                    pending_text += f"\n  · …等共 {len(pending)} 个"
             reply = QMessageBox.question(
                 self,
                 "一键刷题",
-                f"将按顺序自动执行 {len(tasks)} 个未完成任务"
+                f"将按顺序自动执行 {len(tasks)} 个任务"
                 + (f"（已跳过 {skipped} 个已完成任务）" if skipped else "")
+                + pending_text
                 + "\n任务开始后，主页面将无法操作，可点击“中止任务”按钮手动中止任务\n运行期间请勿关闭程序窗口",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.Yes

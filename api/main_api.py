@@ -23,6 +23,18 @@ class SecurityVerifyError(Exception):
     """服务端风控: 11003 需安全验证(要求用户在 App/微信端完成验证), 重试无意义, 应立即停止并提示"""
 
 
+class TaskWordMappingError(Exception):
+    """自建任务单词无法映射到词表及对应单元。"""
+
+
+class TaskNotEffectiveError(Exception):
+    """服务端 20005 任务未生效"""
+
+
+class WordCardDataError(Exception):
+    """服务端 120 卡片数据错误"""
+
+
 class ApiResponseError(Exception):
     """服务端拒绝请求或响应无法解码, 交给任务级处理。"""
 
@@ -40,6 +52,14 @@ def handle_response(response):
     if code == 11003:
         api.logger.error(f"需安全验证: {response.text}")
         raise SecurityVerifyError("服务端需安全验证，请打开词达人 App/微信完成安全验证后重试")
+    # 20005: 任务未生效
+    if code == 20005:
+        api.logger.error(f"任务未生效: {response.text}")
+        raise TaskNotEffectiveError(response_json.get('msg') or '任务未生效')
+    # 120: 请求的词形不在本单元词卡内
+    if code == 120:
+        api.logger.error(f"卡片数据错误: {response.text}")
+        raise WordCardDataError(response_json.get('msg') or '卡片数据错误')
     if code == 1:
         # 获取成功
         api.logger.info(f"请求成功{response.text}")
@@ -248,14 +268,14 @@ def check_is_self_built(func):
             resolved = resolve_word_ci(public_info.word_list, word)
             if resolved is None:
                 api.logger.error(f"自建任务词表中找不到单词：{word}")
-                raise LookupError(f"自建任务词表中找不到单词：{word}")
+                raise TaskWordMappingError(f"自建任务词表中找不到单词：{word}")
             word = resolved
             # 从单词列表获取索引
             word_index = public_info.word_list.index(word)
             # 获取单元单词
             if word_index >= len(public_info.get_book_words_data):
                 api.logger.error(f"单词索引越界：{word}({word_index})")
-                raise LookupError(f"单词索引越界：{word}")
+                raise TaskWordMappingError(f"单词索引越界：{word}")
             public_info.now_unit = public_info.get_book_words_data[word_index]["list_id"]
         return func(public_info, word)
 
