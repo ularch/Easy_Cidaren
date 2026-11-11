@@ -16,12 +16,15 @@ class PublicInfo:
         with open(os.path.join(self.path, "config", "config.json"), 'r', encoding='utf-8') as f:
             # 用户配置文件
             user_config = json.load(f)
-            if user_config['min_time'] >= 2 and user_config['max_time'] >= 2:
-                self._min_time = user_config['min_time']
-                self._max_time = user_config['max_time']
-            else:
-                self._min_time = 2
-                self._max_time = 2
+            min_time = max(0, int(user_config.get('min_time', 1)))
+            max_time = max(0, int(user_config.get('max_time', 2)))
+            # 0/0 视为未配置, 使用默认随机区间, 避免题间节奏过于机械
+            if min_time <= 0 and max_time <= 0:
+                min_time, max_time = 1, 2
+            if max_time < min_time:
+                min_time, max_time = max_time, min_time
+            self._min_time = min_time
+            self._max_time = max_time
             self._spend_min_time = user_config['spend_min_time']
             self._spend_max_time = user_config['spend_max_time']
             self._br_choices = user_config['br_choices']
@@ -162,6 +165,10 @@ class PublicInfo:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
     def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music=None, music_path=None):
+        if min_time <= 0 and max_time <= 0:
+            min_time, max_time = 1, 2
+        if max_time < min_time:
+            min_time, max_time = max_time, min_time
         self._min_time = min_time
         self._max_time = max_time
         self._spend_min_time = min_time_2

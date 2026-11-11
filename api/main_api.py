@@ -253,7 +253,7 @@ def check_is_self_built(func):
 # 查询单词
 @check_is_self_built
 def query_word(public_info, word):
-    time.sleep(random.randint(0, 2))
+    time.sleep(random.uniform(0, 0.25))
     api.logger.info(f"查询单词{word}")
     # query word in the unit
     url = f'Course/StudyWordInfo?course_id={public_info.course_id}&list_id={public_info.now_unit}&word={word}&timestamp={create_timestamp()}&version=2.6.1.231204&app_type=1'
