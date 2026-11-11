@@ -10,6 +10,7 @@ from log.log import Log, get_file_logger
 from publicInfo.publicInfo import PublicInfo
 from util.answer_lib import add_answer, add_word_answer
 from util.basic_util import create_timestamp
+from util.word_cache import lookup as lookup_cached_word, save as save_cached_word
 
 # create logger
 api = Log('main_api')
@@ -18,7 +19,7 @@ basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
 file_logger = get_file_logger('_main_api')
 
-# 单词信息缓存: 同一单元内选项会跨题重复, 命中后不再请求
+# 单词信息缓存: 优先使用内存, 本地缓存可跨重启复用
 _word_info_cache = {}
 _WORD_CACHE_LIMIT = 2000
 
@@ -259,6 +260,10 @@ def check_is_self_built(func):
 def query_word(public_info, word):
     cache_key = (public_info.course_id, public_info.now_unit, str(word).lower())
     cached = _word_info_cache.get(cache_key)
+    if cached is None:
+        cached = lookup_cached_word(cache_key)
+        if cached is not None and len(_word_info_cache) < _WORD_CACHE_LIMIT:
+            _word_info_cache[cache_key] = cached
     if cached is not None:
         public_info.word_query_result = cached
         api.logger.info(f"查询单词{word}(缓存命中)")
@@ -274,6 +279,7 @@ def query_word(public_info, word):
     public_info.word_query_result = debase64(word.json()['data'], word.json()['jv'])
     if len(_word_info_cache) < _WORD_CACHE_LIMIT:
         _word_info_cache[cache_key] = public_info.word_query_result
+    save_cached_word(cache_key, public_info.word_query_result, limit=_WORD_CACHE_LIMIT)
     api.logger.info("查询单词成功")
 
 

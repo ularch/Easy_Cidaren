@@ -1,16 +1,21 @@
 from contextlib import ExitStack
+from pathlib import Path
+import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
 from api import main_api
-from util import word_revert
+from util import word_cache, word_revert
 
 
 class QueryCacheTests(unittest.TestCase):
     def setUp(self):
         self.stack = ExitStack()
         self.addCleanup(self.stack.close)
+        directory = self.stack.enter_context(tempfile.TemporaryDirectory())
+        self.stack.enter_context(patch.object(word_cache, '_cache_path',
+                                             return_value=Path(directory) / 'word_cache.sqlite3'))
         self.cache = {}
         self.stack.enter_context(patch.object(main_api, '_word_info_cache', self.cache))
         self.response = Mock(json=lambda: {'data': 'encoded', 'jv': 'known'})
