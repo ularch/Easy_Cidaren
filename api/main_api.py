@@ -35,6 +35,10 @@ class WordCardDataError(Exception):
     """服务端 120 卡片数据错误"""
 
 
+class ApiResponseError(Exception):
+    """服务端拒绝请求或响应无法解码, 交给任务级处理。"""
+
+
 # response is 200
 def handle_response(response):
     """
@@ -64,10 +68,10 @@ def handle_response(response):
         pass
     elif code == 0 and response_json['msg'] == '加载单词卡片失败，请重新加载':
         api.logger.error("查找不到单词(第三方库转原型失败),请手动答题")
-        raise Exception("查找不到单词,请手动答题")
+        raise LookupError("查找不到单词,请手动答题")
     else:
         api.logger.error(f"请求有问题{response.text}")
-        raise Exception("请求有问题，中止程序")
+        raise ApiResponseError("请求有问题，中止程序")
 
 
 def check_jv_and_retry_post(request_func, url, **kwargs):
@@ -89,7 +93,7 @@ def check_jv_and_retry_post(request_func, url, **kwargs):
             return response
         time.sleep(random.uniform(2, 3))
     api.logger.error("连续5次请求jv均不在已知范围内")
-    raise Exception("jv解码失败")
+    raise ApiResponseError("jv解码失败")
 
 
 def check_jv_and_retry_get(request_func, url, **kwargs):
@@ -111,7 +115,7 @@ def check_jv_and_retry_get(request_func, url, **kwargs):
             return response
         time.sleep(random.uniform(2, 3))
     api.logger.error("连续5次请求jv均不在已知范围内")
-    raise Exception("jv解码失败")
+    raise ApiResponseError("jv解码失败")
 
 
 def is_close() -> bool:

@@ -17,6 +17,7 @@ class Ui_Form(QWidget):
         self._spend_max_time = self.public_info.spend_max_time
         self._br_choices = self.public_info.br_choices
         self._play_music = self.public_info.play_music
+        self._compat_mode = self.public_info.compat_mode
         self.setupUi(self)
 
     def setupUi(self, Form):
@@ -153,7 +154,13 @@ class Ui_Form(QWidget):
         self.defaultMusicBtn.setGeometry(QtCore.QRect(280, 80, 40, 20))
         self.defaultMusicBtn.setObjectName("defaultMusicBtn")
         self.defaultMusicBtn.setText("默认")
-        
+        # 兼容模式: 答题异常时尝试猜测答案继续
+        self.compatCheckBox = QtWidgets.QCheckBox(parent=self.groupBox_3)
+        self.compatCheckBox.setGeometry(QtCore.QRect(10, 110, 311, 16))
+        self.compatCheckBox.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        self.compatCheckBox.setToolTip("答题异常时尝试猜测答案并继续；猜测可能降低正确率")
+        self.compatCheckBox.setObjectName("compatCheckBox")
+
         self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
         self.tabWidget.addTab(self.tab_2, "")
         self.horizontalLayoutWidget = QtWidgets.QWidget(parent=Form)
@@ -195,6 +202,7 @@ class Ui_Form(QWidget):
         self.max_time_2.setValue(self._spend_max_time)
         self.br_checkBox.setChecked(self._br_choices)
         self.playMusicCheckBox.setChecked(self._play_music)
+        self.compatCheckBox.setChecked(self._compat_mode)
         # 设置音乐路径
         self._music_path = self.public_info.music_path if hasattr(self.public_info, 'music_path') else ""
         self.musicPathLineEdit.setText(self._music_path)
@@ -220,6 +228,7 @@ class Ui_Form(QWidget):
         self.groupBox_3.setTitle(_translate("Form", "系统设置（重启后生效）"))
         self.br_checkBox.setText(_translate("Form", "启用br压缩"))
         self.playMusicCheckBox.setText(_translate("Form", "任务完成时播放提示音乐"))
+        self.compatCheckBox.setText(_translate("Form", "兼容模式（出错时猜答案继续）"))
         self.selectMusicBtn.setText(_translate("Form", "..."))
         self.defaultMusicBtn.setText(_translate("Form", "默认"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Form", "高级设置"))
@@ -278,12 +287,14 @@ class Ui_Form(QWidget):
             br_choices = self.br_checkBox.isChecked()
             play_music = self.playMusicCheckBox.isChecked()
             music_path = self.musicPathLineEdit.text().strip()
+            compat_mode = self.compatCheckBox.isChecked()
 
             if br_choices:
                 accept_encoding = 'gzip, deflate, br'
             else:
                 accept_encoding = 'gzip, deflate'
-            self.public_info.input_info(min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music, music_path)
+            self.public_info.input_info(min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music, music_path,
+                                        compat_mode)
             setting = Log("setting")
             setting.logger.info("修改首选项设置成功")
             return True

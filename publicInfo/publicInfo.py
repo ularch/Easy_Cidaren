@@ -31,6 +31,8 @@ class PublicInfo:
             self._read = user_config['read']
             self._play_music = user_config.get('play_music', True)  # 默认为True
             self._music_path = user_config.get('music_path', "")  # 默认为空，使用默认音乐
+            # 兼容模式: 答题异常时尝试猜测答案继续
+            self._compat_mode = user_config.get('compat_mode', True)
             # 自学习开关(独立控制两个记忆库的写入; 关闭只停写入, 读取不受影响)
             self._self_learn_lib = user_config.get('self_learn_lib', True)  # 答案库 self_learn: 判分答案写入 answer_lib
             self._self_learn_pool = user_config.get('self_learn_pool', True)  # 词表池 self_learn: word_pool.json 持久化
@@ -138,6 +140,10 @@ class PublicInfo:
         return self._music_path
 
     @property
+    def compat_mode(self) -> bool:
+        return self._compat_mode
+
+    @property
     def version(self) -> str:
         return self._version
 
@@ -161,7 +167,8 @@ class PublicInfo:
         with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-    def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music=None, music_path=None):
+    def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music=None, music_path=None,
+                   compat_mode=None):
         self._min_time = min_time
         self._max_time = max_time
         self._spend_min_time = min_time_2
@@ -172,6 +179,8 @@ class PublicInfo:
             self._play_music = play_music
         if music_path is not None:
             self._music_path = music_path
+        if compat_mode is not None:
+            self._compat_mode = compat_mode
 
         with open(os.path.join(self.path, "config", "config.json"), 'r', encoding="utf-8") as f:
             data = json.load(f)
@@ -185,6 +194,8 @@ class PublicInfo:
                 data['play_music'] = self._play_music
             if music_path is not None:
                 data['music_path'] = self._music_path
+            if compat_mode is not None:
+                data['compat_mode'] = self._compat_mode
         data_str = json.dumps(data, indent=2)
         with open(os.path.join(self.path, "config", "config.json"), 'w', encoding="utf-8") as f:
             f.write(data_str)
