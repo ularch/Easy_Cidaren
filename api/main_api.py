@@ -23,8 +23,8 @@ class SecurityVerifyError(Exception):
     """服务端风控: 11003 需安全验证(要求用户在 App/微信端完成验证), 重试无意义, 应立即停止并提示"""
 
 
-class ApiResponseError(Exception):
-    """服务端拒绝请求或响应无法解码, 交给任务级处理。"""
+class TaskWordMappingError(Exception):
+    """自建任务单词无法映射到词表及对应单元。"""
 
 
 # response is 200
@@ -48,10 +48,10 @@ def handle_response(response):
         pass
     elif code == 0 and response_json['msg'] == '加载单词卡片失败，请重新加载':
         api.logger.error("查找不到单词(第三方库转原型失败),请手动答题")
-        raise LookupError("查找不到单词,请手动答题")
+        raise Exception("查找不到单词,请手动答题")
     else:
         api.logger.error(f"请求有问题{response.text}")
-        raise ApiResponseError("请求有问题，中止程序")
+        raise Exception("请求有问题，中止程序")
 
 
 def check_jv_and_retry_post(request_func, url, **kwargs):
@@ -73,7 +73,7 @@ def check_jv_and_retry_post(request_func, url, **kwargs):
             return response
         time.sleep(random.uniform(2, 3))
     api.logger.error("连续5次请求jv均不在已知范围内")
-    raise ApiResponseError("jv解码失败")
+    raise Exception("jv解码失败")
 
 
 def check_jv_and_retry_get(request_func, url, **kwargs):
@@ -95,7 +95,7 @@ def check_jv_and_retry_get(request_func, url, **kwargs):
             return response
         time.sleep(random.uniform(2, 3))
     api.logger.error("连续5次请求jv均不在已知范围内")
-    raise ApiResponseError("jv解码失败")
+    raise Exception("jv解码失败")
 
 
 def is_close() -> bool:
@@ -248,14 +248,14 @@ def check_is_self_built(func):
             resolved = resolve_word_ci(public_info.word_list, word)
             if resolved is None:
                 api.logger.error(f"自建任务词表中找不到单词：{word}")
-                raise LookupError(f"自建任务词表中找不到单词：{word}")
+                raise TaskWordMappingError(f"自建任务词表中找不到单词：{word}")
             word = resolved
             # 从单词列表获取索引
             word_index = public_info.word_list.index(word)
             # 获取单元单词
             if word_index >= len(public_info.get_book_words_data):
                 api.logger.error(f"单词索引越界：{word}({word_index})")
-                raise LookupError(f"单词索引越界：{word}")
+                raise TaskWordMappingError(f"单词索引越界：{word}")
             public_info.now_unit = public_info.get_book_words_data[word_index]["list_id"]
         return func(public_info, word)
 

@@ -3,8 +3,6 @@ import random
 import sys
 import time
 
-import requests
-
 # 确保当前虚拟环境的 bin 目录在 PATH 中，方便子进程寻找 mitmdump 等工具
 _venv_bin = os.path.dirname(sys.executable)
 if _venv_bin and _venv_bin not in os.environ.get("PATH", "").split(os.pathsep):
@@ -15,7 +13,7 @@ from PyQt6.QtWidgets import QApplication
 
 from answer_questions.answer_questions import *
 from api.basic_api import get_all_unit, get_unit_words, get_book_all_words
-from api.main_api import get_exam, select_all_word, skip_exam, get_task_score, SecurityVerifyError, ApiResponseError
+from api.main_api import get_exam, select_all_word, skip_exam, get_task_score, SecurityVerifyError
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
 from util.basic_util import extract_book_word, query_word_unit
@@ -152,18 +150,6 @@ class TaskWorker(QThread):
                 public_info.task_id = task_info['task_id']
                 self.class_task_answer()
 
-    def _answer_question(self, public_info, mode):
-        """单题异常不打断任务: 网络错误上抛交给任务级重试, 数据/解析错误跳过当前题"""
-        try:
-            return answer(public_info, mode)
-        except (SecurityVerifyError, ApiResponseError):
-            raise
-        except requests.exceptions.RequestException:
-            raise
-        except Exception as e:
-            main.logger.error(f"答题异常，跳过当前题：{e}", exc_info=True)
-            return None
-
     def emit_progress(self):
         """
         发送答题进度
@@ -201,7 +187,7 @@ class TaskWorker(QThread):
                 jump_read(public_info)
                 self.emit_progress()
                 continue
-            option = self._answer_question(public_info, mode)
+            option = answer(public_info, mode)
             if option is None:
                 public_info.topic_code = public_info.exam['topic_code']
                 public_info.skip_count += 1
@@ -256,7 +242,7 @@ class TaskWorker(QThread):
                 jump_read(public_info)
                 self.emit_progress()
                 continue
-            option = self._answer_question(public_info, mode)
+            option = answer(public_info, mode)
             if option is None:
                 public_info.topic_code = public_info.exam['topic_code']
                 public_info.skip_count += 1
