@@ -4,6 +4,14 @@ import os
 from log.log import Log
 
 
+def _normalize_interval(min_time, max_time):
+    min_time, max_time = int(min_time), int(max_time)
+    # 旧配置的 0/0 仍使用默认区间, 其余值统一限制为至少 1 秒。
+    if min_time <= 0 and max_time <= 0:
+        return 1, 2
+    return tuple(sorted((max(1, min_time), max(1, max_time))))
+
+
 class PublicInfo:
     # 这俩暂时不知道有啥用
     task_type: str
@@ -16,12 +24,10 @@ class PublicInfo:
         with open(os.path.join(self.path, "config", "config.json"), 'r', encoding='utf-8') as f:
             # 用户配置文件
             user_config = json.load(f)
-            if user_config['min_time'] >= 2 and user_config['max_time'] >= 2:
-                self._min_time = user_config['min_time']
-                self._max_time = user_config['max_time']
-            else:
-                self._min_time = 2
-                self._max_time = 2
+            min_time, max_time = _normalize_interval(
+                user_config.get('min_time', 1), user_config.get('max_time', 2))
+            self._min_time = min_time
+            self._max_time = max_time
             self._spend_min_time = user_config['spend_min_time']
             self._spend_max_time = user_config['spend_max_time']
             self._br_choices = user_config['br_choices']
@@ -162,6 +168,7 @@ class PublicInfo:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
     def input_info(self, min_time, max_time, min_time_2, max_time_2, br_choices, accept_encoding, play_music=None, music_path=None):
+        min_time, max_time = _normalize_interval(min_time, max_time)
         self._min_time = min_time
         self._max_time = max_time
         self._spend_min_time = min_time_2

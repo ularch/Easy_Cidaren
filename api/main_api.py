@@ -305,7 +305,7 @@ def query_word(public_info, word):
         public_info.word_query_result = cached
         api.logger.info(f"查询单词{word}(缓存命中)")
         return
-    time.sleep(random.randint(0, 2))
+    time.sleep(random.uniform(0, 0.25))
     api.logger.info(f"查询单词{word}")
     # query word in the unit
     url = f'Course/StudyWordInfo?course_id={public_info.course_id}&list_id={public_info.now_unit}&word={word}&timestamp={create_timestamp()}&version=2.6.1.231204&app_type=1'

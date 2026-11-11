@@ -120,6 +120,14 @@ class TaskWorker(QThread):
     def stop(self):
         self._is_running = False
 
+    def _pacing_delay(self, public_info):
+        """题间随机节奏, 偶尔加入长停顿, 避免固定间隔"""
+        lo, hi = sorted((max(1, public_info.min_time), max(1, public_info.max_time)))
+        delay = random.uniform(lo, hi)
+        if random.random() < 0.03:
+            delay += random.uniform(2.0, 5.0)
+        time.sleep(delay)
+
     def complete_test(self, task_info: dict):
         task_name = task_info['task_name']
         public_info.course_id = task_info['course_id']
@@ -216,7 +224,7 @@ class TaskWorker(QThread):
             else:
                 submit(public_info, option)
             self.emit_progress()
-            time.sleep(random.randint(public_info.min_time, public_info.max_time))
+            self._pacing_delay(public_info)
 
     def complete_practice(self, unit: str, progress: int, task_id=None):
         main.logger.info(f"获取该{unit}单元的单词")
@@ -273,7 +281,7 @@ class TaskWorker(QThread):
             else:
                 submit(public_info, option)
             self.emit_progress()
-            time.sleep(random.randint(public_info.min_time, public_info.max_time))
+            self._pacing_delay(public_info)
 
 
 if __name__ == '__main__':

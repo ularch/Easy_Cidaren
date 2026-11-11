@@ -174,7 +174,7 @@ def submit(public_info: PublicInfo, option: int or str or dict):
     else:
         submit_result(public_info, option)
     #
-    time.sleep(random.randint(1, 2))
+    time.sleep(random.uniform(0.2, 0.6))
     # get next exam
     next_exam(public_info)
 
@@ -184,7 +184,7 @@ def jump_read(public_info):
     """
     跳过阅读卡片
     """
-    time.sleep(random.randint(1, 3))
+    time.sleep(random.uniform(0.3, 1.0))
     query_answer.logger.info("跳过阅读单词卡片")
     next_exam(public_info)
     public_info.topic_code = public_info.exam['topic_code']
