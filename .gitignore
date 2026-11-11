@@ -16,6 +16,7 @@ log/logs/*
 # Token & Local Runtime files
 get token/fetch_token/token.txt
 get token/fetch_token/capture.log
+config/wrong_memory.json
 
 # Build output
 /dist/
