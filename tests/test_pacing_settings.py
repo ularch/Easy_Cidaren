@@ -5,8 +5,10 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from PyQt6.QtWidgets import QApplication
 import main
 from publicInfo.publicInfo import PublicInfo
+from view.setting import Ui_Form
 
 
 class PacingTests(unittest.TestCase):
@@ -28,10 +30,13 @@ class PacingTests(unittest.TestCase):
             self.worker._pacing_delay(SimpleNamespace(min_time=1, max_time=2))
             sleep.assert_called_once_with(5.5)
 
-    def test_nonpositive_upper_bound_does_not_sleep(self):
-        with patch.object(main.time, 'sleep') as sleep:
+    def test_nonpositive_bounds_still_wait_at_least_one_second(self):
+        with patch.object(main.random, 'uniform', return_value=1) as sample, \
+                patch.object(main.random, 'random', return_value=0.5), \
+                patch.object(main.time, 'sleep') as sleep:
             self.worker._pacing_delay(SimpleNamespace(min_time=0, max_time=0))
-            sleep.assert_not_called()
+            sample.assert_called_once_with(1, 1)
+            sleep.assert_called_once_with(1)
 
 
 class ConfigTests(unittest.TestCase):
@@ -50,14 +55,16 @@ class ConfigTests(unittest.TestCase):
         info = self.load(0, 0)
         self.assertEqual((info.min_time, info.max_time), (1, 2))
 
-    def test_loaded_bounds_are_nonnegative_and_ordered(self):
-        for low, high, expected in [(5, 1, (1, 5)), (-3, 5, (0, 5)), (-3, -1, (1, 2))]:
+    def test_loaded_bounds_are_at_least_one_and_ordered(self):
+        for low, high, expected in [(5, 1, (1, 5)), (-3, 5, (1, 5)), (-3, -1, (1, 2)),
+                                    (0, 5, (1, 5)), (5, 0, (1, 5)), (1, 1, (1, 1))]:
             with self.subTest(low=low, high=high):
                 info = self.load(low, high)
                 self.assertEqual((info.min_time, info.max_time), expected)
 
     def test_saved_bounds_are_normalized_and_persisted(self):
-        for low, high, expected in [(0, 0, (1, 2)), (5, 1, (1, 5))]:
+        for low, high, expected in [(0, 0, (1, 2)), (5, 1, (1, 5)), (-3, 5, (1, 5)),
+                                    (5, 0, (1, 5)), (1, 1, (1, 1))]:
             with self.subTest(low=low, high=high):
                 info = self.load(2, 3)
                 info.input_info(low, high, 5, 15, True, 'gzip')
@@ -65,6 +72,22 @@ class ConfigTests(unittest.TestCase):
                 self.assertEqual((restored.min_time, restored.max_time), expected)
                 stored = json.loads(self.path.read_text(encoding='utf-8'))
                 self.assertEqual((stored['min_time'], stored['max_time']), expected)
+
+    def test_settings_inputs_enforce_one_second_and_can_save(self):
+        application = QApplication.instance() or QApplication([])
+        info = self.load(1, 2)
+        form = Ui_Form(info)
+        try:
+            self.assertEqual(form.min_time.minimum(), 1)
+            self.assertEqual(form.max_time.minimum(), 1)
+            form.min_time.setValue(0)
+            form.max_time.setValue(0)
+            self.assertEqual((form.min_time.value(), form.max_time.value()), (1, 1))
+            self.assertTrue(form.input())
+            restored = PublicInfo(self.folder.name)
+            self.assertEqual((restored.min_time, restored.max_time), (1, 1))
+        finally:
+            form.close()
 
 
 if __name__ == '__main__':

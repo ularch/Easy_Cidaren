@@ -9,7 +9,8 @@ from decryptencrypt.encrypt_md5 import encrypt_md5
 from log.log import Log, get_file_logger
 from publicInfo.publicInfo import PublicInfo
 from util.answer_lib import add_answer, add_word_answer
-from util.basic_util import create_timestamp
+from util.basic_util import create_timestamp, resolve_word_ci
+from util.word_cache import lookup as lookup_cached_word, save as save_cached_word
 
 # create logger
 api = Log('main_api')
@@ -18,9 +19,25 @@ basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
 file_logger = get_file_logger('_main_api')
 
+# 单词信息缓存: 优先使用内存, 本地缓存可跨重启复用
+_word_info_cache = {}
+_WORD_CACHE_LIMIT = 2000
+
 
 class SecurityVerifyError(Exception):
     """服务端风控: 11003 需安全验证(要求用户在 App/微信端完成验证), 重试无意义, 应立即停止并提示"""
+
+
+class TaskWordMappingError(Exception):
+    """自建任务单词无法映射到词表及对应单元。"""
+
+
+class TaskNotEffectiveError(Exception):
+    """服务端 20005 任务未生效"""
+
+
+class WordCardDataError(Exception):
+    """服务端 120 卡片数据错误"""
 
 
 # response is 200
@@ -36,6 +53,14 @@ def handle_response(response):
     if code == 11003:
         api.logger.error(f"需安全验证: {response.text}")
         raise SecurityVerifyError("服务端需安全验证，请打开词达人 App/微信完成安全验证后重试")
+    # 20005: 任务未生效
+    if code == 20005:
+        api.logger.error(f"任务未生效: {response.text}")
+        raise TaskNotEffectiveError(response_json.get('msg') or '任务未生效')
+    # 120: 请求的词形不在本单元词卡内
+    if code == 120:
+        api.logger.error(f"卡片数据错误: {response.text}")
+        raise WordCardDataError(response_json.get('msg') or '卡片数据错误')
     if code == 1:
         # 获取成功
         api.logger.info(f"请求成功{response.text}")
@@ -241,9 +266,17 @@ def check_is_self_built(func):
     @wraps(func)
     def is_self_built(public_info, word):
         if public_info.is_self_built:
+            resolved = resolve_word_ci(public_info.word_list, word)
+            if resolved is None:
+                api.logger.error(f"自建任务词表中找不到单词：{word}")
+                raise TaskWordMappingError(f"自建任务词表中找不到单词：{word}")
+            word = resolved
             # 从单词列表获取索引
             word_index = public_info.word_list.index(word)
             # 获取单元单词
+            if word_index >= len(public_info.get_book_words_data):
+                api.logger.error(f"单词索引越界：{word}({word_index})")
+                raise TaskWordMappingError(f"单词索引越界：{word}")
             public_info.now_unit = public_info.get_book_words_data[word_index]["list_id"]
         return func(public_info, word)
 
@@ -251,8 +284,27 @@ def check_is_self_built(func):
 
 
 # 查询单词
+def _remember_word(key, result):
+    """内存缓存同样按 FIFO 淘汰, 新单词不会因满额而永久失去缓存机会。"""
+    if _WORD_CACHE_LIMIT <= 0:
+        return
+    _word_info_cache[key] = result
+    while len(_word_info_cache) > _WORD_CACHE_LIMIT:
+        del _word_info_cache[next(iter(_word_info_cache))]
+
+
 @check_is_self_built
 def query_word(public_info, word):
+    cache_key = (public_info.course_id, public_info.now_unit, str(word).lower())
+    cached = _word_info_cache.get(cache_key)
+    if cached is None:
+        cached = lookup_cached_word(cache_key)
+        if cached is not None:
+            _remember_word(cache_key, cached)
+    if cached is not None:
+        public_info.word_query_result = cached
+        api.logger.info(f"查询单词{word}(缓存命中)")
+        return
     time.sleep(random.uniform(0, 0.25))
     api.logger.info(f"查询单词{word}")
     # query word in the unit
@@ -262,6 +314,8 @@ def query_word(public_info, word):
     handle_response(word)
     # decrypt  response
     public_info.word_query_result = debase64(word.json()['data'], word.json()['jv'])
+    _remember_word(cache_key, public_info.word_query_result)
+    save_cached_word(cache_key, public_info.word_query_result, limit=_WORD_CACHE_LIMIT)
     api.logger.info("查询单词成功")
 
 

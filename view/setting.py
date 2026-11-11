@@ -69,7 +69,7 @@ class Ui_Form(QWidget):
         self.min_time = QtWidgets.QSpinBox(parent=self.verticalLayoutWidget)
         self.min_time.setObjectName("min_time")
         self.min_time.setToolTip(interval_tip)
-        # self.min_time.setMinimum(2)  # 设置最小值为2秒
+        self.min_time.setMinimum(1)
         self.verticalLayout.addWidget(self.min_time)
         self.label_2 = QtWidgets.QLabel(parent=self.verticalLayoutWidget)
         self.label_2.setObjectName("label_2")
@@ -79,7 +79,7 @@ class Ui_Form(QWidget):
         self.max_time = QtWidgets.QSpinBox(parent=self.verticalLayoutWidget)
         self.max_time.setObjectName("max_time")
         self.max_time.setToolTip(interval_tip)
-        # self.max_time.setMinimum(2)  # 设置最小值为2秒
+        self.max_time.setMinimum(1)
         self.verticalLayout.addWidget(self.max_time)
         self.interval_hint = QtWidgets.QLabel(parent=self.scrollAreaWidgetContents_1)
         self.interval_hint.setGeometry(QtCore.QRect(10, 140, 331, 80))
