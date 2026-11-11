@@ -8,7 +8,7 @@ from api.main_api import query_word, submit_result, next_exam
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
 from decryptencrypt.debase64 import debase64
-from util.basic_util import delete_other_char
+from util.basic_util import delete_other_char, resolve_word_ci
 from util.answer_lib import lookup, lookup_word
 from util.select_mean import select_mean, handle_query_word_mean, filler_option, select_match_word, word_examples, \
     is_word_exist
@@ -245,16 +245,25 @@ def word_form_mean(public_info: PublicInfo) -> int:
     word = re.findall("{(.*?)}", exam)
     query_answer.logger.info(f"提取到{word}")
     word = word[0] if word else exam
-    # 判断单词是否在单词列表中
-    if word not in public_info.word_list:
-        if word.endswith("ed") and word[:-2] in public_info.word_list:
-            word = word[:-2]
-        elif word.endswith("ing") and word[:-3] in public_info.word_list:
-            word = word[:-3]
+    # 大小写无关匹配优先(句首大写 Insert -> 词表 insert)
+    resolved = resolve_word_ci(public_info.word_list, word)
+    if resolved is not None:
+        word = resolved
+    else:
+        # 判断单词是否在单词列表中
+        stem = None
+        if word.endswith("ed"):
+            stem = word[:-2]
+        elif word.endswith("ing"):
+            stem = word[:-3]
+        resolved = resolve_word_ci(public_info.word_list, stem) if stem else None
+        if resolved is not None:
+            word = resolved
         else:
             query_answer.logger.info(f"将{word}转原型")
             # 单词转原型
-            word = word_revert(word)
+            word = word_revert(word) or word
+            word = resolve_word_ci(public_info.word_list, word) or word
     # 请求单词释义
     query_word(public_info, word)
     # 提取释义
