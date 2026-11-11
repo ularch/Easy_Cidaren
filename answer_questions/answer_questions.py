@@ -4,7 +4,7 @@ import time
 import json
 from urllib.parse import unquote
 
-from api.main_api import query_word, submit_result, next_exam, WordCardDataError
+from api.main_api import query_word, submit_result, next_exam, WordCardDataError, TaskWordMappingError
 from log.log import Log
 from publicInfo.publicInfo import PublicInfo
 from decryptencrypt.debase64 import debase64
@@ -287,9 +287,9 @@ def word_form_mean(public_info: PublicInfo):
     # 请求单词释义
     try:
         query_word(public_info, word)
-    except WordCardDataError as e:
-        # 词形仍不在本单元词卡内：只跳过当前这道题，不拖垮整个任务
-        query_answer.logger.warning(f"查词被服务端拒绝（{e}），跳过该题")
+    except (WordCardDataError, TaskWordMappingError) as e:
+        # 词形仍不在本单元词卡内 / 自建任务词表映射失败：只跳过当前这道题，不拖垮整个任务
+        query_answer.logger.warning(f"查词失败（{e}），跳过该题")
         return None
     # 提取释义
     handle_query_word_mean(public_info)

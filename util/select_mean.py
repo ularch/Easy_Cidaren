@@ -1,7 +1,7 @@
 import random
 import re
 
-from api.main_api import query_word, WordCardDataError
+from api.main_api import query_word, WordCardDataError, TaskWordMappingError
 from log.log import Log
 from util.mean_match import choose_option
 from util.word_form import match_in_list
@@ -73,8 +73,8 @@ def select_match_word(public_info, word_mean) -> int:
         # query word mean
         try:
             query_word(public_info, word)
-        except WordCardDataError:
-            select_module.logger.warning(f"查词被服务端拒绝，跳过候选[{word}]")
+        except (WordCardDataError, TaskWordMappingError) as e:
+            select_module.logger.warning(f"查词失败，跳过候选[{word}]: {e}")
             continue
         handle_query_word_mean(public_info)
         # is match word mean
@@ -96,7 +96,12 @@ def is_word_exist(public_info, option) -> bool:
     if hit:
         if hit.lower() != (option or '').lower():
             select_module.logger.info(f"词形还原 {option} -> {hit}")
-        query_word(public_info, hit)
+        try:
+            query_word(public_info, hit)
+        except (WordCardDataError, TaskWordMappingError) as e:
+            # 查词失败只放弃这个候选词，不拖垮整场任务
+            select_module.logger.warning(f"查词失败，跳过候选[{hit}]: {e}")
+            return False
         return True
     select_module.logger.info(f"{option} 不在词表且无法还原，跳过")
     return False
