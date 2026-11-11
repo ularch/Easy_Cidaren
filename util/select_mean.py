@@ -1,8 +1,10 @@
+import difflib
 import random
 import re
 
 from api.main_api import query_word
 from log.log import Log
+from util.text_norm import norm_key, norm_text
 from util.word_revert import word_revert
 
 # log module
@@ -48,6 +50,29 @@ def filler_option(public_info) -> list:
     return options
 
 
+def _log_context_scores(public_info, options, chosen):
+    """影子模式: 用题干 remark(中文翻译)给当前选项打分并记录, 仅日志, 不影响提交"""
+    exam = public_info.exam if isinstance(public_info.exam, dict) else None
+    if not exam:
+        return
+    remark = (exam.get('stem') or {}).get('remark')
+    if not isinstance(remark, str) or not remark.strip():
+        return
+    target = norm_text(remark)
+    target_key = norm_key(remark)
+    scored = []
+    for index, option in enumerate(options):
+        if not isinstance(option, str):
+            continue
+        option_key = norm_key(option)
+        ratio = difflib.SequenceMatcher(None, norm_text(option), target).ratio()
+        contains = 1 if option_key and option_key in target_key else 0
+        scored.append((index, round(ratio, 3), contains))
+    if scored:
+        scored.sort(key=lambda item: (item[1], item[2]), reverse=True)
+        select_module.logger.info(f"上下文评分(影子): 当前选择={chosen} 候选={scored}")
+
+
 def select_mean(public_info) -> int:
     """
     英译汉 选择匹配的意思
@@ -61,24 +86,34 @@ def select_mean(public_info) -> int:
             # 选项顺序混乱，重排序
             if sorted(option.replace(" ", '')) == sorted(mean.replace(" ", '')) or mean in option:
                 select_module.logger.info(f"匹配第{index + 1}个选项选项[{option}]")
+                _log_context_scores(public_info, options, index)
                 return index
     # 匹配失败 随机提交一个
     select_module.logger.warning("匹配失败，随机提交")
-    return random.randint(0, len(options) - 1)
+    guess = random.randint(0, len(options) - 1)
+    _log_context_scores(public_info, options, guess)
+    return guess
 
 
 # select match word
 def select_match_word(public_info, word_mean) -> int:
     options = filler_option(public_info)
+    target = norm_text(word_mean)
+    shadow = []
     for word in options:
         # query word mean
         query_word(public_info, word)
         handle_query_word_mean(public_info)
+        best = max((difflib.SequenceMatcher(None, norm_text(mean), target).ratio()
+                    for mean in public_info.word_means), default=0)
+        shadow.append((word, round(best, 3)))
         # is match word mean
         for mean in public_info.word_means:
             if sorted(word_mean.replace(" ", '')) == sorted(mean.replace(" ", '')):
+                select_module.logger.info(f"上下文评分(影子): 命中={word} 候选={shadow}")
                 return public_info.source_option.index(word)
     select_module.logger.error("匹配失败,猜第3个选项")
+    select_module.logger.info(f"上下文评分(影子): 猜第3个 候选={shadow}")
     return 2
 
 

@@ -9,6 +9,7 @@ from decryptencrypt.encrypt_md5 import encrypt_md5
 from log.log import Log, get_file_logger
 from publicInfo.publicInfo import PublicInfo
 from util.answer_lib import add_answer, add_word_answer
+from util.wrong_memory import record as record_wrong_answer
 from util.basic_util import create_timestamp, resolve_word_ci
 
 # create logger
@@ -278,6 +279,50 @@ def query_word(public_info, word):
 
 
 # submit word
+_WRONG_CHOICE_MODES = (11, 15, 16, 17, 18, 21, 22, 42)
+_WRONG_PHRASE_MODES = (32, 73)
+
+
+def _corrects_to_contents(corrects, options):
+    """把 answer_corrects 统一归一化为选项内容: 下标映射到 options, 字符串原样保留"""
+    if not isinstance(corrects, (list, tuple)):
+        return []
+    contents = []
+    for correct in corrects:
+        if isinstance(correct, bool):
+            continue
+        if isinstance(correct, int):
+            if 0 <= correct < len(options):
+                item = options[correct]
+                if isinstance(item, dict) and isinstance(item.get('content'), str):
+                    contents.append(item['content'])
+        elif isinstance(correct, str) and correct.strip():
+            contents.append(correct)
+    return contents
+
+
+def _record_wrong_answer(mode, stem, corrects, options):
+    """判错时按题目上下文记录标准答案, 供下次同题直接使用"""
+    if not isinstance(stem, dict):
+        return
+    content = stem.get('content')
+    remark = stem.get('remark')
+    if not isinstance(remark, str):
+        remark = None
+    if mode in _WRONG_CHOICE_MODES:
+        answers = _corrects_to_contents(corrects, options)
+    elif mode in _WRONG_PHRASE_MODES:
+        if isinstance(corrects, str):
+            corrects = [corrects]
+        if not isinstance(corrects, (list, tuple)):
+            return
+        answers = [c for c in corrects if isinstance(c, str) and c.strip()]
+    else:
+        return
+    if answers:
+        record_wrong_answer(mode, content, remark, answers)
+
+
 def submit_result(public_info, option):
     api.logger.info("开始提交答案")
     timestamp = create_timestamp()
@@ -325,6 +370,9 @@ def submit_result(public_info, option):
                             words.append(content)
                 if words:
                     add_word_answer(word_zh, words)
+            # 错题上下文记忆: 记录该题标准答案, 下次先按上下文命中
+            if answer_result == 2 and corrects:
+                _record_wrong_answer(mode, stem, corrects, exam.get('options') or [])
     api.logger.info("提取下一题的请求参数")
     # next exam topic_code
     public_info.topic_code = result['topic_code']
