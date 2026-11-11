@@ -1,4 +1,5 @@
 import json
+import os
 from contextlib import closing
 from pathlib import Path
 import sqlite3
@@ -10,7 +11,11 @@ cache_logger = Log('word_cache')
 
 
 def _cache_path():
-    root = Path(sys.executable).resolve().parent if getattr(sys, 'frozen', False) else Path(__file__).resolve().parent.parent
+    if getattr(sys, 'frozen', False):
+        local_data = os.environ.get('LOCALAPPDATA')
+        root = Path(local_data) / 'Easy_Cidaren' if local_data else Path.home() / '.Easy_Cidaren'
+    else:
+        root = Path(__file__).resolve().parent.parent
     return root / 'config' / 'word_cache.sqlite3'
 
 
@@ -34,8 +39,8 @@ def lookup(key):
 
 
 def save(key, result, limit=2000):
-    """事务写入成功查词结果, 最多保存 limit 条; 本地写入失败不打断答题。"""
-    if not isinstance(result, dict):
+    """事务写入查词结果, 超限按 FIFO 淘汰; 更新与命中不改变插入顺序。"""
+    if not isinstance(result, dict) or limit <= 0:
         return False
     try:
         payload = json.dumps(result, ensure_ascii=False)
@@ -43,21 +48,29 @@ def save(key, result, limit=2000):
         path.parent.mkdir(parents=True, exist_ok=True)
         parts = tuple(str(part) for part in key)
         with closing(sqlite3.connect(path, timeout=1)) as connection, connection:
+            # 在读取条数前获取写锁, 避免多个进程同时插入导致超过上限。
+            connection.execute('BEGIN IMMEDIATE')
             connection.execute(
                 'CREATE TABLE IF NOT EXISTS word_cache ('
                 'course TEXT NOT NULL, unit TEXT NOT NULL, word TEXT NOT NULL, '
                 'response TEXT NOT NULL, PRIMARY KEY (course, unit, word))'
             )
-            count = connection.execute('SELECT COUNT(*) FROM word_cache').fetchone()[0]
-            if count >= limit:
+            updated = connection.execute(
+                'UPDATE word_cache SET response = ? WHERE course = ? AND unit = ? AND word = ?',
+                (payload, *parts),
+            )
+            if updated.rowcount == 0:
                 connection.execute(
-                    'UPDATE word_cache SET response = ? WHERE course = ? AND unit = ? AND word = ?',
-                    (payload, *parts),
-                )
-            else:
-                connection.execute(
-                    'INSERT OR REPLACE INTO word_cache (course, unit, word, response) VALUES (?, ?, ?, ?)',
+                    'INSERT INTO word_cache (course, unit, word, response) VALUES (?, ?, ?, ?)',
                     (*parts, payload),
+                )
+            # 旧版本的表已自带 rowid, 无需新增字段或重建数据库。
+            count = connection.execute('SELECT COUNT(*) FROM word_cache').fetchone()[0]
+            if count > limit:
+                connection.execute(
+                    'DELETE FROM word_cache WHERE rowid IN ('
+                    'SELECT rowid FROM word_cache ORDER BY rowid LIMIT ?)',
+                    (count - limit,),
                 )
         return True
     except (OSError, sqlite3.Error, ValueError, TypeError) as error:

@@ -43,12 +43,19 @@ class QueryCacheTests(unittest.TestCase):
         self.assertEqual(self.get.call_count, 3)
         self.assertEqual(len(self.cache), 3)
 
-    def test_cache_limit_preserves_existing_hits(self):
+    def test_cache_limit_evicts_oldest_and_keeps_new_words(self):
         with patch.object(main_api, '_WORD_CACHE_LIMIT', 2):
-            for word in ['one', 'two', 'three', 'one']:
+            for word in ['one', 'two', 'one', 'three', 'three']:
                 main_api.query_word(self.info, word)
             self.assertEqual(self.get.call_count, 3)
             self.assertEqual(len(self.cache), 2)
+            self.assertEqual([key[2] for key in self.cache], ['two', 'three'])
+            self.assertIsNone(word_cache.lookup(('course', 'unit', 'one')))
+            self.cache.clear()
+            main_api.query_word(self.info, 'three')
+            self.assertEqual(self.get.call_count, 3)
+            main_api.query_word(self.info, 'one')
+            self.assertEqual(self.get.call_count, 4)
 
     def test_failed_request_is_not_cached(self):
         error = main_api.requests.exceptions.ConnectionError('offline')

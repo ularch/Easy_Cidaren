@@ -284,14 +284,23 @@ def check_is_self_built(func):
 
 
 # 查询单词
+def _remember_word(key, result):
+    """内存缓存同样按 FIFO 淘汰, 新单词不会因满额而永久失去缓存机会。"""
+    if _WORD_CACHE_LIMIT <= 0:
+        return
+    _word_info_cache[key] = result
+    while len(_word_info_cache) > _WORD_CACHE_LIMIT:
+        del _word_info_cache[next(iter(_word_info_cache))]
+
+
 @check_is_self_built
 def query_word(public_info, word):
     cache_key = (public_info.course_id, public_info.now_unit, str(word).lower())
     cached = _word_info_cache.get(cache_key)
     if cached is None:
         cached = lookup_cached_word(cache_key)
-        if cached is not None and len(_word_info_cache) < _WORD_CACHE_LIMIT:
-            _word_info_cache[cache_key] = cached
+        if cached is not None:
+            _remember_word(cache_key, cached)
     if cached is not None:
         public_info.word_query_result = cached
         api.logger.info(f"查询单词{word}(缓存命中)")
@@ -305,8 +314,7 @@ def query_word(public_info, word):
     handle_response(word)
     # decrypt  response
     public_info.word_query_result = debase64(word.json()['data'], word.json()['jv'])
-    if len(_word_info_cache) < _WORD_CACHE_LIMIT:
-        _word_info_cache[cache_key] = public_info.word_query_result
+    _remember_word(cache_key, public_info.word_query_result)
     save_cached_word(cache_key, public_info.word_query_result, limit=_WORD_CACHE_LIMIT)
     api.logger.info("查询单词成功")
 
