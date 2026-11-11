@@ -65,19 +65,20 @@ class ModelCacheTests(unittest.TestCase):
     def test_model_is_loaded_once_for_multiple_words(self):
         model = Mock(return_value=[SimpleNamespace(lemma_='run')])
         with patch.object(word_revert, '_nlp', None), \
-                patch.object(word_revert.spacy, 'load', return_value=model) as load:
+                patch.object(word_revert, '_model_broken', False), \
+                patch('spacy.load', return_value=model) as load:
             self.assertEqual(word_revert.word_revert('running'), 'run')
             self.assertEqual(word_revert.word_revert('runs'), 'run')
             load.assert_called_once()
 
-    def test_model_load_failure_can_retry_later(self):
-        model = Mock(return_value=[SimpleNamespace(lemma_='run')])
+    def test_model_load_failure_uses_upstream_stop_policy(self):
         with patch.object(word_revert, '_nlp', None), \
-                patch.object(word_revert.spacy, 'load', side_effect=[RuntimeError('load failed'), model]) as load, \
+                patch.object(word_revert, '_model_broken', False), \
+                patch('spacy.load', side_effect=RuntimeError('load failed')) as load, \
                 patch.object(word_revert, 'use_api_get_prototype', return_value='run') as fallback:
             self.assertEqual(word_revert.word_revert('running'), 'run')
-            self.assertEqual(word_revert.word_revert('runs'), 'run')
-            self.assertEqual(load.call_count, 2)
+            self.assertEqual(word_revert.word_revert('runs'), 'runs')
+            load.assert_called_once()
             fallback.assert_called_once_with('running')
 
 
