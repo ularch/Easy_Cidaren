@@ -19,6 +19,16 @@ else:
     module.logger.info(f"模型加载成功{model_path}")
 
 
+_nlp = None
+
+
+def _get_nlp():
+    global _nlp
+    if _nlp is None:
+        _nlp = spacy.load(model_path)
+    return _nlp
+
+
 def word_revert(word: str) -> str:
     """
     优先使用模型转原型
@@ -26,7 +36,7 @@ def word_revert(word: str) -> str:
     :return: 原型
     """
     try:
-        nlp = spacy.load(model_path)
+        nlp = _get_nlp()
         module.logger.info(f"{word}优先使用模型转原型")
         doc = nlp(word)
         for token in doc:

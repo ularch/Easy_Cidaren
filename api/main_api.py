@@ -18,6 +18,10 @@ basic_url = 'https://app.vocabgo.com/student/api/Student/'
 
 file_logger = get_file_logger('_main_api')
 
+# 单词信息缓存: 同一单元内选项会跨题重复, 命中后不再请求
+_word_info_cache = {}
+_WORD_CACHE_LIMIT = 2000
+
 
 class SecurityVerifyError(Exception):
     """服务端风控: 11003 需安全验证(要求用户在 App/微信端完成验证), 重试无意义, 应立即停止并提示"""
@@ -253,6 +257,12 @@ def check_is_self_built(func):
 # 查询单词
 @check_is_self_built
 def query_word(public_info, word):
+    cache_key = (public_info.course_id, public_info.now_unit, str(word).lower())
+    cached = _word_info_cache.get(cache_key)
+    if cached is not None:
+        public_info.word_query_result = cached
+        api.logger.info(f"查询单词{word}(缓存命中)")
+        return
     time.sleep(random.randint(0, 2))
     api.logger.info(f"查询单词{word}")
     # query word in the unit
@@ -262,6 +272,8 @@ def query_word(public_info, word):
     handle_response(word)
     # decrypt  response
     public_info.word_query_result = debase64(word.json()['data'], word.json()['jv'])
+    if len(_word_info_cache) < _WORD_CACHE_LIMIT:
+        _word_info_cache[cache_key] = public_info.word_query_result
     api.logger.info("查询单词成功")
 
 
