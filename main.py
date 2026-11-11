@@ -153,7 +153,7 @@ class TaskWorker(QThread):
                 self.class_task_answer()
 
     def _answer_question(self, public_info, mode):
-        """单题异常不打断任务: 网络错误上抛交给任务级重试, 数据/解析错误跳过当前题"""
+        """单题异常不打断任务: 网络错误上抛交给任务级重试, 数据/解析错误猜测或跳过当前题"""
         try:
             return answer(public_info, mode)
         except (SecurityVerifyError, ApiResponseError):
@@ -161,7 +161,15 @@ class TaskWorker(QThread):
         except requests.exceptions.RequestException:
             raise
         except Exception as e:
-            main.logger.error(f"答题异常，跳过当前题：{e}", exc_info=True)
+            if getattr(public_info, 'compat_mode', True):
+                main.logger.error(f"答题异常，兼容模式猜测答案：{e}", exc_info=True)
+                guessed = guess_answer(public_info, mode)
+                if guessed is not None:
+                    main.logger.info(f"兼容模式猜测答案：{guessed}")
+                    return guessed
+                main.logger.error("兼容模式无法生成猜测答案，跳过当前题")
+            else:
+                main.logger.error(f"答题异常，跳过当前题：{e}", exc_info=True)
             return None
 
     def emit_progress(self):

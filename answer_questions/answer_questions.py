@@ -524,3 +524,92 @@ def answer(public_info, mode):
         # 此处抛出异常
         raise Exception
     return option
+
+
+def guess_answer(public_info, mode):
+    """兼容模式: 答题异常时生成格式合法的猜测答案, 无法生成返回 None"""
+    exam = getattr(public_info, 'exam', None)
+    if not isinstance(exam, dict):
+        return None
+    try:
+        options = exam.get('options') or []
+        contents = [o.get('content') for o in options if isinstance(o, dict)]
+        n = len(options)
+        if mode in (11, 15, 16, 17, 18, 21, 22):
+            return random.randrange(n) if n else None
+        if mode == 13:
+            return 3
+        if mode == 31:
+            relations = exam.get('stem', {}).get('remark') or []
+            if not n or not isinstance(relations, list) or not relations:
+                return None
+            indexes = list(range(n))
+            random.shuffle(indexes)
+            return {rel['relation']: indexes[i % n]
+                    for i, rel in enumerate(relations)
+                    if isinstance(rel, dict) and 'relation' in rel}
+        if mode == 32:
+            _, slot_words = _template_slots(exam.get('stem', {}).get('content', ''))
+            words = [c for c in contents if c]
+            if not words:
+                return None
+            count = slot_words or 1
+            return ','.join(words[i % len(words)] for i in range(count))
+        if mode in (41, 42, 43, 44):
+            if not options:
+                return None
+            option = options[2] if n >= 3 else options[0]
+            tag = option.get('answer_tag')
+            if isinstance(tag, str):
+                sub_options = option.get('sub_options') or []
+                if sub_options:
+                    return tag + str(sub_options[0].get('answer_tag', 0))
+                return tag + '0'
+            return tag
+        if mode in (51, 52, 53, 54):
+            w_lens = exam.get('w_lens') or []
+            w_len = int(w_lens[0]) if w_lens else 0
+            tip = (exam.get('w_tip') or '').lower()
+            words = public_info.word_list or []
+            for w in words:
+                if isinstance(w, str) and w.lower().startswith(tip) and (not w_len or len(w) == w_len):
+                    return w
+            for w in words:
+                if isinstance(w, str) and w_len and len(w) == w_len:
+                    return w
+            if tip:
+                return tip + 'a' * max(0, w_len - len(tip))
+            return None
+        if mode == 73:
+            content = exam.get('stem', {}).get('content', '')
+            tips = re.findall(r'\{(\w+)\}', content)
+            if not tips:
+                slot_count = content.count('{}')
+                pool = [c for c in contents if c]
+                if slot_count and pool:
+                    return json.dumps([pool[i % len(pool)] for i in range(slot_count)])
+                return None
+            w_lens = exam.get('w_lens') or []
+            pool = [w for w in (public_info.word_list or []) if isinstance(w, str)]
+            pool += [w for w in (_global_word_pool(public_info) or []) if isinstance(w, str)]
+            answers = []
+            for i, tip in enumerate(tips):
+                w_len = int(w_lens[i]) if i < len(w_lens) and w_lens[i] else 0
+                matched = None
+                for w in pool:
+                    if w.lower().startswith(tip.lower()) and (not w_len or len(w) == w_len):
+                        matched = w
+                        break
+                if matched is None:
+                    for w in pool:
+                        if w_len and len(w) == w_len:
+                            matched = w
+                            break
+                if matched is None:
+                    matched = tip + 'a' * max(0, w_len - len(tip))
+                answers.append(matched)
+            return json.dumps(answers)
+    except Exception as e:
+        query_answer.logger.error(f"兼容模式猜测答案失败: {e}")
+        return None
+    return None
